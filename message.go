@@ -41,7 +41,13 @@ func NewMessageService(opts ...option.RequestOption) (r MessageService) {
 // template details, contact information, and pricing. The customer ID is extracted
 // from the authentication token to ensure the message belongs to the authenticated
 // customer.
-func (r *MessageService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *MessageGetResponse, err error) {
+func (r *MessageService) Get(ctx context.Context, id string, query MessageGetParams, opts ...option.RequestOption) (res *MessageGetResponse, err error) {
+	if !param.IsOmitted(query.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", query.XAPIKey)))
+	}
+	if !param.IsOmitted(query.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", query.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -55,11 +61,17 @@ func (r *MessageService) Get(ctx context.Context, id string, opts ...option.Requ
 // Sends a message to a phone number using the default template. This endpoint is
 // rate limited to 5 messages per customer per day. The customer ID is extracted
 // from the authentication token.
-func (r *MessageService) SendQuickMessage(ctx context.Context, body MessageSendQuickMessageParams, opts ...option.RequestOption) (err error) {
+func (r *MessageService) SendQuickMessage(ctx context.Context, params MessageSendQuickMessageParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
+	}
+	if !param.IsOmitted(params.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := "v2/messages/quick-message"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, nil, opts...)
 	return
 }
 
@@ -67,11 +79,17 @@ func (r *MessageService) SendQuickMessage(ctx context.Context, body MessageSendQ
 // via SMS or WhatsApp depending on the contact's capabilities. Optionally specify
 // a webhook URL to receive delivery status updates. The customer ID is extracted
 // from the authentication token.
-func (r *MessageService) SendToContact(ctx context.Context, body MessageSendToContactParams, opts ...option.RequestOption) (err error) {
+func (r *MessageService) SendToContact(ctx context.Context, params MessageSendToContactParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
+	}
+	if !param.IsOmitted(params.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := "v2/messages/contact"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, nil, opts...)
 	return
 }
 
@@ -79,11 +97,17 @@ func (r *MessageService) SendToContact(ctx context.Context, body MessageSendToCo
 // need to be a pre-existing contact. The message can be sent via SMS or WhatsApp.
 // Optionally specify a webhook URL to receive delivery status updates. The
 // customer ID is extracted from the authentication token.
-func (r *MessageService) SendToPhone(ctx context.Context, body MessageSendToPhoneParams, opts ...option.RequestOption) (err error) {
+func (r *MessageService) SendToPhone(ctx context.Context, params MessageSendToPhoneParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
+	}
+	if !param.IsOmitted(params.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := "v2/messages/phone"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, nil, opts...)
 	return
 }
 
@@ -219,12 +243,20 @@ func (r *MessageGetResponseMessageBodyButton) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type MessageGetParams struct {
+	XAPIKey   string `header:"x-api-key,required" json:"-"`
+	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
+	paramObj
+}
+
 type MessageSendQuickMessageParams struct {
 	// The custom message content to include in the template
 	CustomMessage string `json:"customMessage,required"`
 	// The phone number to send the message to, in international format (e.g.,
 	// +1234567890)
 	PhoneNumber string `json:"phoneNumber,required"`
+	XAPIKey     string `header:"x-api-key,required" json:"-"`
+	XSenderID   string `header:"x-sender-id,required" format:"guid" json:"-"`
 	paramObj
 }
 
@@ -241,6 +273,8 @@ type MessageSendToContactParams struct {
 	ContactID string `json:"contactId,required" format:"guid"`
 	// The unique identifier of the template to use for the message
 	TemplateID string `json:"templateId,required" format:"guid"`
+	XAPIKey    string `header:"x-api-key,required" json:"-"`
+	XSenderID  string `header:"x-sender-id,required" format:"guid" json:"-"`
 	// Optional key-value pairs of template variables to replace in the template body.
 	// For example, if your template contains "Hello {{name}}", you would provide {
 	// "name": "John Doe" }
@@ -262,6 +296,8 @@ type MessageSendToPhoneParams struct {
 	PhoneNumber string `json:"phoneNumber,required"`
 	// The unique identifier of the template to use for the message
 	TemplateID string `json:"templateId,required" format:"guid"`
+	XAPIKey    string `header:"x-api-key,required" json:"-"`
+	XSenderID  string `header:"x-sender-id,required" format:"guid" json:"-"`
 	// Optional key-value pairs of template variables to replace in the template body.
 	// For example, if your template contains "Hello {{name}}", you would provide {
 	// "name": "John Doe" }

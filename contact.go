@@ -4,6 +4,7 @@ package sentdm
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -12,6 +13,7 @@ import (
 	"github.com/sentdm/sent-dm-go/internal/apiquery"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
@@ -37,30 +39,48 @@ func NewContactService(opts ...option.RequestOption) (r ContactService) {
 // Retrieves a paginated list of contacts for the authenticated customer. Supports
 // server-side pagination with configurable page size. The customer ID is extracted
 // from the authentication token.
-func (r *ContactService) List(ctx context.Context, query ContactListParams, opts ...option.RequestOption) (res *ContactListResponse, err error) {
+func (r *ContactService) List(ctx context.Context, params ContactListParams, opts ...option.RequestOption) (res *ContactListResponse, err error) {
+	if !param.IsOmitted(params.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
+	}
+	if !param.IsOmitted(params.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/contacts"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return
 }
 
 // Retrieves a contact by their phone number for the authenticated customer. Phone
 // number should be in international format (e.g., +1234567890). The customer ID is
 // extracted from the authentication token.
-func (r *ContactService) GetByPhone(ctx context.Context, query ContactGetByPhoneParams, opts ...option.RequestOption) (res *ContactListItem, err error) {
+func (r *ContactService) GetByPhone(ctx context.Context, params ContactGetByPhoneParams, opts ...option.RequestOption) (res *ContactListItem, err error) {
+	if !param.IsOmitted(params.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
+	}
+	if !param.IsOmitted(params.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/contacts/phone"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return
 }
 
 // Retrieves a specific contact by their unique identifier for the authenticated
 // customer. The customer ID is extracted from the authentication token. Returns
 // detailed contact information including phone number and creation timestamp.
-func (r *ContactService) GetID(ctx context.Context, query ContactGetIDParams, opts ...option.RequestOption) (res *ContactListItem, err error) {
+func (r *ContactService) GetID(ctx context.Context, params ContactGetIDParams, opts ...option.RequestOption) (res *ContactListItem, err error) {
+	if !param.IsOmitted(params.XAPIKey) {
+		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
+	}
+	if !param.IsOmitted(params.XSenderID) {
+		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/contacts/id"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return
 }
 
@@ -139,7 +159,9 @@ type ContactListParams struct {
 	// The page number (zero-indexed). Default is 0.
 	Page int64 `query:"page,required" json:"-"`
 	// The number of items per page. Default is 20.
-	PageSize int64 `query:"pageSize,required" json:"-"`
+	PageSize  int64  `query:"pageSize,required" json:"-"`
+	XAPIKey   string `header:"x-api-key,required" json:"-"`
+	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
 	paramObj
 }
 
@@ -154,6 +176,8 @@ func (r ContactListParams) URLQuery() (v url.Values, err error) {
 type ContactGetByPhoneParams struct {
 	// The phone number in international format (e.g., +1234567890)
 	PhoneNumber string `query:"phoneNumber,required" json:"-"`
+	XAPIKey     string `header:"x-api-key,required" json:"-"`
+	XSenderID   string `header:"x-sender-id,required" format:"guid" json:"-"`
 	paramObj
 }
 
@@ -168,7 +192,9 @@ func (r ContactGetByPhoneParams) URLQuery() (v url.Values, err error) {
 
 type ContactGetIDParams struct {
 	// The unique identifier (GUID) of the resource to retrieve
-	ID string `query:"id,required" format:"guid" json:"-"`
+	ID        string `query:"id,required" format:"guid" json:"-"`
+	XAPIKey   string `header:"x-api-key,required" json:"-"`
+	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
 	paramObj
 }
 

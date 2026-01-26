@@ -22,11 +22,16 @@ func TestUsage(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	t.Skip("Prism tests are disabled")
-	err := client.Templates.Delete(context.TODO(), "REPLACE_ME")
+	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
+	})
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())
 	}

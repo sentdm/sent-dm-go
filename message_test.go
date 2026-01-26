@@ -24,10 +24,17 @@ func TestMessageGet(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
-	_, err := client.Messages.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
+	_, err := client.Messages.Get(
+		context.TODO(),
+		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.MessageGetParams{
+			XAPIKey:   "",
+			XSenderID: "00000000-0000-0000-0000-000000000000",
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -48,12 +55,14 @@ func TestMessageSendQuickMessage(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendQuickMessage(context.TODO(), sentdm.MessageSendQuickMessageParams{
 		CustomMessage: "Hello, this is a test message!",
 		PhoneNumber:   "+1234567890",
+		XAPIKey:       "",
+		XSenderID:     "00000000-0000-0000-0000-000000000000",
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -75,12 +84,14 @@ func TestMessageSendToContactWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendToContact(context.TODO(), sentdm.MessageSendToContactParams{
 		ContactID:  "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		TemplateID: "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:    "",
+		XSenderID:  "00000000-0000-0000-0000-000000000000",
 		TemplateVariables: map[string]string{
 			"name":     "John Doe",
 			"order_id": "12345",
@@ -106,12 +117,14 @@ func TestMessageSendToPhoneWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
 		TemplateVariables: map[string]string{
 			"name":     "John Doe",
 			"order_id": "12345",

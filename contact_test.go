@@ -24,12 +24,14 @@ func TestContactList(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
-		Page:     0,
-		PageSize: 0,
+		Page:      0,
+		PageSize:  0,
+		XAPIKey:   "",
+		XSenderID: "00000000-0000-0000-0000-000000000000",
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -51,11 +53,13 @@ func TestContactGetByPhone(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetByPhone(context.TODO(), sentdm.ContactGetByPhoneParams{
 		PhoneNumber: "phoneNumber",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -77,11 +81,13 @@ func TestContactGetID(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetID(context.TODO(), sentdm.ContactGetIDParams{
-		ID: "id",
+		ID:        "id",
+		XAPIKey:   "",
+		XSenderID: "00000000-0000-0000-0000-000000000000",
 	})
 	if err != nil {
 		var apierr *sentdm.Error

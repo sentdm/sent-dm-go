@@ -24,11 +24,13 @@ func TestNumberLookupGet(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.NumberLookup.Get(context.TODO(), sentdm.NumberLookupGetParams{
 		PhoneNumber: "phoneNumber",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
 	})
 	if err != nil {
 		var apierr *sentdm.Error

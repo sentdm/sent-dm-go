@@ -25,8 +25,8 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Templates.New(context.TODO(), sentdm.TemplateNewParams{
 		Definition: sentdm.TemplateDefinitionParam{
@@ -141,6 +141,8 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 				}},
 			},
 		},
+		XAPIKey:         "",
+		XSenderID:       "00000000-0000-0000-0000-000000000000",
 		Category:        sentdm.String("MARKETING"),
 		Language:        sentdm.String("en_US"),
 		SubmitForReview: sentdm.Bool(false),
@@ -165,10 +167,17 @@ func TestTemplateGet(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
-	_, err := client.Templates.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
+	_, err := client.Templates.Get(
+		context.TODO(),
+		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.TemplateGetParams{
+			XAPIKey:   "",
+			XSenderID: "00000000-0000-0000-0000-000000000000",
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -189,15 +198,17 @@ func TestTemplateListWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Templates.List(context.TODO(), sentdm.TemplateListParams{
-		Page:     0,
-		PageSize: 0,
-		Category: sentdm.String("category"),
-		Search:   sentdm.String("search"),
-		Status:   sentdm.String("status"),
+		Page:      0,
+		PageSize:  0,
+		XAPIKey:   "",
+		XSenderID: "00000000-0000-0000-0000-000000000000",
+		Category:  sentdm.String("category"),
+		Search:    sentdm.String("search"),
+		Status:    sentdm.String("status"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -219,10 +230,17 @@ func TestTemplateDelete(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
-	err := client.Templates.Delete(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
+	err := client.Templates.Delete(
+		context.TODO(),
+		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.TemplateDeleteParams{
+			XAPIKey:   "",
+			XSenderID: "00000000-0000-0000-0000-000000000000",
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {

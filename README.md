@@ -53,9 +53,15 @@ import (
 
 func main() {
 	client := sentdm.NewClient(
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"), // defaults to os.LookupEnv("SENT_DM_CUSTOMER_AUTH_SCHEME")
+		option.WithAPIKey("My API Key"),     // defaults to os.LookupEnv("SENT_DM_API_KEY")
+		option.WithSenderID("My Sender ID"), // defaults to os.LookupEnv("SENT_DM_SENDER_ID")
 	)
-	err := client.Templates.Delete(context.TODO(), "REPLACE_ME")
+	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
+	})
 	if err != nil {
 		panic(err.Error())
 	}
@@ -264,7 +270,7 @@ client := sentdm.NewClient(
 	option.WithHeader("X-Some-Header", "custom_header_info"),
 )
 
-client.Templates.Delete(context.TODO(), ...,
+client.Messages.SendToPhone(context.TODO(), ...,
 	// Override the header
 	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
 	// Add an undocumented field to the request body, using sjson syntax
@@ -295,14 +301,19 @@ When the API returns a non-success status code, we return an error with type
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
-err := client.Templates.Delete(context.TODO(), "REPLACE_ME")
+err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
+	PhoneNumber: "+1234567890",
+	TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+	XAPIKey:     "",
+	XSenderID:   "00000000-0000-0000-0000-000000000000",
+})
 if err != nil {
 	var apierr *sentdm.Error
 	if errors.As(err, &apierr) {
 		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
 		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
 	}
-	panic(err.Error()) // GET "/v2/templates/{id}": 400 Bad Request { ... }
+	panic(err.Error()) // GET "/v2/messages/phone": 400 Bad Request { ... }
 }
 ```
 
@@ -320,9 +331,14 @@ To set a per-retry timeout, use `option.WithRequestTimeout()`.
 // This sets the timeout for the request, including all the retries.
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
-client.Templates.Delete(
+client.Messages.SendToPhone(
 	ctx,
-	"REPLACE_ME",
+	sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
+	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
 )
@@ -356,9 +372,14 @@ client := sentdm.NewClient(
 )
 
 // Override per-request:
-client.Templates.Delete(
+client.Messages.SendToPhone(
 	context.TODO(),
-	"REPLACE_ME",
+	sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
+	},
 	option.WithMaxRetries(5),
 )
 ```
@@ -371,9 +392,14 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-err := client.Templates.Delete(
+err := client.Messages.SendToPhone(
 	context.TODO(),
-	"REPLACE_ME",
+	sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		XAPIKey:     "",
+		XSenderID:   "00000000-0000-0000-0000-000000000000",
+	},
 	option.WithResponseInto(&response),
 )
 if err != nil {

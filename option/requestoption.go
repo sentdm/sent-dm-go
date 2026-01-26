@@ -266,18 +266,18 @@ func WithEnvironmentProduction() RequestOption {
 	return requestconfig.WithDefaultBaseURL("https://api.sent.dm/")
 }
 
-// WithAdminAuthScheme returns a RequestOption that sets the client setting "admin_auth_scheme".
-func WithAdminAuthScheme(value string) RequestOption {
+// WithAPIKey returns a RequestOption that sets the client setting "api_key".
+func WithAPIKey(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.AdminAuthScheme = value
-		return r.Apply(WithHeader("x-api-key", r.AdminAuthScheme))
+		r.APIKey = value
+		return nil
 	})
 }
 
-// WithCustomerAuthScheme returns a RequestOption that sets the client setting "customer_auth_scheme".
-func WithCustomerAuthScheme(value string) RequestOption {
+// WithSenderID returns a RequestOption that sets the client setting "sender_id".
+func WithSenderID(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.CustomerAuthScheme = value
-		return r.Apply(WithHeader("x-sender-id", r.CustomerAuthScheme))
+		r.SenderID = value
+		return nil
 	})
 }
