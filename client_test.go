@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stainless-sdks/sent-dm-go"
-	"github.com/stainless-sdks/sent-dm-go/internal"
-	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go"
+	"github.com/sentdm/sent-dm-go/internal"
+	"github.com/sentdm/sent-dm-go/option"
 )
 
 type closureTransport struct {
