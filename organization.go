@@ -10,10 +10,10 @@ import (
 	"slices"
 	"time"
 
-	"github.com/sentdm/sent-dm-go/internal/apijson"
-	"github.com/sentdm/sent-dm-go/internal/requestconfig"
-	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/respjson"
+	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
+	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
+	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
 )
 
 // OrganizationService contains methods and other services that help with

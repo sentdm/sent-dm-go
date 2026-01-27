@@ -14,7 +14,7 @@ import (
 	"encoding"
 	"encoding/base64"
 	"fmt"
-	"github.com/sentdm/sent-dm-go/internal/encoding/json/shims"
+	"github.com/stainless-sdks/sent-dm-go/internal/encoding/json/shims"
 	"reflect"
 	"strconv"
 	"strings"

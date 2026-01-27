@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sentdm/sent-dm-go"
-	"github.com/sentdm/sent-dm-go/internal/testutil"
-	"github.com/sentdm/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go"
+	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
+	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
 func TestOrganizationList(t *testing.T) {

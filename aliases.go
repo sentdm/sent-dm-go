@@ -3,8 +3,8 @@
 package sentdm
 
 import (
-	"github.com/sentdm/sent-dm-go/internal/apierror"
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/internal/apierror"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 )
 
 // aliased to make [param.APIUnion] private when embedding
