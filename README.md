@@ -59,6 +59,10 @@ func main() {
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
 	})
 	if err != nil {
 		panic(err.Error())
@@ -302,6 +306,10 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 	PhoneNumber: "+1234567890",
 	TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+	TemplateVariables: map[string]string{
+		"name":     "John Doe",
+		"order_id": "12345",
+	},
 })
 if err != nil {
 	var apierr *sentdm.Error
@@ -332,6 +340,10 @@ client.Messages.SendToPhone(
 	sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -371,6 +383,10 @@ client.Messages.SendToPhone(
 	sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
 	},
 	option.WithMaxRetries(5),
 )
@@ -389,6 +405,10 @@ err := client.Messages.SendToPhone(
 	sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
 	},
 	option.WithResponseInto(&response),
 )
