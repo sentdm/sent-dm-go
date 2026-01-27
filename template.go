@@ -44,16 +44,10 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 // Supports automatic metadata generation using AI (display name, language,
 // category). Optionally submits the template for WhatsApp review. The customer ID
 // is extracted from the authentication token.
-func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *TemplateResponse, err error) {
-	if !param.IsOmitted(params.XAPIKey) {
-		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
-	}
-	if !param.IsOmitted(params.XSenderID) {
-		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
-	}
+func (r *TemplateService) New(ctx context.Context, body TemplateNewParams, opts ...option.RequestOption) (res *TemplateResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/templates"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
 }
 
@@ -61,13 +55,7 @@ func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opt
 // authenticated customer with comprehensive template definitions including
 // headers, body, footer, and interactive buttons. The customer ID is extracted
 // from the authentication token.
-func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetParams, opts ...option.RequestOption) (res *TemplateResponse, err error) {
-	if !param.IsOmitted(query.XAPIKey) {
-		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", query.XAPIKey)))
-	}
-	if !param.IsOmitted(query.XSenderID) {
-		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", query.XSenderID)))
-	}
+func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *TemplateResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -83,16 +71,10 @@ func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetP
 // interactive buttons. Supports advanced filtering by search term, status, and
 // category, plus pagination. The customer ID is extracted from the authentication
 // token.
-func (r *TemplateService) List(ctx context.Context, params TemplateListParams, opts ...option.RequestOption) (res *TemplateListResponse, err error) {
-	if !param.IsOmitted(params.XAPIKey) {
-		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
-	}
-	if !param.IsOmitted(params.XSenderID) {
-		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
-	}
+func (r *TemplateService) List(ctx context.Context, query TemplateListParams, opts ...option.RequestOption) (res *TemplateListResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/templates"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
@@ -103,13 +85,7 @@ func (r *TemplateService) List(ctx context.Context, params TemplateListParams, o
 // delete with snapshot). The template must exist and belong to the authenticated
 // customer to be deleted successfully. The customer ID is extracted from the
 // authentication token.
-func (r *TemplateService) Delete(ctx context.Context, id string, body TemplateDeleteParams, opts ...option.RequestOption) (err error) {
-	if !param.IsOmitted(body.XAPIKey) {
-		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", body.XAPIKey)))
-	}
-	if !param.IsOmitted(body.XSenderID) {
-		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", body.XSenderID)))
-	}
+func (r *TemplateService) Delete(ctx context.Context, id string, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
@@ -691,8 +667,6 @@ func (r *TemplateListResponse) UnmarshalJSON(data []byte) error {
 type TemplateNewParams struct {
 	// Template definition containing header, body, footer, and buttons
 	Definition TemplateDefinitionParam `json:"definition,omitzero,required"`
-	XAPIKey    string                  `header:"x-api-key,required" json:"-"`
-	XSenderID  string                  `header:"x-sender-id,required" format:"guid" json:"-"`
 	// The template category (e.g., MARKETING, UTILITY, AUTHENTICATION). Can only be
 	// set when creating a new template. If not provided, will be auto-generated using
 	// AI.
@@ -714,19 +688,11 @@ func (r *TemplateNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type TemplateGetParams struct {
-	XAPIKey   string `header:"x-api-key,required" json:"-"`
-	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
-	paramObj
-}
-
 type TemplateListParams struct {
 	// The page number (zero-indexed). Default is 0.
 	Page int64 `query:"page,required" json:"-"`
 	// The number of items per page (1-1000). Default is 100.
-	PageSize  int64  `query:"pageSize,required" json:"-"`
-	XAPIKey   string `header:"x-api-key,required" json:"-"`
-	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
+	PageSize int64 `query:"pageSize,required" json:"-"`
 	// Optional filter by template category (e.g., MARKETING, UTILITY, AUTHENTICATION)
 	Category param.Opt[string] `query:"category,omitzero" json:"-"`
 	// Optional search term to filter templates by name or content
@@ -742,10 +708,4 @@ func (r TemplateListParams) URLQuery() (v url.Values, err error) {
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
-}
-
-type TemplateDeleteParams struct {
-	XAPIKey   string `header:"x-api-key,required" json:"-"`
-	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
-	paramObj
 }

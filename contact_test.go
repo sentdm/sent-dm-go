@@ -28,10 +28,8 @@ func TestContactList(t *testing.T) {
 		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
-		Page:      0,
-		PageSize:  0,
-		XAPIKey:   "",
-		XSenderID: "00000000-0000-0000-0000-000000000000",
+		Page:     0,
+		PageSize: 0,
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -58,8 +56,6 @@ func TestContactGetByPhone(t *testing.T) {
 	)
 	_, err := client.Contacts.GetByPhone(context.TODO(), sentdm.ContactGetByPhoneParams{
 		PhoneNumber: "phoneNumber",
-		XAPIKey:     "",
-		XSenderID:   "00000000-0000-0000-0000-000000000000",
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -85,9 +81,7 @@ func TestContactGetID(t *testing.T) {
 		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetID(context.TODO(), sentdm.ContactGetIDParams{
-		ID:        "id",
-		XAPIKey:   "",
-		XSenderID: "00000000-0000-0000-0000-000000000000",
+		ID: "id",
 	})
 	if err != nil {
 		var apierr *sentdm.Error

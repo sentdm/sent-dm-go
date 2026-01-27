@@ -4,7 +4,6 @@ package sentdm
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -13,7 +12,6 @@ import (
 	"github.com/sentdm/sent-dm-go/internal/apiquery"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
@@ -39,16 +37,10 @@ func NewNumberLookupService(opts ...option.RequestOption) (r NumberLookupService
 // Retrieves detailed information about a phone number including validation,
 // formatting, country information, and available messaging channels. The customer
 // ID is extracted from the authentication token.
-func (r *NumberLookupService) Get(ctx context.Context, params NumberLookupGetParams, opts ...option.RequestOption) (res *NumberLookupGetResponse, err error) {
-	if !param.IsOmitted(params.XAPIKey) {
-		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", params.XAPIKey)))
-	}
-	if !param.IsOmitted(params.XSenderID) {
-		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", params.XSenderID)))
-	}
+func (r *NumberLookupService) Get(ctx context.Context, query NumberLookupGetParams, opts ...option.RequestOption) (res *NumberLookupGetResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/number-lookup"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
@@ -96,8 +88,6 @@ func (r *NumberLookupGetResponse) UnmarshalJSON(data []byte) error {
 
 type NumberLookupGetParams struct {
 	PhoneNumber string `query:"phoneNumber,required" json:"-"`
-	XAPIKey     string `header:"x-api-key,required" json:"-"`
-	XSenderID   string `header:"x-sender-id,required" format:"guid" json:"-"`
 	paramObj
 }
 

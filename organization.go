@@ -13,7 +13,6 @@ import (
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
@@ -50,13 +49,7 @@ func (r *OrganizationService) List(ctx context.Context, opts ...option.RequestOp
 
 // Retrieves all sender profiles within an organization that the authenticated user
 // has access to. Returns filtered list based on user's permissions.
-func (r *OrganizationService) GetProfiles(ctx context.Context, orgID string, query OrganizationGetProfilesParams, opts ...option.RequestOption) (res *OrganizationGetProfilesResponse, err error) {
-	if !param.IsOmitted(query.XAPIKey) {
-		opts = append(opts, option.WithHeader("x-api-key", fmt.Sprintf("%s", query.XAPIKey)))
-	}
-	if !param.IsOmitted(query.XSenderID) {
-		opts = append(opts, option.WithHeader("x-sender-id", fmt.Sprintf("%s", query.XSenderID)))
-	}
+func (r *OrganizationService) GetProfiles(ctx context.Context, orgID string, opts ...option.RequestOption) (res *OrganizationGetProfilesResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if orgID == "" {
 		err = errors.New("missing required orgId parameter")
@@ -151,10 +144,4 @@ type OrganizationGetProfilesResponse struct {
 func (r OrganizationGetProfilesResponse) RawJSON() string { return r.JSON.raw }
 func (r *OrganizationGetProfilesResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-type OrganizationGetProfilesParams struct {
-	XAPIKey   string `header:"x-api-key,required" json:"-"`
-	XSenderID string `header:"x-sender-id,required" format:"guid" json:"-"`
-	paramObj
 }
