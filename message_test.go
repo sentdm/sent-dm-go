@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/sent-dm-go"
-	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
-	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go"
+	"github.com/sentdm/sent-dm-go/internal/testutil"
+	"github.com/sentdm/sent-dm-go/option"
 )
 
 func TestMessageGet(t *testing.T) {
@@ -24,8 +24,8 @@ func TestMessageGet(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Messages.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
@@ -48,8 +48,8 @@ func TestMessageSendQuickMessage(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendQuickMessage(context.TODO(), sentdm.MessageSendQuickMessageParams{
 		CustomMessage: "Hello, this is a test message!",
@@ -75,8 +75,8 @@ func TestMessageSendToContactWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendToContact(context.TODO(), sentdm.MessageSendToContactParams{
 		ContactID:  "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -106,8 +106,8 @@ func TestMessageSendToPhoneWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",

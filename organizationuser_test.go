@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/sent-dm-go"
-	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
-	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go"
+	"github.com/sentdm/sent-dm-go/internal/testutil"
+	"github.com/sentdm/sent-dm-go/option"
 )
 
 func TestOrganizationUserGet(t *testing.T) {
@@ -24,8 +24,8 @@ func TestOrganizationUserGet(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Organizations.Users.Get(
 		context.TODO(),
@@ -54,8 +54,8 @@ func TestOrganizationUserList(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Organizations.Users.List(
 		context.TODO(),
@@ -85,8 +85,8 @@ func TestOrganizationUserDelete(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Organizations.Users.Delete(
 		context.TODO(),
@@ -115,8 +115,8 @@ func TestOrganizationUserInviteWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Organizations.Users.Invite(
 		context.TODO(),
@@ -148,8 +148,8 @@ func TestOrganizationUserUpdateRoleWithOptionalParams(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Organizations.Users.UpdateRole(
 		context.TODO(),

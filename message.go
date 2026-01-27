@@ -10,11 +10,11 @@ import (
 	"slices"
 	"time"
 
-	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
-	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
-	"github.com/stainless-sdks/sent-dm-go/option"
-	"github.com/stainless-sdks/sent-dm-go/packages/param"
-	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
+	"github.com/sentdm/sent-dm-go/internal/apijson"
+	"github.com/sentdm/sent-dm-go/internal/requestconfig"
+	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
 // MessageService contains methods and other services that help with interacting
@@ -91,17 +91,17 @@ func (r *MessageService) SendToPhone(ctx context.Context, body MessageSendToPhon
 // (v2)
 type MessageGetResponse struct {
 	// The unique identifier of the message
-	ID string `json:"id" format:"guid"`
+	ID string `json:"id" format:"uuid"`
 	// The messaging channel used (e.g., SMS, WhatsApp)
 	Channel string `json:"channel"`
 	// The unique identifier of the contact who received the message
-	ContactID string `json:"contactId" format:"guid"`
+	ContactID string `json:"contactId" format:"uuid"`
 	// The final price charged for sending this message
 	CorrectedPrice float64 `json:"correctedPrice,nullable"`
 	// The date and time when the message was created
 	CreatedAt time.Time `json:"createdAt" format:"date-time"`
 	// The unique identifier of the customer who sent the message
-	CustomerID string `json:"customerId" format:"guid"`
+	CustomerID string `json:"customerId" format:"uuid"`
 	// A chronological list of status change events for this message. Each event
 	// includes a status and timestamp, following industry standards (Twilio, SendGrid,
 	// Mailgun). Events are ordered chronologically from oldest to newest.
@@ -120,7 +120,7 @@ type MessageGetResponse struct {
 	TemplateCategory string `json:"templateCategory"`
 	// The unique identifier of the template used for this message (null if no template
 	// was used)
-	TemplateID string `json:"templateId,nullable" format:"guid"`
+	TemplateID string `json:"templateId,nullable" format:"uuid"`
 	// The display name of the template
 	TemplateName string `json:"templateName"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -238,9 +238,9 @@ func (r *MessageSendQuickMessageParams) UnmarshalJSON(data []byte) error {
 
 type MessageSendToContactParams struct {
 	// The unique identifier of the contact to send the message to
-	ContactID string `json:"contactId,required" format:"guid"`
+	ContactID string `json:"contactId,required" format:"uuid"`
 	// The unique identifier of the template to use for the message
-	TemplateID string `json:"templateId,required" format:"guid"`
+	TemplateID string `json:"templateId,required" format:"uuid"`
 	// Optional key-value pairs of template variables to replace in the template body.
 	// For example, if your template contains "Hello {{name}}", you would provide {
 	// "name": "John Doe" }
@@ -261,7 +261,7 @@ type MessageSendToPhoneParams struct {
 	// +1234567890)
 	PhoneNumber string `json:"phoneNumber,required"`
 	// The unique identifier of the template to use for the message
-	TemplateID string `json:"templateId,required" format:"guid"`
+	TemplateID string `json:"templateId,required" format:"uuid"`
 	// Optional key-value pairs of template variables to replace in the template body.
 	// For example, if your template contains "Hello {{name}}", you would provide {
 	// "name": "John Doe" }

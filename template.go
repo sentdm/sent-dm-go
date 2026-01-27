@@ -12,12 +12,12 @@ import (
 	"slices"
 	"time"
 
-	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
-	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
-	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
-	"github.com/stainless-sdks/sent-dm-go/option"
-	"github.com/stainless-sdks/sent-dm-go/packages/param"
-	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
+	"github.com/sentdm/sent-dm-go/internal/apijson"
+	"github.com/sentdm/sent-dm-go/internal/apiquery"
+	"github.com/sentdm/sent-dm-go/internal/requestconfig"
+	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
 // TemplateService contains methods and other services that help with interacting
@@ -504,7 +504,7 @@ func (r *TemplateDefinitionHeaderParam) UnmarshalJSON(data []byte) error {
 // structure
 type TemplateResponse struct {
 	// The unique identifier of the template
-	ID string `json:"id" format:"guid"`
+	ID string `json:"id" format:"uuid"`
 	// The template category (e.g., MARKETING, UTILITY, AUTHENTICATION)
 	Category string `json:"category"`
 	// The date and time when the template was created

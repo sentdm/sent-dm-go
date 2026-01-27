@@ -2,7 +2,7 @@
 
 <!-- x-release-please-start-version -->
 
-<a href="https://pkg.go.dev/github.com/stainless-sdks/sent-dm-go"><img src="https://pkg.go.dev/badge/github.com/stainless-sdks/sent-dm-go.svg" alt="Go Reference"></a>
+<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go"><img src="https://pkg.go.dev/badge/github.com/sentdm/sent-dm-go.svg" alt="Go Reference"></a>
 
 <!-- x-release-please-end -->
 
@@ -13,17 +13,25 @@ It is generated with [Stainless](https://www.stainless.com/).
 
 ## Installation
 
+<!-- x-release-please-start-version -->
+
 ```go
 import (
-	"github.com/stainless-sdks/sent-dm-go" // imported as sentdm
+	"github.com/sentdm/sent-dm-go" // imported as sentdm
 )
 ```
 
+<!-- x-release-please-end -->
+
 Or to pin the version:
 
+<!-- x-release-please-start-version -->
+
 ```sh
-go get -u 'github.com/stainless-sdks/sent-dm-go@v0.0.1'
+go get -u 'github.com/sentdm/sent-dm-go@v0.1.0'
 ```
+
+<!-- x-release-please-end -->
 
 ## Requirements
 
@@ -39,15 +47,23 @@ package main
 import (
 	"context"
 
-	"github.com/stainless-sdks/sent-dm-go"
-	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go"
+	"github.com/sentdm/sent-dm-go/option"
 )
 
 func main() {
 	client := sentdm.NewClient(
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"), // defaults to os.LookupEnv("SENT_DM_CUSTOMER_AUTH_SCHEME")
+		option.WithAPIKey("My API Key"),     // defaults to os.LookupEnv("SENT_DM_API_KEY")
+		option.WithSenderID("My Sender ID"), // defaults to os.LookupEnv("SENT_DM_SENDER_ID")
 	)
-	err := client.Templates.Delete(context.TODO(), "REPLACE_ME")
+	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
+	})
 	if err != nil {
 		panic(err.Error())
 	}
@@ -256,7 +272,7 @@ client := sentdm.NewClient(
 	option.WithHeader("X-Some-Header", "custom_header_info"),
 )
 
-client.Templates.Delete(context.TODO(), ...,
+client.Messages.SendToPhone(context.TODO(), ...,
 	// Override the header
 	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
 	// Add an undocumented field to the request body, using sjson syntax
@@ -266,7 +282,7 @@ client.Templates.Delete(context.TODO(), ...,
 
 The request option `option.WithDebugLog(nil)` may be helpful while debugging.
 
-See the [full list of request options](https://pkg.go.dev/github.com/stainless-sdks/sent-dm-go/option).
+See the [full list of request options](https://pkg.go.dev/github.com/sentdm/sent-dm-go/option).
 
 ### Pagination
 
@@ -287,14 +303,21 @@ When the API returns a non-success status code, we return an error with type
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
-err := client.Templates.Delete(context.TODO(), "REPLACE_ME")
+err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
+	PhoneNumber: "+1234567890",
+	TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+	TemplateVariables: map[string]string{
+		"name":     "John Doe",
+		"order_id": "12345",
+	},
+})
 if err != nil {
 	var apierr *sentdm.Error
 	if errors.As(err, &apierr) {
 		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
 		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
 	}
-	panic(err.Error()) // GET "/v2/templates/{id}": 400 Bad Request { ... }
+	panic(err.Error()) // GET "/v2/messages/phone": 400 Bad Request { ... }
 }
 ```
 
@@ -312,9 +335,16 @@ To set a per-retry timeout, use `option.WithRequestTimeout()`.
 // This sets the timeout for the request, including all the retries.
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
-client.Templates.Delete(
+client.Messages.SendToPhone(
 	ctx,
-	"REPLACE_ME",
+	sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
+	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
 )
@@ -348,9 +378,16 @@ client := sentdm.NewClient(
 )
 
 // Override per-request:
-client.Templates.Delete(
+client.Messages.SendToPhone(
 	context.TODO(),
-	"REPLACE_ME",
+	sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
+	},
 	option.WithMaxRetries(5),
 )
 ```
@@ -363,9 +400,16 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-err := client.Templates.Delete(
+err := client.Messages.SendToPhone(
 	context.TODO(),
-	"REPLACE_ME",
+	sentdm.MessageSendToPhoneParams{
+		PhoneNumber: "+1234567890",
+		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		TemplateVariables: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
+	},
 	option.WithResponseInto(&response),
 )
 if err != nil {
@@ -472,7 +516,7 @@ This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) con
 
 We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
 
-We are keen for your feedback; please open an [issue](https://www.github.com/stainless-sdks/sent-dm-go/issues) with questions, bugs, or suggestions.
+We are keen for your feedback; please open an [issue](https://www.github.com/sentdm/sent-dm-go/issues) with questions, bugs, or suggestions.
 
 ## Contributing
 

@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/sent-dm-go"
-	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
-	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go"
+	"github.com/sentdm/sent-dm-go/internal/testutil"
+	"github.com/sentdm/sent-dm-go/option"
 )
 
 func TestContactList(t *testing.T) {
@@ -24,8 +24,8 @@ func TestContactList(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
 		Page:     0,
@@ -51,8 +51,8 @@ func TestContactGetByPhone(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetByPhone(context.TODO(), sentdm.ContactGetByPhoneParams{
 		PhoneNumber: "phoneNumber",
@@ -77,11 +77,11 @@ func TestContactGetID(t *testing.T) {
 	}
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
-		option.WithAdminAuthScheme("My Admin Auth Scheme"),
-		option.WithCustomerAuthScheme("My Customer Auth Scheme"),
+		option.WithAPIKey("My API Key"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetID(context.TODO(), sentdm.ContactGetIDParams{
-		ID: "id",
+		ID: "182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 	})
 	if err != nil {
 		var apierr *sentdm.Error

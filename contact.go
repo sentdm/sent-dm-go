@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
-	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
-	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
-	"github.com/stainless-sdks/sent-dm-go/option"
-	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
+	"github.com/sentdm/sent-dm-go/internal/apijson"
+	"github.com/sentdm/sent-dm-go/internal/apiquery"
+	"github.com/sentdm/sent-dm-go/internal/requestconfig"
+	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
 // ContactService contains methods and other services that help with interacting
@@ -67,7 +67,7 @@ func (r *ContactService) GetID(ctx context.Context, query ContactGetIDParams, op
 // Represents a contact in the customer's contact list
 type ContactListItem struct {
 	// The unique identifier of the contact
-	ID string `json:"id" format:"guid"`
+	ID string `json:"id" format:"uuid"`
 	// Comma-separated list of available messaging channels for this contact (e.g.,
 	// "sms,whatsapp")
 	AvailableChannels string `json:"availableChannels"`
@@ -168,7 +168,7 @@ func (r ContactGetByPhoneParams) URLQuery() (v url.Values, err error) {
 
 type ContactGetIDParams struct {
 	// The unique identifier (GUID) of the resource to retrieve
-	ID string `query:"id,required" format:"guid" json:"-"`
+	ID string `query:"id,required" format:"uuid" json:"-"`
 	paramObj
 }
 
