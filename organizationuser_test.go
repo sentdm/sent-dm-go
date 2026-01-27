@@ -13,7 +13,7 @@ import (
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestOrganizationUserNewOrInviteWithOptionalParams(t *testing.T) {
+func TestOrganizationUserGet(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -27,10 +27,101 @@ func TestOrganizationUserNewOrInviteWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Organizations.Users.NewOrInvite(
+	_, err := client.Organizations.Users.Get(
+		context.TODO(),
+		"650e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserGetParams{
+			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserList(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.List(
 		context.TODO(),
 		"550e8400-e29b-41d4-a716-446655440000",
-		sentdm.OrganizationUserNewOrInviteParams{
+		sentdm.OrganizationUserListParams{
+			Page:     0,
+			PageSize: 0,
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserDelete(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	err := client.Organizations.Users.Delete(
+		context.TODO(),
+		"650e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserDeleteParams{
+			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserInviteWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.Invite(
+		context.TODO(),
+		"550e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserInviteParams{
 			Email:     sentdm.String("user@example.com"),
 			InvitedBy: sentdm.String("650e8400-e29b-41d4-a716-446655440000"),
 			Name:      sentdm.String("John Doe"),
@@ -46,7 +137,7 @@ func TestOrganizationUserNewOrInviteWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestOrganizationUserDeleteByCustomer(t *testing.T) {
+func TestOrganizationUserUpdateRoleWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -60,101 +151,10 @@ func TestOrganizationUserDeleteByCustomer(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	err := client.Organizations.Users.DeleteByCustomer(
+	_, err := client.Organizations.Users.UpdateRole(
 		context.TODO(),
 		"650e8400-e29b-41d4-a716-446655440000",
-		sentdm.OrganizationUserDeleteByCustomerParams{
-			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
-		},
-	)
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestOrganizationUserListByCustomer(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
-	)
-	_, err := client.Organizations.Users.ListByCustomer(
-		context.TODO(),
-		"550e8400-e29b-41d4-a716-446655440000",
-		sentdm.OrganizationUserListByCustomerParams{
-			Page:     0,
-			PageSize: 0,
-		},
-	)
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestOrganizationUserGetByCustomer(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
-	)
-	_, err := client.Organizations.Users.GetByCustomer(
-		context.TODO(),
-		"650e8400-e29b-41d4-a716-446655440000",
-		sentdm.OrganizationUserGetByCustomerParams{
-			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
-		},
-	)
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestOrganizationUserUpdateRoleByCustomerWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
-	)
-	_, err := client.Organizations.Users.UpdateRoleByCustomer(
-		context.TODO(),
-		"650e8400-e29b-41d4-a716-446655440000",
-		sentdm.OrganizationUserUpdateRoleByCustomerParams{
+		sentdm.OrganizationUserUpdateRoleParams{
 			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
 			Role:       sentdm.String("admin"),
 		},

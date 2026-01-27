@@ -13,7 +13,7 @@ import (
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestOrganizationListAuthenticatedUserOrganizations(t *testing.T) {
+func TestOrganizationList(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -27,7 +27,31 @@ func TestOrganizationListAuthenticatedUserOrganizations(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Organizations.ListAuthenticatedUserOrganizations(context.TODO())
+	_, err := client.Organizations.List(context.TODO())
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationGetProfiles(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.GetProfiles(context.TODO(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {

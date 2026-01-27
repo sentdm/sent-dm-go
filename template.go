@@ -44,7 +44,7 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 // Supports automatic metadata generation using AI (display name, language,
 // category). Optionally submits the template for WhatsApp review. The customer ID
 // is extracted from the authentication token.
-func (r *TemplateService) New(ctx context.Context, body TemplateNewParams, opts ...option.RequestOption) (res *TemplateResponseV2, err error) {
+func (r *TemplateService) New(ctx context.Context, body TemplateNewParams, opts ...option.RequestOption) (res *TemplateResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/templates"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -55,7 +55,7 @@ func (r *TemplateService) New(ctx context.Context, body TemplateNewParams, opts 
 // authenticated customer with comprehensive template definitions including
 // headers, body, footer, and interactive buttons. The customer ID is extracted
 // from the authentication token.
-func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *TemplateResponseV2, err error) {
+func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *TemplateResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -502,7 +502,7 @@ func (r *TemplateDefinitionHeaderParam) UnmarshalJSON(data []byte) error {
 
 // Represents a message template with comprehensive metadata including definition
 // structure
-type TemplateResponseV2 struct {
+type TemplateResponse struct {
 	// The unique identifier of the template
 	ID string `json:"id" format:"guid"`
 	// The template category (e.g., MARKETING, UTILITY, AUTHENTICATION)
@@ -544,8 +544,8 @@ type TemplateResponseV2 struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r TemplateResponseV2) RawJSON() string { return r.JSON.raw }
-func (r *TemplateResponseV2) UnmarshalJSON(data []byte) error {
+func (r TemplateResponse) RawJSON() string { return r.JSON.raw }
+func (r *TemplateResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -641,11 +641,11 @@ func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
 }
 
 type TemplateListResponse struct {
-	Items      []TemplateResponseV2 `json:"items"`
-	Page       int64                `json:"page"`
-	PageSize   int64                `json:"pageSize"`
-	TotalCount int64                `json:"totalCount"`
-	TotalPages int64                `json:"totalPages"`
+	Items      []TemplateResponse `json:"items"`
+	Page       int64              `json:"page"`
+	PageSize   int64              `json:"pageSize"`
+	TotalCount int64              `json:"totalCount"`
+	TotalPages int64              `json:"totalPages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Items       respjson.Field

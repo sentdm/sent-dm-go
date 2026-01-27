@@ -17,14 +17,11 @@ import (
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
 	Options       []option.RequestOption
-	Profiles      ProfileService
-	Organizations OrganizationService
-	Healthcheck   HealthcheckService
-	Health        HealthService
 	Templates     TemplateService
 	Contacts      ContactService
 	Messages      MessageService
 	NumberLookup  NumberLookupService
+	Organizations OrganizationService
 }
 
 // DefaultClientOptions read from the environment (SENT_DM_API_KEY,
@@ -53,14 +50,11 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 
 	r = Client{Options: opts}
 
-	r.Profiles = NewProfileService(opts...)
-	r.Organizations = NewOrganizationService(opts...)
-	r.Healthcheck = NewHealthcheckService(opts...)
-	r.Health = NewHealthService(opts...)
 	r.Templates = NewTemplateService(opts...)
 	r.Contacts = NewContactService(opts...)
 	r.Messages = NewMessageService(opts...)
 	r.NumberLookup = NewNumberLookupService(opts...)
+	r.Organizations = NewOrganizationService(opts...)
 
 	return
 }
