@@ -61,7 +61,7 @@ func (r *OrganizationService) GetProfiles(ctx context.Context, orgID string, opt
 }
 
 type ProfileSummary struct {
-	ID          string    `json:"id" format:"guid"`
+	ID          string    `json:"id" format:"uuid"`
 	CreatedAt   time.Time `json:"createdAt" format:"date-time"`
 	Description string    `json:"description,nullable"`
 	Icon        string    `json:"icon,nullable"`
@@ -103,7 +103,7 @@ func (r *OrganizationListResponse) UnmarshalJSON(data []byte) error {
 }
 
 type OrganizationListResponseOrganization struct {
-	ID          string           `json:"id" format:"guid"`
+	ID          string           `json:"id" format:"uuid"`
 	CreatedAt   time.Time        `json:"createdAt" format:"date-time"`
 	Description string           `json:"description,nullable"`
 	Icon        string           `json:"icon,nullable"`
@@ -129,7 +129,7 @@ func (r *OrganizationListResponseOrganization) UnmarshalJSON(data []byte) error 
 }
 
 type OrganizationGetProfilesResponse struct {
-	OrganizationID string           `json:"organizationId" format:"guid"`
+	OrganizationID string           `json:"organizationId" format:"uuid"`
 	Profiles       []ProfileSummary `json:"profiles"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {

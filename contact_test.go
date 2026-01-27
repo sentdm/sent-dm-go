@@ -81,7 +81,7 @@ func TestContactGetID(t *testing.T) {
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Contacts.GetID(context.TODO(), sentdm.ContactGetIDParams{
-		ID: "id",
+		ID: "182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 	})
 	if err != nil {
 		var apierr *sentdm.Error

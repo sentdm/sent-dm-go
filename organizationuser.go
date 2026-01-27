@@ -119,9 +119,9 @@ func (r *OrganizationUserService) UpdateRole(ctx context.Context, userID string,
 
 type CustomerUser struct {
 	// Unique identifier
-	ID                       string    `json:"id" format:"guid"`
+	ID                       string    `json:"id" format:"uuid"`
 	CreatedAt                time.Time `json:"createdAt" format:"date-time"`
-	CustomerID               string    `json:"customerId" format:"guid"`
+	CustomerID               string    `json:"customerId" format:"uuid"`
 	Email                    string    `json:"email"`
 	InvitationSentAt         time.Time `json:"invitationSentAt,nullable" format:"date-time"`
 	InvitationToken          string    `json:"invitationToken,nullable"`
@@ -179,7 +179,7 @@ func (r *OrganizationUserListResponse) UnmarshalJSON(data []byte) error {
 }
 
 type OrganizationUserGetParams struct {
-	CustomerID string `path:"customerId,required" format:"guid" json:"-"`
+	CustomerID string `path:"customerId,required" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -199,12 +199,12 @@ func (r OrganizationUserListParams) URLQuery() (v url.Values, err error) {
 }
 
 type OrganizationUserDeleteParams struct {
-	CustomerID string `path:"customerId,required" format:"guid" json:"-"`
+	CustomerID string `path:"customerId,required" format:"uuid" json:"-"`
 	paramObj
 }
 
 type OrganizationUserInviteParams struct {
-	InvitedBy param.Opt[string] `json:"invitedBy,omitzero" format:"guid"`
+	InvitedBy param.Opt[string] `json:"invitedBy,omitzero" format:"uuid"`
 	Email     param.Opt[string] `json:"email,omitzero"`
 	Name      param.Opt[string] `json:"name,omitzero"`
 	Role      param.Opt[string] `json:"role,omitzero"`
@@ -220,7 +220,7 @@ func (r *OrganizationUserInviteParams) UnmarshalJSON(data []byte) error {
 }
 
 type OrganizationUserUpdateRoleParams struct {
-	CustomerID string            `path:"customerId,required" format:"guid" json:"-"`
+	CustomerID string            `path:"customerId,required" format:"uuid" json:"-"`
 	Role       param.Opt[string] `json:"role,omitzero"`
 	paramObj
 }
