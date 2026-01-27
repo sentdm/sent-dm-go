@@ -42,10 +42,6 @@ func TestUserAgentHeader(t *testing.T) {
 	client.Messages.SendToPhone(context.Background(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if userAgent != fmt.Sprintf("SentDm/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -74,10 +70,6 @@ func TestRetryAfter(t *testing.T) {
 	err := client.Messages.SendToPhone(context.Background(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -117,10 +109,6 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	err := client.Messages.SendToPhone(context.Background(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -155,10 +143,6 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	err := client.Messages.SendToPhone(context.Background(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -192,10 +176,6 @@ func TestRetryAfterMs(t *testing.T) {
 	err := client.Messages.SendToPhone(context.Background(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -223,10 +203,6 @@ func TestContextCancel(t *testing.T) {
 	err := client.Messages.SendToPhone(cancelCtx, sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -251,10 +227,6 @@ func TestContextCancelDelay(t *testing.T) {
 	err := client.Messages.SendToPhone(cancelCtx, sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -285,10 +257,6 @@ func TestContextDeadline(t *testing.T) {
 		err := client.Messages.SendToPhone(deadlineCtx, sentdm.MessageSendToPhoneParams{
 			PhoneNumber: "+1234567890",
 			TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-			TemplateVariables: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")

@@ -6,7 +6,7 @@
 
 <!-- x-release-please-end -->
 
-The Sent Dm Go library provides convenient access to the [Sent Dm REST API](https://docs.sent.dm)
+The Sent Dm Go library provides convenient access to the Sent Dm REST API
 from applications written in Go.
 
 It is generated with [Stainless](https://www.stainless.com/).
@@ -28,7 +28,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.2.0'
+go get -u 'github.com/sentdm/sent-dm-go@v0.1.0'
 ```
 
 <!-- x-release-please-end -->
@@ -59,10 +59,6 @@ func main() {
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err != nil {
 		panic(err.Error())
@@ -306,10 +302,6 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 	PhoneNumber: "+1234567890",
 	TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-	TemplateVariables: map[string]string{
-		"name":     "John Doe",
-		"order_id": "12345",
-	},
 })
 if err != nil {
 	var apierr *sentdm.Error
@@ -340,10 +332,6 @@ client.Messages.SendToPhone(
 	sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -383,10 +371,6 @@ client.Messages.SendToPhone(
 	sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	},
 	option.WithMaxRetries(5),
 )
@@ -405,10 +389,6 @@ err := client.Messages.SendToPhone(
 	sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	},
 	option.WithResponseInto(&response),
 )

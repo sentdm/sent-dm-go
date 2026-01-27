@@ -29,10 +29,6 @@ func TestUsage(t *testing.T) {
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
 		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
 	})
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())
