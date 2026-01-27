@@ -53,8 +53,8 @@ import (
 
 func main() {
 	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),                      // defaults to os.LookupEnv("SENT_DM_API_KEY")
-		option.WithCustomerSenderID("My Customer Sender ID"), // defaults to os.LookupEnv("SENT_DM_CUSTOMER_SENDER_ID")
+		option.WithAPIKey("My API Key"),     // defaults to os.LookupEnv("SENT_DM_API_KEY")
+		option.WithSenderID("My Sender ID"), // defaults to os.LookupEnv("SENT_DM_SENDER_ID")
 	)
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",

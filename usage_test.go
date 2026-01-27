@@ -23,7 +23,7 @@ func TestUsage(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	t.Skip("Prism tests are disabled")
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{

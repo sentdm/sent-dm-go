@@ -25,7 +25,7 @@ func TestOrganizationList(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Organizations.List(context.TODO())
 	if err != nil {
@@ -49,7 +49,7 @@ func TestOrganizationGetProfiles(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Organizations.GetProfiles(context.TODO(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {

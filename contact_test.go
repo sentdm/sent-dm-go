@@ -25,7 +25,7 @@ func TestContactList(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
 		Page:     0,
@@ -52,7 +52,7 @@ func TestContactGetByPhone(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetByPhone(context.TODO(), sentdm.ContactGetByPhoneParams{
 		PhoneNumber: "phoneNumber",
@@ -78,7 +78,7 @@ func TestContactGetID(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Contacts.GetID(context.TODO(), sentdm.ContactGetIDParams{
 		ID: "182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",

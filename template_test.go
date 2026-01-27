@@ -26,7 +26,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Templates.New(context.TODO(), sentdm.TemplateNewParams{
 		Definition: sentdm.TemplateDefinitionParam{
@@ -166,7 +166,7 @@ func TestTemplateGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Templates.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
@@ -190,7 +190,7 @@ func TestTemplateListWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Templates.List(context.TODO(), sentdm.TemplateListParams{
 		Page:     0,
@@ -220,7 +220,7 @@ func TestTemplateDelete(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Templates.Delete(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {

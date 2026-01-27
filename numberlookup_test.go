@@ -25,7 +25,7 @@ func TestNumberLookupGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.NumberLookup.Get(context.TODO(), sentdm.NumberLookupGetParams{
 		PhoneNumber: "phoneNumber",

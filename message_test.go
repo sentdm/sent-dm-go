@@ -25,7 +25,7 @@ func TestMessageGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	_, err := client.Messages.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
@@ -49,7 +49,7 @@ func TestMessageSendQuickMessage(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendQuickMessage(context.TODO(), sentdm.MessageSendQuickMessageParams{
 		CustomMessage: "Hello, this is a test message!",
@@ -76,7 +76,7 @@ func TestMessageSendToContactWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendToContact(context.TODO(), sentdm.MessageSendToContactParams{
 		ContactID:  "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -107,7 +107,7 @@ func TestMessageSendToPhoneWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+		option.WithSenderID("My Sender ID"),
 	)
 	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
 		PhoneNumber: "+1234567890",
