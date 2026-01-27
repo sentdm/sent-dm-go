@@ -6,7 +6,7 @@
 
 <!-- x-release-please-end -->
 
-The Sent Dm Go library provides convenient access to the Sent Dm REST API
+The Sent Dm Go library provides convenient access to the [Sent Dm REST API](https://docs.sent.dm)
 from applications written in Go.
 
 It is generated with [Stainless](https://www.stainless.com/).
@@ -28,7 +28,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.1.0'
+go get -u 'github.com/sentdm/sent-dm-go@v0.2.0'
 ```
 
 <!-- x-release-please-end -->
