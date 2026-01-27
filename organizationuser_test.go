@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sentdm/sent-dm-go"
-	"github.com/sentdm/sent-dm-go/internal/testutil"
-	"github.com/sentdm/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go"
+	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
+	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
 func TestOrganizationUserGet(t *testing.T) {
@@ -25,13 +25,13 @@ func TestOrganizationUserGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Organizations.Users.Get(
 		context.TODO(),
-		"650e8400-e29b-41d4-a716-446655440000",
+		"userId",
 		sentdm.OrganizationUserGetParams{
-			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
+			OrgID: "orgId",
 		},
 	)
 	if err != nil {
@@ -55,11 +55,11 @@ func TestOrganizationUserList(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Organizations.Users.List(
 		context.TODO(),
-		"550e8400-e29b-41d4-a716-446655440000",
+		"orgId",
 		sentdm.OrganizationUserListParams{
 			Page:     0,
 			PageSize: 0,
@@ -86,12 +86,75 @@ func TestOrganizationUserDelete(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	err := client.Organizations.Users.Delete(
 		context.TODO(),
-		"650e8400-e29b-41d4-a716-446655440000",
+		"userId",
 		sentdm.OrganizationUserDeleteParams{
+			OrgID: "orgId",
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserNewOrInviteWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.NewOrInvite(
+		context.TODO(),
+		"550e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserNewOrInviteParams{
+			Email:     sentdm.String("user@example.com"),
+			InvitedBy: sentdm.String("650e8400-e29b-41d4-a716-446655440000"),
+			Name:      sentdm.String("John Doe"),
+			Role:      sentdm.String("admin"),
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserDeleteByCustomer(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	err := client.Organizations.Users.DeleteByCustomer(
+		context.TODO(),
+		"650e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserDeleteByCustomerParams{
 			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
 		},
 	)
@@ -116,16 +179,108 @@ func TestOrganizationUserInviteWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Organizations.Users.Invite(
 		context.TODO(),
-		"550e8400-e29b-41d4-a716-446655440000",
+		"orgId",
 		sentdm.OrganizationUserInviteParams{
-			Email:     sentdm.String("user@example.com"),
-			InvitedBy: sentdm.String("650e8400-e29b-41d4-a716-446655440000"),
-			Name:      sentdm.String("John Doe"),
-			Role:      sentdm.String("admin"),
+			InviteUserRequest: sentdm.InviteUserRequestParam{
+				Email: sentdm.String("user@example.com"),
+				Name:  sentdm.String("John Doe"),
+				Role:  sentdm.String("admin"),
+			},
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserListByCustomer(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.ListByCustomer(
+		context.TODO(),
+		"550e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserListByCustomerParams{
+			Page:     0,
+			PageSize: 0,
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserGetByCustomer(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.GetByCustomer(
+		context.TODO(),
+		"650e8400-e29b-41d4-a716-446655440000",
+		sentdm.OrganizationUserGetByCustomerParams{
+			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserGetInvitationDetails(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.GetInvitationDetails(
+		context.TODO(),
+		"invitation-token-example",
+		sentdm.OrganizationUserGetInvitationDetailsParams{
+			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
 		},
 	)
 	if err != nil {
@@ -149,12 +304,45 @@ func TestOrganizationUserUpdateRoleWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Organizations.Users.UpdateRole(
+	err := client.Organizations.Users.UpdateRole(
+		context.TODO(),
+		"userId",
+		sentdm.OrganizationUserUpdateRoleParams{
+			OrgID: "orgId",
+			UpdateUserRoleRequest: sentdm.UpdateUserRoleRequestParam{
+				Role: sentdm.String("developer"),
+			},
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestOrganizationUserUpdateRoleByCustomerWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Organizations.Users.UpdateRoleByCustomer(
 		context.TODO(),
 		"650e8400-e29b-41d4-a716-446655440000",
-		sentdm.OrganizationUserUpdateRoleParams{
+		sentdm.OrganizationUserUpdateRoleByCustomerParams{
 			CustomerID: "550e8400-e29b-41d4-a716-446655440000",
 			Role:       sentdm.String("admin"),
 		},

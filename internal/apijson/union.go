@@ -2,7 +2,7 @@ package apijson
 
 import (
 	"errors"
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 	"reflect"
 
 	"github.com/tidwall/gjson"

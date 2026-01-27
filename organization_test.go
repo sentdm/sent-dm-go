@@ -8,12 +8,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sentdm/sent-dm-go"
-	"github.com/sentdm/sent-dm-go/internal/testutil"
-	"github.com/sentdm/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go"
+	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
+	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestOrganizationList(t *testing.T) {
+func TestOrganizationListAuthenticatedUserOrganizations(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -25,33 +25,9 @@ func TestOrganizationList(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Organizations.List(context.TODO())
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestOrganizationGetProfiles(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
-	)
-	_, err := client.Organizations.GetProfiles(context.TODO(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	_, err := client.Organizations.ListAuthenticatedUserOrganizations(context.TODO())
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sentdm/sent-dm-go/internal/requestconfig"
+	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
 	"github.com/tidwall/sjson"
 )
 
@@ -19,7 +19,7 @@ import (
 // which can be supplied to clients, services, and methods. You can read more about this functional
 // options pattern in our [README].
 //
-// [README]: https://pkg.go.dev/github.com/sentdm/sent-dm-go#readme-requestoptions
+// [README]: https://pkg.go.dev/github.com/stainless-sdks/sent-dm-go#readme-requestoptions
 type RequestOption = requestconfig.RequestOption
 
 // WithBaseURL returns a RequestOption that sets the BaseURL for the client.
@@ -263,21 +263,21 @@ func WithRequestTimeout(dur time.Duration) RequestOption {
 // environment to be the "production" environment. An environment specifies which base URL
 // to use by default.
 func WithEnvironmentProduction() RequestOption {
-	return requestconfig.WithDefaultBaseURL("https://api.sent.dm/")
+	return requestconfig.WithDefaultBaseURL("https://api-dev.sent.dm/")
 }
 
 // WithAPIKey returns a RequestOption that sets the client setting "api_key".
 func WithAPIKey(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.APIKey = value
-		return nil
+		return r.Apply(WithHeader("x-api-key", r.APIKey))
 	})
 }
 
-// WithSenderID returns a RequestOption that sets the client setting "sender_id".
-func WithSenderID(value string) RequestOption {
+// WithCustomerSenderID returns a RequestOption that sets the client setting "customer_sender_id".
+func WithCustomerSenderID(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.SenderID = value
-		return nil
+		r.CustomerSenderID = value
+		return r.Apply(WithHeader("x-sender-id", r.CustomerSenderID))
 	})
 }

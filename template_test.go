@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sentdm/sent-dm-go"
-	"github.com/sentdm/sent-dm-go/internal/testutil"
-	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go"
+	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
+	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 )
 
 func TestTemplateNewWithOptionalParams(t *testing.T) {
@@ -26,7 +26,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Templates.New(context.TODO(), sentdm.TemplateNewParams{
 		Definition: sentdm.TemplateDefinitionParam{
@@ -166,7 +166,7 @@ func TestTemplateGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Templates.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
@@ -190,7 +190,7 @@ func TestTemplateListWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.Templates.List(context.TODO(), sentdm.TemplateListParams{
 		Page:     0,
@@ -220,7 +220,7 @@ func TestTemplateDelete(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	err := client.Templates.Delete(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {

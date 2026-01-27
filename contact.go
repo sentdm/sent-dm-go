@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/sentdm/sent-dm-go/internal/apijson"
-	"github.com/sentdm/sent-dm-go/internal/apiquery"
-	"github.com/sentdm/sent-dm-go/internal/requestconfig"
-	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/respjson"
+	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
+	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
+	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
+	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
 )
 
 // ContactService contains methods and other services that help with interacting
@@ -47,7 +47,7 @@ func (r *ContactService) List(ctx context.Context, query ContactListParams, opts
 // Retrieves a contact by their phone number for the authenticated customer. Phone
 // number should be in international format (e.g., +1234567890). The customer ID is
 // extracted from the authentication token.
-func (r *ContactService) GetByPhone(ctx context.Context, query ContactGetByPhoneParams, opts ...option.RequestOption) (res *ContactListItem, err error) {
+func (r *ContactService) GetByPhone(ctx context.Context, query ContactGetByPhoneParams, opts ...option.RequestOption) (res *ContactListItemV2, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/contacts/phone"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
@@ -57,7 +57,7 @@ func (r *ContactService) GetByPhone(ctx context.Context, query ContactGetByPhone
 // Retrieves a specific contact by their unique identifier for the authenticated
 // customer. The customer ID is extracted from the authentication token. Returns
 // detailed contact information including phone number and creation timestamp.
-func (r *ContactService) GetID(ctx context.Context, query ContactGetIDParams, opts ...option.RequestOption) (res *ContactListItem, err error) {
+func (r *ContactService) GetID(ctx context.Context, query ContactGetIDParams, opts ...option.RequestOption) (res *ContactListItemV2, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "v2/contacts/id"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
@@ -65,7 +65,7 @@ func (r *ContactService) GetID(ctx context.Context, query ContactGetIDParams, op
 }
 
 // Represents a contact in the customer's contact list
-type ContactListItem struct {
+type ContactListItemV2 struct {
 	// The unique identifier of the contact
 	ID string `json:"id" format:"guid"`
 	// Comma-separated list of available messaging channels for this contact (e.g.,
@@ -106,17 +106,17 @@ type ContactListItem struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactListItem) RawJSON() string { return r.JSON.raw }
-func (r *ContactListItem) UnmarshalJSON(data []byte) error {
+func (r ContactListItemV2) RawJSON() string { return r.JSON.raw }
+func (r *ContactListItemV2) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 type ContactListResponse struct {
-	Items      []ContactListItem `json:"items"`
-	Page       int64             `json:"page"`
-	PageSize   int64             `json:"pageSize"`
-	TotalCount int64             `json:"totalCount"`
-	TotalPages int64             `json:"totalPages"`
+	Items      []ContactListItemV2 `json:"items"`
+	Page       int64               `json:"page"`
+	PageSize   int64               `json:"pageSize"`
+	TotalCount int64               `json:"totalCount"`
+	TotalPages int64               `json:"totalPages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Items       respjson.Field

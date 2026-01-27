@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sentdm/sent-dm-go"
-	"github.com/sentdm/sent-dm-go/internal/testutil"
-	"github.com/sentdm/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go"
+	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
+	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
 func TestNumberLookupGet(t *testing.T) {
@@ -25,7 +25,7 @@ func TestNumberLookupGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
 	_, err := client.NumberLookup.Get(context.TODO(), sentdm.NumberLookupGetParams{
 		PhoneNumber: "phoneNumber",

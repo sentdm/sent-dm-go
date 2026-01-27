@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/sentdm/sent-dm-go/internal/apijson"
-	"github.com/sentdm/sent-dm-go/packages/respjson"
+	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
+	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
 )
 
 // Error represents an error that originates from the API, i.e. when a request is

@@ -13,7 +13,7 @@ import (
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestContactList(t *testing.T) {
+func TestProfileContactGet(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -27,10 +27,13 @@ func TestContactList(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
-		Page:     0,
-		PageSize: 0,
-	})
+	_, err := client.Profiles.Contacts.Get(
+		context.TODO(),
+		"7ba7b810-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.ProfileContactGetParams{
+			ProfileID: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -40,7 +43,7 @@ func TestContactList(t *testing.T) {
 	}
 }
 
-func TestContactGetByPhone(t *testing.T) {
+func TestProfileContactListWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -54,35 +57,16 @@ func TestContactGetByPhone(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Contacts.GetByPhone(context.TODO(), sentdm.ContactGetByPhoneParams{
-		PhoneNumber: "phoneNumber",
-	})
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestContactGetID(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
+	_, err := client.Profiles.Contacts.List(
+		context.TODO(),
+		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.ProfileContactListParams{
+			Page:       0,
+			PageSize:   0,
+			Channel:    sentdm.String("channel"),
+			SearchTerm: sentdm.String("searchTerm"),
+		},
 	)
-	_, err := client.Contacts.GetID(context.TODO(), sentdm.ContactGetIDParams{
-		ID: "id",
-	})
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {

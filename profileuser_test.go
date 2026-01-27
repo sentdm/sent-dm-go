@@ -13,7 +13,7 @@ import (
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestMessageGet(t *testing.T) {
+func TestProfileUserGet(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -27,65 +27,13 @@ func TestMessageGet(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	_, err := client.Messages.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestMessageSendQuickMessage(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
-	)
-	err := client.Messages.SendQuickMessage(context.TODO(), sentdm.MessageSendQuickMessageParams{
-		CustomMessage: "Hello, this is a test message!",
-		PhoneNumber:   "+1234567890",
-	})
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestMessageSendToContactWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithCustomerSenderID("My Customer Sender ID"),
-	)
-	err := client.Messages.SendToContact(context.TODO(), sentdm.MessageSendToContactParams{
-		ContactID:  "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-		TemplateID: "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	_, err := client.Profiles.Users.Get(
+		context.TODO(),
+		"userId",
+		sentdm.ProfileUserGetParams{
+			ProfileID: "profileId",
 		},
-	})
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -95,7 +43,7 @@ func TestMessageSendToContactWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestMessageSendToPhoneWithOptionalParams(t *testing.T) {
+func TestProfileUserList(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -109,14 +57,111 @@ func TestMessageSendToPhoneWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithCustomerSenderID("My Customer Sender ID"),
 	)
-	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
-		PhoneNumber: "+1234567890",
-		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	_, err := client.Profiles.Users.List(
+		context.TODO(),
+		"profileId",
+		sentdm.ProfileUserListParams{
+			Page:     0,
+			PageSize: 0,
 		},
-	})
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestProfileUserDelete(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	err := client.Profiles.Users.Delete(
+		context.TODO(),
+		"userId",
+		sentdm.ProfileUserDeleteParams{
+			ProfileID: "profileId",
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestProfileUserInviteWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	_, err := client.Profiles.Users.Invite(
+		context.TODO(),
+		"profileId",
+		sentdm.ProfileUserInviteParams{
+			InviteUserRequest: sentdm.InviteUserRequestParam{
+				Email: sentdm.String("user@example.com"),
+				Name:  sentdm.String("John Doe"),
+				Role:  sentdm.String("admin"),
+			},
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestProfileUserUpdateRoleWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithCustomerSenderID("My Customer Sender ID"),
+	)
+	err := client.Profiles.Users.UpdateRole(
+		context.TODO(),
+		"userId",
+		sentdm.ProfileUserUpdateRoleParams{
+			ProfileID: "profileId",
+			UpdateUserRoleRequest: sentdm.UpdateUserRoleRequestParam{
+				Role: sentdm.String("developer"),
+			},
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {

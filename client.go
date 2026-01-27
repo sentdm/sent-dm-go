@@ -8,8 +8,8 @@ import (
 	"os"
 	"slices"
 
-	"github.com/sentdm/sent-dm-go/internal/requestconfig"
-	"github.com/sentdm/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
+	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
 // Client creates a struct with services and top level methods that help with
@@ -17,16 +17,19 @@ import (
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
 	Options       []option.RequestOption
+	Profiles      ProfileService
+	Organizations OrganizationService
+	Healthcheck   HealthcheckService
+	Health        HealthService
 	Templates     TemplateService
 	Contacts      ContactService
 	Messages      MessageService
 	NumberLookup  NumberLookupService
-	Organizations OrganizationService
 }
 
 // DefaultClientOptions read from the environment (SENT_DM_API_KEY,
-// SENT_DM_SENDER_ID, SENT_DM_BASE_URL). This should be used to initialize new
-// clients.
+// SENT_DM_CUSTOMER_SENDER_ID, SENT_DM_BASE_URL). This should be used to initialize
+// new clients.
 func DefaultClientOptions() []option.RequestOption {
 	defaults := []option.RequestOption{option.WithEnvironmentProduction()}
 	if o, ok := os.LookupEnv("SENT_DM_BASE_URL"); ok {
@@ -35,26 +38,29 @@ func DefaultClientOptions() []option.RequestOption {
 	if o, ok := os.LookupEnv("SENT_DM_API_KEY"); ok {
 		defaults = append(defaults, option.WithAPIKey(o))
 	}
-	if o, ok := os.LookupEnv("SENT_DM_SENDER_ID"); ok {
-		defaults = append(defaults, option.WithSenderID(o))
+	if o, ok := os.LookupEnv("SENT_DM_CUSTOMER_SENDER_ID"); ok {
+		defaults = append(defaults, option.WithCustomerSenderID(o))
 	}
 	return defaults
 }
 
 // NewClient generates a new client with the default option read from the
-// environment (SENT_DM_API_KEY, SENT_DM_SENDER_ID, SENT_DM_BASE_URL). The option
-// passed in as arguments are applied after these default arguments, and all option
-// will be passed down to the services and requests that this client makes.
+// environment (SENT_DM_API_KEY, SENT_DM_CUSTOMER_SENDER_ID, SENT_DM_BASE_URL). The
+// option passed in as arguments are applied after these default arguments, and all
+// option will be passed down to the services and requests that this client makes.
 func NewClient(opts ...option.RequestOption) (r Client) {
 	opts = append(DefaultClientOptions(), opts...)
 
 	r = Client{Options: opts}
 
+	r.Profiles = NewProfileService(opts...)
+	r.Organizations = NewOrganizationService(opts...)
+	r.Healthcheck = NewHealthcheckService(opts...)
+	r.Health = NewHealthService(opts...)
 	r.Templates = NewTemplateService(opts...)
 	r.Contacts = NewContactService(opts...)
 	r.Messages = NewMessageService(opts...)
 	r.NumberLookup = NewNumberLookupService(opts...)
-	r.Organizations = NewOrganizationService(opts...)
 
 	return
 }
