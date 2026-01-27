@@ -3,11 +3,6 @@
 package sentdm
 
 import (
-	"context"
-	"net/http"
-	"slices"
-
-	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
@@ -27,14 +22,5 @@ type HealthcheckService struct {
 func NewHealthcheckService(opts ...option.RequestOption) (r HealthcheckService) {
 	r = HealthcheckService{}
 	r.Options = opts
-	return
-}
-
-// Checks the health of the Sent Public API Endpoints.
-func (r *HealthcheckService) Check(ctx context.Context, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	path := "healthcheck"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, nil, opts...)
 	return
 }

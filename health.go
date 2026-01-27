@@ -3,11 +3,6 @@
 package sentdm
 
 import (
-	"context"
-	"net/http"
-	"slices"
-
-	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
@@ -27,24 +22,5 @@ type HealthService struct {
 func NewHealthService(opts ...option.RequestOption) (r HealthService) {
 	r = HealthService{}
 	r.Options = opts
-	return
-}
-
-// Kubernetes liveness probe. Returns 200 if the application is running.
-func (r *HealthService) CheckLive(ctx context.Context, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	path := "health/live"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, nil, opts...)
-	return
-}
-
-// Kubernetes readiness probe. Returns 200 when application is ready to serve
-// traffic.
-func (r *HealthService) CheckReady(ctx context.Context, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	path := "health/ready"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, nil, opts...)
 	return
 }

@@ -4,7 +4,6 @@ package sentdm
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
 	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
-	shimjson "github.com/stainless-sdks/sent-dm-go/internal/encoding/json"
 	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
 	"github.com/stainless-sdks/sent-dm-go/option"
 	"github.com/stainless-sdks/sent-dm-go/packages/param"
@@ -36,52 +34,6 @@ type OrganizationUserService struct {
 func NewOrganizationUserService(opts ...option.RequestOption) (r OrganizationUserService) {
 	r = OrganizationUserService{}
 	r.Options = opts
-	return
-}
-
-// Retrieves a specific user by ID. Requires organization-scoped API key.
-func (r *OrganizationUserService) Get(ctx context.Context, userID string, query OrganizationUserGetParams, opts ...option.RequestOption) (res *CustomerUserDto, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if query.OrgID == "" {
-		err = errors.New("missing required orgId parameter")
-		return
-	}
-	if userID == "" {
-		err = errors.New("missing required userId parameter")
-		return
-	}
-	path := fmt.Sprintf("v3/organizations/%s/users/%s", query.OrgID, userID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
-}
-
-// Retrieves all users associated with an organization. Requires
-// organization-scoped API key. Supports pagination.
-func (r *OrganizationUserService) List(ctx context.Context, orgID string, query OrganizationUserListParams, opts ...option.RequestOption) (res *UserListResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if orgID == "" {
-		err = errors.New("missing required orgId parameter")
-		return
-	}
-	path := fmt.Sprintf("v3/organizations/%s/users", orgID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Removes a user from an organization. Requires organization-scoped API key.
-func (r *OrganizationUserService) Delete(ctx context.Context, userID string, body OrganizationUserDeleteParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	if body.OrgID == "" {
-		err = errors.New("missing required orgId parameter")
-		return
-	}
-	if userID == "" {
-		err = errors.New("missing required userId parameter")
-		return
-	}
-	path := fmt.Sprintf("v3/organizations/%s/users/%s", body.OrgID, userID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return
 }
 
@@ -117,20 +69,6 @@ func (r *OrganizationUserService) DeleteByCustomer(ctx context.Context, userID s
 	return
 }
 
-// Sends an invitation to a user to join an organization with a specified role.
-// Requires organization-scoped API key. If the user already exists with 'invited'
-// status, resends the invitation with a new token.
-func (r *OrganizationUserService) Invite(ctx context.Context, orgID string, body OrganizationUserInviteParams, opts ...option.RequestOption) (res *InviteUserResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if orgID == "" {
-		err = errors.New("missing required orgId parameter")
-		return
-	}
-	path := fmt.Sprintf("v3/organizations/%s/users/invite", orgID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
-}
-
 // Retrieves all users associated with an organization or sender profile. Requires
 // appropriate permissions. Supports pagination.
 func (r *OrganizationUserService) ListByCustomer(ctx context.Context, customerID string, query OrganizationUserListByCustomerParams, opts ...option.RequestOption) (res *OrganizationUserListByCustomerResponse, err error) {
@@ -158,42 +96,6 @@ func (r *OrganizationUserService) GetByCustomer(ctx context.Context, userID stri
 	}
 	path := fmt.Sprintf("v2/organizations/%s/users/%s", query.CustomerID, userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
-}
-
-// Retrieves detailed information about a user invitation using the invitation
-// token. Verifies that the invitation belongs to the specified organization. This
-// endpoint is public and does not require authentication.
-func (r *OrganizationUserService) GetInvitationDetails(ctx context.Context, token string, query OrganizationUserGetInvitationDetailsParams, opts ...option.RequestOption) (res *InvitationDetails, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if query.CustomerID == "" {
-		err = errors.New("missing required customerId parameter")
-		return
-	}
-	if token == "" {
-		err = errors.New("missing required token parameter")
-		return
-	}
-	path := fmt.Sprintf("v3/organizations/%s/users/invitations/%s", query.CustomerID, token)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
-}
-
-// Updates a user's role within an organization. Requires organization-scoped API
-// key.
-func (r *OrganizationUserService) UpdateRole(ctx context.Context, userID string, params OrganizationUserUpdateRoleParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	if params.OrgID == "" {
-		err = errors.New("missing required orgId parameter")
-		return
-	}
-	if userID == "" {
-		err = errors.New("missing required userId parameter")
-		return
-	}
-	path := fmt.Sprintf("v3/organizations/%s/users/%s/role", params.OrgID, userID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, nil, opts...)
 	return
 }
 
@@ -236,31 +138,6 @@ func (r *OrganizationUserListByCustomerResponse) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type OrganizationUserGetParams struct {
-	OrgID string `path:"orgId,required" json:"-"`
-	paramObj
-}
-
-type OrganizationUserListParams struct {
-	Page     int64 `query:"page,required" json:"-"`
-	PageSize int64 `query:"pageSize,required" json:"-"`
-	paramObj
-}
-
-// URLQuery serializes [OrganizationUserListParams]'s query parameters as
-// `url.Values`.
-func (r OrganizationUserListParams) URLQuery() (v url.Values, err error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
-}
-
-type OrganizationUserDeleteParams struct {
-	OrgID string `path:"orgId,required" json:"-"`
-	paramObj
-}
-
 type OrganizationUserNewOrInviteParams struct {
 	InvitedBy param.Opt[string] `json:"invitedBy,omitzero" format:"guid"`
 	Email     param.Opt[string] `json:"email,omitzero"`
@@ -282,18 +159,6 @@ type OrganizationUserDeleteByCustomerParams struct {
 	paramObj
 }
 
-type OrganizationUserInviteParams struct {
-	InviteUserRequest InviteUserRequestParam
-	paramObj
-}
-
-func (r OrganizationUserInviteParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.InviteUserRequest)
-}
-func (r *OrganizationUserInviteParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.InviteUserRequest)
-}
-
 type OrganizationUserListByCustomerParams struct {
 	Page     int64 `query:"page,required" json:"-"`
 	PageSize int64 `query:"pageSize,required" json:"-"`
@@ -312,24 +177,6 @@ func (r OrganizationUserListByCustomerParams) URLQuery() (v url.Values, err erro
 type OrganizationUserGetByCustomerParams struct {
 	CustomerID string `path:"customerId,required" format:"guid" json:"-"`
 	paramObj
-}
-
-type OrganizationUserGetInvitationDetailsParams struct {
-	CustomerID string `path:"customerId,required" format:"guid" json:"-"`
-	paramObj
-}
-
-type OrganizationUserUpdateRoleParams struct {
-	OrgID                 string `path:"orgId,required" json:"-"`
-	UpdateUserRoleRequest UpdateUserRoleRequestParam
-	paramObj
-}
-
-func (r OrganizationUserUpdateRoleParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.UpdateUserRoleRequest)
-}
-func (r *OrganizationUserUpdateRoleParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.UpdateUserRoleRequest)
 }
 
 type OrganizationUserUpdateRoleByCustomerParams struct {
