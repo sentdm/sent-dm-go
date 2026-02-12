@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 (2026-02-12)
+
+Full Changelog: [v0.5.0...v0.5.1](https://github.com/sentdm/sent-dm-go/compare/v0.5.0...v0.5.1)
+
+### Bug Fixes
+
+* **encoder:** correctly serialize NullStruct ([c527f7a](https://github.com/sentdm/sent-dm-go/commit/c527f7ad8426e2c56e6b1f944082cb4b98b1dbf9))
+
 ## 0.5.0 (2026-02-10)
 
 Full Changelog: [v0.4.0...v0.5.0](https://github.com/sentdm/sent-dm-go/compare/v0.4.0...v0.5.0)
