@@ -16,12 +16,11 @@ import (
 // interacting with the sent-dm API. You should not instantiate this client
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options       []option.RequestOption
-	Templates     TemplateService
-	Contacts      ContactService
-	Messages      MessageService
-	NumberLookup  NumberLookupService
-	Organizations OrganizationService
+	Options      []option.RequestOption
+	Contacts     ContactService
+	Messages     MessageService
+	Templates    TemplateService
+	NumberLookup NumberLookupService
 }
 
 // DefaultClientOptions read from the environment (SENT_DM_API_KEY,
@@ -50,11 +49,10 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 
 	r = Client{Options: opts}
 
-	r.Templates = NewTemplateService(opts...)
 	r.Contacts = NewContactService(opts...)
 	r.Messages = NewMessageService(opts...)
+	r.Templates = NewTemplateService(opts...)
 	r.NumberLookup = NewNumberLookupService(opts...)
-	r.Organizations = NewOrganizationService(opts...)
 
 	return
 }
