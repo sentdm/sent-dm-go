@@ -1,7 +1,7 @@
 package apijson
 
 import (
-	"github.com/sentdm/sent-dm-go/packages/respjson"
+	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
 	"reflect"
 )
 

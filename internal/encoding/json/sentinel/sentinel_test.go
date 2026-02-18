@@ -1,8 +1,8 @@
 package sentinel_test
 
 import (
-	"github.com/sentdm/sent-dm-go/internal/encoding/json/sentinel"
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/internal/encoding/json/sentinel"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 	"reflect"
 	"slices"
 	"testing"

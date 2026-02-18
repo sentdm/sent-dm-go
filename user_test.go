@@ -13,7 +13,7 @@ import (
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestContactNewWithOptionalParams(t *testing.T) {
+func TestUserGet(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -26,8 +26,56 @@ func TestContactNewWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Contacts.New(context.TODO(), sentdm.ContactNewParams{
-		PhoneNumber:    sentdm.String("+1234567890"),
+	_, err := client.Users.Get(context.TODO(), "182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e")
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestUserList(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Users.List(context.TODO())
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestUserInviteWithOptionalParams(t *testing.T) {
+	t.Skip("Prism tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Users.Invite(context.TODO(), sentdm.UserInviteParams{
+		Email:          sentdm.String("newuser@example.com"),
+		Name:           sentdm.String("New User"),
+		Role:           sentdm.String("developer"),
 		TestMode:       sentdm.Bool(false),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
 	})
@@ -40,7 +88,7 @@ func TestContactNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestContactGet(t *testing.T) {
+func TestUserRemoveWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -53,37 +101,12 @@ func TestContactGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Contacts.Get(context.TODO(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestContactUpdateWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-	)
-	_, err := client.Contacts.Update(
+	err := client.Users.Remove(
 		context.TODO(),
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-		sentdm.ContactUpdateParams{
-			DefaultChannel: sentdm.String("whatsapp"),
-			OptOut:         sentdm.Bool(false),
-			TestMode:       sentdm.Bool(false),
-			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
+		sentdm.UserRemoveParams{
+			TestMode: sentdm.Bool(false),
+			UserID:   sentdm.String("aa0e8400-e29b-41d4-a716-446655440005"),
 		},
 	)
 	if err != nil {
@@ -95,7 +118,7 @@ func TestContactUpdateWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestContactListWithOptionalParams(t *testing.T) {
+func TestUserUpdateRoleWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -108,44 +131,14 @@ func TestContactListWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
-		Page:     0,
-		PageSize: 0,
-		Channel:  sentdm.String("channel"),
-		Phone:    sentdm.String("phone"),
-		Search:   sentdm.String("search"),
-	})
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestContactDeleteWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-	)
-	err := client.Contacts.Delete(
+	_, err := client.Users.UpdateRole(
 		context.TODO(),
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-		sentdm.ContactDeleteParams{
-			Body: sentdm.ContactDeleteParamsBody{
-				MutationRequestParam: sentdm.MutationRequestParam{
-					TestMode: sentdm.Bool(false),
-				},
-			},
+		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
+		sentdm.UserUpdateRoleParams{
+			Role:           sentdm.String("billing"),
+			TestMode:       sentdm.Bool(false),
+			UserID:         sentdm.String("aa0e8400-e29b-41d4-a716-446655440005"),
+			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 		},
 	)
 	if err != nil {

@@ -1,8 +1,8 @@
 package paramutil
 
 import (
-	"github.com/sentdm/sent-dm-go/packages/param"
-	"github.com/sentdm/sent-dm-go/packages/respjson"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
 )
 
 func AddrIfPresent[T comparable](v param.Opt[T]) *T {

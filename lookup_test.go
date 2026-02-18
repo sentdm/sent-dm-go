@@ -4,6 +4,7 @@ package sentdm_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
@@ -12,7 +13,8 @@ import (
 	"github.com/stainless-sdks/sent-dm-go/option"
 )
 
-func TestUsage(t *testing.T) {
+func TestLookupGetPhoneInfo(t *testing.T) {
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -24,21 +26,12 @@ func TestUsage(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	t.Skip("Prism tests are disabled")
-	response, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
-		Channel: []string{"sms", "whatsapp"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234", "+14155555678"},
-	})
+	_, err := client.Lookup.GetPhoneInfo(context.TODO(), "phoneNumber")
 	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
-	t.Logf("%+v\n", response.Data)
 }
