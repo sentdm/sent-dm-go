@@ -12,13 +12,13 @@ import (
 	"slices"
 	"time"
 
-	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
-	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
-	shimjson "github.com/stainless-sdks/sent-dm-go/internal/encoding/json"
-	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
-	"github.com/stainless-sdks/sent-dm-go/option"
-	"github.com/stainless-sdks/sent-dm-go/packages/param"
-	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
+	"github.com/sentdm/sent-dm-go/internal/apijson"
+	"github.com/sentdm/sent-dm-go/internal/apiquery"
+	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
+	"github.com/sentdm/sent-dm-go/internal/requestconfig"
+	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
 // WebhookService contains methods and other services that help with interacting

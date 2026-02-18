@@ -1,7 +1,7 @@
 package sentinel
 
 import (
-	"github.com/stainless-sdks/sent-dm-go/internal/encoding/json/shims"
+	"github.com/sentdm/sent-dm-go/internal/encoding/json/shims"
 	"reflect"
 	"sync"
 )

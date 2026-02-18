@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stainless-sdks/sent-dm-go/internal"
-	"github.com/stainless-sdks/sent-dm-go/internal/apierror"
-	"github.com/stainless-sdks/sent-dm-go/internal/apiform"
-	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
+	"github.com/sentdm/sent-dm-go/internal"
+	"github.com/sentdm/sent-dm-go/internal/apierror"
+	"github.com/sentdm/sent-dm-go/internal/apiform"
+	"github.com/sentdm/sent-dm-go/internal/apiquery"
 )
 
 func getDefaultHeaders() map[string]string {
