@@ -28,7 +28,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.6.0'
+go get -u 'github.com/sentdm/sent-dm-go@v0.7.0'
 ```
 
 <!-- x-release-please-end -->
@@ -46,6 +46,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sentdm/sent-dm-go"
 	"github.com/sentdm/sent-dm-go/option"
@@ -53,20 +54,24 @@ import (
 
 func main() {
 	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),     // defaults to os.LookupEnv("SENT_DM_API_KEY")
-		option.WithSenderID("My Sender ID"), // defaults to os.LookupEnv("SENT_DM_SENDER_ID")
+		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("SENT_DM_API_KEY")
 	)
-	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
-		PhoneNumber: "+1234567890",
-		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	response, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
+		Channel: []string{"sms", "whatsapp"},
+		Template: sentdm.MessageSendParamsTemplate{
+			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+			Name: sentdm.String("order_confirmation"),
+			Parameters: map[string]string{
+				"name":     "John Doe",
+				"order_id": "12345",
+			},
 		},
+		To: []string{"+14155551234", "+14155555678"},
 	})
 	if err != nil {
 		panic(err.Error())
 	}
+	fmt.Printf("%+v\n", response.Data)
 }
 
 ```
@@ -272,7 +277,7 @@ client := sentdm.NewClient(
 	option.WithHeader("X-Some-Header", "custom_header_info"),
 )
 
-client.Messages.SendToPhone(context.TODO(), ...,
+client.Messages.Send(context.TODO(), ...,
 	// Override the header
 	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
 	// Add an undocumented field to the request body, using sjson syntax
@@ -303,13 +308,17 @@ When the API returns a non-success status code, we return an error with type
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
-err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
-	PhoneNumber: "+1234567890",
-	TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-	TemplateVariables: map[string]string{
-		"name":     "John Doe",
-		"order_id": "12345",
+_, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
+	Channel: []string{"sms"},
+	Template: sentdm.MessageSendParamsTemplate{
+		ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+		Name: sentdm.String("order_confirmation"),
+		Parameters: map[string]string{
+			"name":     "John Doe",
+			"order_id": "12345",
+		},
 	},
+	To: []string{"+14155551234"},
 })
 if err != nil {
 	var apierr *sentdm.Error
@@ -317,7 +326,7 @@ if err != nil {
 		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
 		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
 	}
-	panic(err.Error()) // GET "/v2/messages/phone": 400 Bad Request { ... }
+	panic(err.Error()) // GET "/v3/messages": 400 Bad Request { ... }
 }
 ```
 
@@ -335,15 +344,19 @@ To set a per-retry timeout, use `option.WithRequestTimeout()`.
 // This sets the timeout for the request, including all the retries.
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
-client.Messages.SendToPhone(
+client.Messages.Send(
 	ctx,
-	sentdm.MessageSendToPhoneParams{
-		PhoneNumber: "+1234567890",
-		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	sentdm.MessageSendParams{
+		Channel: []string{"sms"},
+		Template: sentdm.MessageSendParamsTemplate{
+			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+			Name: sentdm.String("order_confirmation"),
+			Parameters: map[string]string{
+				"name":     "John Doe",
+				"order_id": "12345",
+			},
 		},
+		To: []string{"+14155551234"},
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -378,15 +391,19 @@ client := sentdm.NewClient(
 )
 
 // Override per-request:
-client.Messages.SendToPhone(
+client.Messages.Send(
 	context.TODO(),
-	sentdm.MessageSendToPhoneParams{
-		PhoneNumber: "+1234567890",
-		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	sentdm.MessageSendParams{
+		Channel: []string{"sms"},
+		Template: sentdm.MessageSendParamsTemplate{
+			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+			Name: sentdm.String("order_confirmation"),
+			Parameters: map[string]string{
+				"name":     "John Doe",
+				"order_id": "12345",
+			},
 		},
+		To: []string{"+14155551234"},
 	},
 	option.WithMaxRetries(5),
 )
@@ -400,22 +417,26 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-err := client.Messages.SendToPhone(
+response, err := client.Messages.Send(
 	context.TODO(),
-	sentdm.MessageSendToPhoneParams{
-		PhoneNumber: "+1234567890",
-		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	sentdm.MessageSendParams{
+		Channel: []string{"sms"},
+		Template: sentdm.MessageSendParamsTemplate{
+			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+			Name: sentdm.String("order_confirmation"),
+			Parameters: map[string]string{
+				"name":     "John Doe",
+				"order_id": "12345",
+			},
 		},
+		To: []string{"+14155551234"},
 	},
 	option.WithResponseInto(&response),
 )
 if err != nil {
 	// handle error
 }
-null
+fmt.Printf("%+v\n", response)
 
 fmt.Printf("Status Code: %d\n", response.StatusCode)
 fmt.Printf("Headers: %+#v\n", response.Header)

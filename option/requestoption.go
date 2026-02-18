@@ -273,11 +273,3 @@ func WithAPIKey(value string) RequestOption {
 		return r.Apply(WithHeader("x-api-key", r.APIKey))
 	})
 }
-
-// WithSenderID returns a RequestOption that sets the client setting "sender_id".
-func WithSenderID(value string) RequestOption {
-	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.SenderID = value
-		return r.Apply(WithHeader("x-sender-id", r.SenderID))
-	})
-}

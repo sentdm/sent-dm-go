@@ -13,7 +13,7 @@ import (
 	"github.com/sentdm/sent-dm-go/option"
 )
 
-func TestNumberLookupGet(t *testing.T) {
+func TestLookupGetPhoneInfo(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -25,11 +25,8 @@ func TestNumberLookupGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
 	)
-	_, err := client.NumberLookup.Get(context.TODO(), sentdm.NumberLookupGetParams{
-		PhoneNumber: "phoneNumber",
-	})
+	_, err := client.Lookup.GetPhoneInfo(context.TODO(), "phoneNumber")
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {

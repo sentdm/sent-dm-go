@@ -13,7 +13,7 @@ import (
 	"github.com/sentdm/sent-dm-go/option"
 )
 
-func TestMessageGet(t *testing.T) {
+func TestMessageGetActivities(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -25,9 +25,8 @@ func TestMessageGet(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
 	)
-	_, err := client.Messages.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
+	_, err := client.Messages.GetActivities(context.TODO(), "8ba7b830-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -37,7 +36,7 @@ func TestMessageGet(t *testing.T) {
 	}
 }
 
-func TestMessageSendQuickMessage(t *testing.T) {
+func TestMessageGetStatus(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -49,12 +48,8 @@ func TestMessageSendQuickMessage(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
 	)
-	err := client.Messages.SendQuickMessage(context.TODO(), sentdm.MessageSendQuickMessageParams{
-		CustomMessage: "Hello, this is a test message!",
-		PhoneNumber:   "+1234567890",
-	})
+	_, err := client.Messages.GetStatus(context.TODO(), "8ba7b830-9dad-11d1-80b4-00c04fd430c8")
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -64,7 +59,7 @@ func TestMessageSendQuickMessage(t *testing.T) {
 	}
 }
 
-func TestMessageSendToContactWithOptionalParams(t *testing.T) {
+func TestMessageSendWithOptionalParams(t *testing.T) {
 	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -76,46 +71,20 @@ func TestMessageSendToContactWithOptionalParams(t *testing.T) {
 	client := sentdm.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
 	)
-	err := client.Messages.SendToContact(context.TODO(), sentdm.MessageSendToContactParams{
-		ContactID:  "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-		TemplateID: "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
+	_, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
+		Channel: []string{"sms", "whatsapp"},
+		Template: sentdm.MessageSendParamsTemplate{
+			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+			Name: sentdm.String("order_confirmation"),
+			Parameters: map[string]string{
+				"name":     "John Doe",
+				"order_id": "12345",
+			},
 		},
-	})
-	if err != nil {
-		var apierr *sentdm.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestMessageSendToPhoneWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := sentdm.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithSenderID("My Sender ID"),
-	)
-	err := client.Messages.SendToPhone(context.TODO(), sentdm.MessageSendToPhoneParams{
-		PhoneNumber: "+1234567890",
-		TemplateID:  "7ba7b820-9dad-11d1-80b4-00c04fd430c8",
-		TemplateVariables: map[string]string{
-			"name":     "John Doe",
-			"order_id": "12345",
-		},
+		TestMode:       sentdm.Bool(false),
+		To:             []string{"+14155551234", "+14155555678"},
+		IdempotencyKey: sentdm.String("req_abc123_retry1"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error

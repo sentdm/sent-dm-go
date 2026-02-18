@@ -36,132 +36,201 @@ func NewMessageService(opts ...option.RequestOption) (r MessageService) {
 	return
 }
 
-// Retrieves comprehensive details about a specific message using the message ID.
-// Returns complete message data including delivery status, channel information,
-// template details, contact information, and pricing. The customer ID is extracted
-// from the authentication token to ensure the message belongs to the authenticated
-// customer.
-func (r *MessageService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *MessageGetResponse, err error) {
+// Retrieves the activity log for a specific message. Activities track the message
+// lifecycle including acceptance, processing, sending, delivery, and any errors.
+func (r *MessageService) GetActivities(ctx context.Context, id string, opts ...option.RequestOption) (res *MessageGetActivitiesResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
 		return
 	}
-	path := fmt.Sprintf("v2/messages/%s", id)
+	path := fmt.Sprintf("v3/messages/%s/activities", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
-// Sends a message to a phone number using the default template. This endpoint is
-// rate limited to 5 messages per customer per day. The customer ID is extracted
-// from the authentication token.
-func (r *MessageService) SendQuickMessage(ctx context.Context, body MessageSendQuickMessageParams, opts ...option.RequestOption) (err error) {
+// Retrieves the current status and details of a message by ID. Includes delivery
+// status, timestamps, and error information if applicable.
+func (r *MessageService) GetStatus(ctx context.Context, id string, opts ...option.RequestOption) (res *MessageGetStatusResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	path := "v2/messages/quick-message"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return
+	}
+	path := fmt.Sprintf("v3/messages/%s", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
-// Sends a message to a specific contact using a template. The message can be sent
-// via SMS or WhatsApp depending on the contact's capabilities. Optionally specify
-// a webhook URL to receive delivery status updates. The customer ID is extracted
-// from the authentication token.
-func (r *MessageService) SendToContact(ctx context.Context, body MessageSendToContactParams, opts ...option.RequestOption) (err error) {
+// Sends a message to one or more recipients using a template. Supports
+// multi-channel broadcast — when multiple channels are specified (e.g. ["sms",
+// "whatsapp"]), a separate message is created for each (recipient, channel) pair.
+// Returns immediately with per-recipient message IDs for async tracking via
+// webhooks or the GET /messages/{id} endpoint.
+func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
+	if !param.IsOmitted(params.IdempotencyKey) {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	path := "v2/messages/contact"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
+	path := "v3/messages"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return
 }
 
-// Sends a message to a phone number using a template. The phone number doesn't
-// need to be a pre-existing contact. The message can be sent via SMS or WhatsApp.
-// Optionally specify a webhook URL to receive delivery status updates. The
-// customer ID is extracted from the authentication token.
-func (r *MessageService) SendToPhone(ctx context.Context, body MessageSendToPhoneParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	path := "v2/messages/phone"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
-}
-
-// Represents a sent message with comprehensive delivery and template information
-// (v2)
-type MessageGetResponse struct {
-	// The unique identifier of the message
-	ID string `json:"id" format:"uuid"`
-	// The messaging channel used (e.g., SMS, WhatsApp)
-	Channel string `json:"channel"`
-	// The unique identifier of the contact who received the message
-	ContactID string `json:"contactId" format:"uuid"`
-	// The final price charged for sending this message
-	CorrectedPrice float64 `json:"correctedPrice,nullable"`
-	// The date and time when the message was created
-	CreatedAt time.Time `json:"createdAt" format:"date-time"`
-	// The unique identifier of the customer who sent the message
-	CustomerID string `json:"customerId" format:"uuid"`
-	// A chronological list of status change events for this message. Each event
-	// includes a status and timestamp, following industry standards (Twilio, SendGrid,
-	// Mailgun). Events are ordered chronologically from oldest to newest.
-	Events []MessageGetResponseEvent `json:"events,nullable"`
-	// The message body content with variables substituted
-	MessageBody MessageGetResponseMessageBody `json:"messageBody,nullable"`
-	// The phone number of the recipient (E.164 format)
-	PhoneNumber string `json:"phoneNumber"`
-	// The phone number in international format
-	PhoneNumberInternational string `json:"phoneNumberInternational"`
-	// The region code of the phone number (e.g., US, GB, DE)
-	RegionCode string `json:"regionCode"`
-	// The delivery status of the message (e.g., sent, delivered, failed, read)
-	Status string `json:"status"`
-	// The category of the template (e.g., MARKETING, UTILITY, AUTHENTICATION)
-	TemplateCategory string `json:"templateCategory"`
-	// The unique identifier of the template used for this message (null if no template
-	// was used)
-	TemplateID string `json:"templateId,nullable" format:"uuid"`
-	// The display name of the template
-	TemplateName string `json:"templateName"`
+// Standard API response envelope for all v3 endpoints
+type MessageGetActivitiesResponse struct {
+	// The response data (null if error)
+	Data MessageGetActivitiesResponseData `json:"data,nullable"`
+	// Error details (null if successful)
+	Error APIError `json:"error,nullable"`
+	// Metadata about the request and response
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                       respjson.Field
-		Channel                  respjson.Field
-		ContactID                respjson.Field
-		CorrectedPrice           respjson.Field
-		CreatedAt                respjson.Field
-		CustomerID               respjson.Field
-		Events                   respjson.Field
-		MessageBody              respjson.Field
-		PhoneNumber              respjson.Field
-		PhoneNumberInternational respjson.Field
-		RegionCode               respjson.Field
-		Status                   respjson.Field
-		TemplateCategory         respjson.Field
-		TemplateID               respjson.Field
-		TemplateName             respjson.Field
-		ExtraFields              map[string]respjson.Field
-		raw                      string
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageGetResponse) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetResponse) UnmarshalJSON(data []byte) error {
+func (r MessageGetActivitiesResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetActivitiesResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Represents a status change event in a message's lifecycle Follows industry
-// standards (Twilio, SendGrid, Mailgun pattern)
-type MessageGetResponseEvent struct {
-	// Optional human-readable description of the event Useful for error messages or
-	// additional context
-	Description string `json:"description,nullable"`
-	// The status of the message at this point in time Examples: "queued", "sent",
-	// "delivered", "read", "failed"
+// The response data (null if error)
+type MessageGetActivitiesResponseData struct {
+	// List of activity events ordered by most recent first
+	Activities []MessageGetActivitiesResponseDataActivity `json:"activities"`
+	// The message ID these activities belong to
+	MessageID string `json:"message_id" format:"uuid"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Activities  respjson.Field
+		MessageID   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageGetActivitiesResponseData) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetActivitiesResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A single message activity event for v3 API
+type MessageGetActivitiesResponseDataActivity struct {
+	// Additional content or payload for the activity (e.g., channel response)
+	Content string `json:"content,nullable"`
+	// Human-readable description of the activity
+	Description string `json:"description"`
+	// Activity status (e.g., ACCEPTED, PROCESSED, SENT, DELIVERED, FAILED)
 	Status string `json:"status"`
-	// When this status change occurred (ISO 8601 format)
+	// When this activity occurred
 	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Content     respjson.Field
+		Description respjson.Field
+		Status      respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageGetActivitiesResponseDataActivity) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetActivitiesResponseDataActivity) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type MessageGetStatusResponse struct {
+	// The response data (null if error)
+	Data MessageGetStatusResponseData `json:"data,nullable"`
+	// Error details (null if successful)
+	Error APIError `json:"error,nullable"`
+	// Metadata about the request and response
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageGetStatusResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetStatusResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The response data (null if error)
+type MessageGetStatusResponseData struct {
+	ID         string                              `json:"id" format:"uuid"`
+	Channel    string                              `json:"channel"`
+	ContactID  string                              `json:"contact_id" format:"uuid"`
+	CreatedAt  time.Time                           `json:"created_at" format:"date-time"`
+	CustomerID string                              `json:"customer_id" format:"uuid"`
+	Events     []MessageGetStatusResponseDataEvent `json:"events,nullable"`
+	// Structured message body format for database storage. Preserves channel-specific
+	// components (header, body, footer, buttons).
+	MessageBody        MessageGetStatusResponseDataMessageBody `json:"message_body,nullable"`
+	Phone              string                                  `json:"phone"`
+	PhoneInternational string                                  `json:"phone_international"`
+	Price              float64                                 `json:"price,nullable"`
+	RegionCode         string                                  `json:"region_code"`
+	Status             string                                  `json:"status"`
+	TemplateCategory   string                                  `json:"template_category"`
+	TemplateID         string                                  `json:"template_id,nullable" format:"uuid"`
+	TemplateName       string                                  `json:"template_name"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		Channel            respjson.Field
+		ContactID          respjson.Field
+		CreatedAt          respjson.Field
+		CustomerID         respjson.Field
+		Events             respjson.Field
+		MessageBody        respjson.Field
+		Phone              respjson.Field
+		PhoneInternational respjson.Field
+		Price              respjson.Field
+		RegionCode         respjson.Field
+		Status             respjson.Field
+		TemplateCategory   respjson.Field
+		TemplateID         respjson.Field
+		TemplateName       respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageGetStatusResponseData) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetStatusResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Represents a status change event in a message's lifecycle (v3)
+type MessageGetStatusResponseDataEvent struct {
+	Description string    `json:"description,nullable"`
+	Status      string    `json:"status"`
+	Timestamp   time.Time `json:"timestamp" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Description respjson.Field
@@ -173,17 +242,18 @@ type MessageGetResponseEvent struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageGetResponseEvent) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetResponseEvent) UnmarshalJSON(data []byte) error {
+func (r MessageGetStatusResponseDataEvent) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetStatusResponseDataEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The message body content with variables substituted
-type MessageGetResponseMessageBody struct {
-	Buttons []MessageGetResponseMessageBodyButton `json:"buttons,nullable"`
-	Content string                                `json:"content"`
-	Footer  string                                `json:"footer,nullable"`
-	Header  string                                `json:"header,nullable"`
+// Structured message body format for database storage. Preserves channel-specific
+// components (header, body, footer, buttons).
+type MessageGetStatusResponseDataMessageBody struct {
+	Buttons []MessageGetStatusResponseDataMessageBodyButton `json:"buttons,nullable"`
+	Content string                                          `json:"content"`
+	Footer  string                                          `json:"footer,nullable"`
+	Header  string                                          `json:"header,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Buttons     respjson.Field
@@ -196,12 +266,12 @@ type MessageGetResponseMessageBody struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageGetResponseMessageBody) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetResponseMessageBody) UnmarshalJSON(data []byte) error {
+func (r MessageGetStatusResponseDataMessageBody) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetStatusResponseDataMessageBody) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MessageGetResponseMessageBodyButton struct {
+type MessageGetStatusResponseDataMessageBodyButton struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -214,65 +284,132 @@ type MessageGetResponseMessageBodyButton struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageGetResponseMessageBodyButton) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetResponseMessageBodyButton) UnmarshalJSON(data []byte) error {
+func (r MessageGetStatusResponseDataMessageBodyButton) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetStatusResponseDataMessageBodyButton) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MessageSendQuickMessageParams struct {
-	// The custom message content to include in the template
-	CustomMessage string `json:"customMessage,required"`
-	// The phone number to send the message to, in international format (e.g.,
-	// +1234567890)
-	PhoneNumber string `json:"phoneNumber,required"`
-	paramObj
+// Standard API response envelope for all v3 endpoints
+type MessageSendResponse struct {
+	// The response data (null if error)
+	Data MessageSendResponseData `json:"data,nullable"`
+	// Error details (null if successful)
+	Error APIError `json:"error,nullable"`
+	// Metadata about the request and response
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-func (r MessageSendQuickMessageParams) MarshalJSON() (data []byte, err error) {
-	type shadow MessageSendQuickMessageParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *MessageSendQuickMessageParams) UnmarshalJSON(data []byte) error {
+// Returns the unmodified JSON received from the API
+func (r MessageSendResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MessageSendToContactParams struct {
-	// The unique identifier of the contact to send the message to
-	ContactID string `json:"contactId,required" format:"uuid"`
-	// The unique identifier of the template to use for the message
-	TemplateID string `json:"templateId,required" format:"uuid"`
-	// Optional key-value pairs of template variables to replace in the template body.
-	// For example, if your template contains "Hello {{name}}", you would provide {
-	// "name": "John Doe" }
-	TemplateVariables map[string]string `json:"templateVariables,omitzero"`
-	paramObj
+// The response data (null if error)
+type MessageSendResponseData struct {
+	// Resolved template body text
+	Body string `json:"body,nullable"`
+	// Per-recipient message results
+	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
+	// Overall request status (e.g. "accepted")
+	Status string `json:"status"`
+	// Template ID that was used
+	TemplateID string `json:"template_id" format:"uuid"`
+	// Template display name
+	TemplateName string `json:"template_name"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Body         respjson.Field
+		Recipients   respjson.Field
+		Status       respjson.Field
+		TemplateID   respjson.Field
+		TemplateName respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
 }
 
-func (r MessageSendToContactParams) MarshalJSON() (data []byte, err error) {
-	type shadow MessageSendToContactParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *MessageSendToContactParams) UnmarshalJSON(data []byte) error {
+// Returns the unmodified JSON received from the API
+func (r MessageSendResponseData) RawJSON() string { return r.JSON.raw }
+func (r *MessageSendResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MessageSendToPhoneParams struct {
-	// The phone number to send the message to, in international format (e.g.,
-	// +1234567890)
-	PhoneNumber string `json:"phoneNumber,required"`
-	// The unique identifier of the template to use for the message
-	TemplateID string `json:"templateId,required" format:"uuid"`
-	// Optional key-value pairs of template variables to replace in the template body.
-	// For example, if your template contains "Hello {{name}}", you would provide {
-	// "name": "John Doe" }
-	TemplateVariables map[string]string `json:"templateVariables,omitzero"`
+// Per-recipient result in the send message response
+type MessageSendResponseDataRecipient struct {
+	// Channel this message will be sent on (e.g. "sms", "whatsapp"), or null for
+	// auto-detect
+	Channel string `json:"channel,nullable"`
+	// Unique message identifier for tracking this recipient's message
+	MessageID string `json:"message_id" format:"uuid"`
+	// Phone number in E.164 format
+	To string `json:"to"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Channel     respjson.Field
+		MessageID   respjson.Field
+		To          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageSendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
+func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type MessageSendParams struct {
+	// Test mode flag - when true, the operation is simulated without side effects
+	// Useful for testing integrations without actual execution
+	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	// Channels to broadcast on, e.g. ["whatsapp", "sms"]. Each channel produces a
+	// separate message per recipient. "sent" = auto-detect, "rcs" = reserved
+	// (skipped). Defaults to ["sent"] (auto-detect) if omitted.
+	Channel []string `json:"channel,omitzero"`
+	// Template reference (by id or name, with optional parameters)
+	Template MessageSendParamsTemplate `json:"template,omitzero"`
+	// List of recipient phone numbers in E.164 format (multi-recipient fan-out)
+	To []string `json:"to,omitzero"`
 	paramObj
 }
 
-func (r MessageSendToPhoneParams) MarshalJSON() (data []byte, err error) {
-	type shadow MessageSendToPhoneParams
+func (r MessageSendParams) MarshalJSON() (data []byte, err error) {
+	type shadow MessageSendParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *MessageSendToPhoneParams) UnmarshalJSON(data []byte) error {
+func (r *MessageSendParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Template reference (by id or name, with optional parameters)
+type MessageSendParamsTemplate struct {
+	// Template ID (mutually exclusive with name)
+	ID param.Opt[string] `json:"id,omitzero" format:"uuid"`
+	// Template name (mutually exclusive with id)
+	Name param.Opt[string] `json:"name,omitzero"`
+	// Template variable parameters for personalization
+	Parameters map[string]string `json:"parameters,omitzero"`
+	paramObj
+}
+
+func (r MessageSendParamsTemplate) MarshalJSON() (data []byte, err error) {
+	type shadow MessageSendParamsTemplate
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *MessageSendParamsTemplate) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
