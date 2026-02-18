@@ -31,7 +31,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		Category:       sentdm.String("MARKETING"),
 		CreationSource: param.Null[string](),
 		Definition: sentdm.TemplateDefinitionParam{
-			Body: sentdm.TemplateDefinitionBodyParam{
+			Body: sentdm.SentDmServicesCommonContractsPocOsTemplateBodyParam{
 				MultiChannel: sentdm.TemplateBodyContentParam{
 					Template: sentdm.String("Hello {{0:variable}}! Welcome to {{1:variable}}."),
 					Type:     param.Null[string](),
@@ -96,13 +96,13 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					}},
 				},
 			},
-			AuthenticationConfig: sentdm.TemplateDefinitionAuthenticationConfigParam{
+			AuthenticationConfig: sentdm.SentDmServicesCommonContractsPocOsAuthenticationConfigParam{
 				AddSecurityRecommendation: sentdm.Bool(true),
 				CodeExpirationMinutes:     sentdm.Int(0),
 			},
-			Buttons: []sentdm.TemplateDefinitionButtonParam{{
+			Buttons: []sentdm.SentDmServicesCommonContractsPocOsTemplateButtonParam{{
 				ID: sentdm.Int(0),
-				Props: sentdm.TemplateDefinitionButtonPropsParam{
+				Props: sentdm.SentDmServicesCommonContractsPocOsTemplateButtonPropsParam{
 					ActiveFor:      sentdm.Int(0),
 					AutofillText:   sentdm.String("autofillText"),
 					CountryCode:    sentdm.String("countryCode"),
@@ -119,7 +119,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 				Type: sentdm.String("type"),
 			}},
 			DefinitionVersion: sentdm.String("1.0"),
-			Footer: sentdm.TemplateDefinitionFooterParam{
+			Footer: sentdm.SentDmServicesCommonContractsPocOsTemplateFooterParam{
 				Template: sentdm.String("template"),
 				Type:     sentdm.String("type"),
 				Variables: []sentdm.TemplateVariableParam{{
@@ -136,7 +136,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					Type: sentdm.String("type"),
 				}},
 			},
-			Header: sentdm.TemplateDefinitionHeaderParam{
+			Header: sentdm.SentDmServicesCommonContractsPocOsTemplateHeaderParam{
 				Template: sentdm.String("template"),
 				Type:     sentdm.String("type"),
 				Variables: []sentdm.TemplateVariableParam{{
@@ -210,7 +210,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 		sentdm.TemplateUpdateParams{
 			Category: sentdm.String("MARKETING"),
 			Definition: sentdm.TemplateDefinitionParam{
-				Body: sentdm.TemplateDefinitionBodyParam{
+				Body: sentdm.SentDmServicesCommonContractsPocOsTemplateBodyParam{
 					MultiChannel: sentdm.TemplateBodyContentParam{
 						Template: sentdm.String("template"),
 						Type:     sentdm.String("type"),
@@ -263,13 +263,13 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						}},
 					},
 				},
-				AuthenticationConfig: sentdm.TemplateDefinitionAuthenticationConfigParam{
+				AuthenticationConfig: sentdm.SentDmServicesCommonContractsPocOsAuthenticationConfigParam{
 					AddSecurityRecommendation: sentdm.Bool(true),
 					CodeExpirationMinutes:     sentdm.Int(0),
 				},
-				Buttons: []sentdm.TemplateDefinitionButtonParam{{
+				Buttons: []sentdm.SentDmServicesCommonContractsPocOsTemplateButtonParam{{
 					ID: sentdm.Int(0),
-					Props: sentdm.TemplateDefinitionButtonPropsParam{
+					Props: sentdm.SentDmServicesCommonContractsPocOsTemplateButtonPropsParam{
 						ActiveFor:      sentdm.Int(0),
 						AutofillText:   sentdm.String("autofillText"),
 						CountryCode:    sentdm.String("countryCode"),
@@ -286,7 +286,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 					Type: sentdm.String("type"),
 				}},
 				DefinitionVersion: sentdm.String("definitionVersion"),
-				Footer: sentdm.TemplateDefinitionFooterParam{
+				Footer: sentdm.SentDmServicesCommonContractsPocOsTemplateFooterParam{
 					Template: sentdm.String("template"),
 					Type:     sentdm.String("type"),
 					Variables: []sentdm.TemplateVariableParam{{
@@ -303,7 +303,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						Type: sentdm.String("type"),
 					}},
 				},
-				Header: sentdm.TemplateDefinitionHeaderParam{
+				Header: sentdm.SentDmServicesCommonContractsPocOsTemplateHeaderParam{
 					Template: sentdm.String("template"),
 					Type:     sentdm.String("type"),
 					Variables: []sentdm.TemplateVariableParam{{
