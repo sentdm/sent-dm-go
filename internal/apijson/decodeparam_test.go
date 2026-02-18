@@ -3,8 +3,8 @@ package apijson_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sentdm/sent-dm-go/internal/apijson"
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 	"reflect"
 	"testing"
 )

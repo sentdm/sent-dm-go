@@ -1,4 +1,4 @@
-module github.com/sentdm/sent-dm-go
+module github.com/stainless-sdks/sent-dm-go
 
 go 1.22
 

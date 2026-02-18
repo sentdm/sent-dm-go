@@ -4,7 +4,6 @@ package sentdm
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,12 +11,12 @@ import (
 	"slices"
 	"time"
 
-	"github.com/sentdm/sent-dm-go/internal/apijson"
-	"github.com/sentdm/sent-dm-go/internal/apiquery"
-	"github.com/sentdm/sent-dm-go/internal/requestconfig"
-	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/param"
-	"github.com/sentdm/sent-dm-go/packages/respjson"
+	"github.com/stainless-sdks/sent-dm-go/internal/apijson"
+	"github.com/stainless-sdks/sent-dm-go/internal/apiquery"
+	"github.com/stainless-sdks/sent-dm-go/internal/requestconfig"
+	"github.com/stainless-sdks/sent-dm-go/option"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/packages/respjson"
 )
 
 // TemplateService contains methods and other services that help with interacting
@@ -39,72 +38,131 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 	return
 }
 
-// Creates a new message template for the authenticated customer with comprehensive
-// template definitions including headers, body, footer, and interactive buttons.
-// Supports automatic metadata generation using AI (display name, language,
-// category). Optionally submits the template for WhatsApp review. The customer ID
-// is extracted from the authentication token.
-func (r *TemplateService) New(ctx context.Context, body TemplateNewParams, opts ...option.RequestOption) (res *TemplateResponseV2, err error) {
+// Creates a new message template with header, body, footer, and buttons. The
+// template can be submitted for review immediately or saved as draft for later
+// submission.
+func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+	if !param.IsOmitted(params.IdempotencyKey) {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
-	path := "v2/templates"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	path := "v3/templates"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return
 }
 
-// Retrieves a specific message template by its unique identifier for the
-// authenticated customer with comprehensive template definitions including
-// headers, body, footer, and interactive buttons. The customer ID is extracted
-// from the authentication token.
-func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *TemplateResponseV2, err error) {
+// Retrieves a specific template by its ID. Returns template details including
+// name, category, language, status, and definition.
+func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
 		return
 	}
-	path := fmt.Sprintf("v2/templates/%s", id)
+	path := fmt.Sprintf("v3/templates/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
-// Retrieves all message templates available for the authenticated customer with
-// comprehensive template definitions including headers, body, footer, and
-// interactive buttons. Supports advanced filtering by search term, status, and
-// category, plus pagination. The customer ID is extracted from the authentication
-// token.
+// Updates an existing template's name, category, language, definition, or submits
+// it for review.
+func (r *TemplateService) Update(ctx context.Context, id string, params TemplateUpdateParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+	if !param.IsOmitted(params.IdempotencyKey) {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+	}
+	opts = slices.Concat(r.Options, opts)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return
+	}
+	path := fmt.Sprintf("v3/templates/%s", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
+	return
+}
+
+// Retrieves a paginated list of message templates for the authenticated customer.
+// Supports filtering by status, category, and search term.
 func (r *TemplateService) List(ctx context.Context, query TemplateListParams, opts ...option.RequestOption) (res *TemplateListResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
-	path := "v2/templates"
+	path := "v3/templates"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
-// Deletes a specific message template by its unique identifier for the
-// authenticated customer with smart deletion strategy. Deletion behavior: - If
-// template has NO messages: Permanently deleted from database (hard delete). - If
-// template has messages: Marked as deleted but preserved for message history (soft
-// delete with snapshot). The template must exist and belong to the authenticated
-// customer to be deleted successfully. The customer ID is extracted from the
-// authentication token.
-func (r *TemplateService) Delete(ctx context.Context, id string, opts ...option.RequestOption) (err error) {
+// Deletes a template by ID. Optionally, you can also delete the template from
+// WhatsApp/Meta by setting delete_from_meta=true.
+func (r *TemplateService) Delete(ctx context.Context, id string, body TemplateDeleteParams, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
 		return
 	}
-	path := fmt.Sprintf("v2/templates/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
+	path := fmt.Sprintf("v3/templates/%s", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
 	return
 }
 
-type TemplateBodyContent struct {
-	Template  string             `json:"template"`
-	Type      string             `json:"type,nullable"`
-	Variables []TemplateVariable `json:"variables,nullable"`
+// Standard API response envelope for all v3 endpoints
+type APIResponseTemplate struct {
+	// The response data (null if error)
+	Data Template `json:"data,nullable"`
+	// Error details (null if successful)
+	Error APIError `json:"error,nullable"`
+	// Metadata about the request and response
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Template    respjson.Field
-		Type        respjson.Field
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseTemplate) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseTemplate) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Template response for v3 API
+type Template struct {
+	// Unique template identifier
+	ID string `json:"id" format:"uuid"`
+	// Template category: MARKETING, UTILITY, AUTHENTICATION
+	Category string `json:"category"`
+	// Supported channels: sms, whatsapp
+	Channels []string `json:"channels,nullable"`
+	// When the template was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Whether the template is published and active
+	IsPublished bool `json:"is_published"`
+	// Template language code (e.g., en_US)
+	Language string `json:"language"`
+	// Template display name
+	Name string `json:"name"`
+	// Template status: APPROVED, PENDING, REJECTED
+	Status string `json:"status"`
+	// When the template was last updated
+	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	// Template variables for personalization
+	Variables []string `json:"variables,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Category    respjson.Field
+		Channels    respjson.Field
+		CreatedAt   respjson.Field
+		IsPublished respjson.Field
+		Language    respjson.Field
+		Name        respjson.Field
+		Status      respjson.Field
+		UpdatedAt   respjson.Field
 		Variables   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -112,18 +170,9 @@ type TemplateBodyContent struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r TemplateBodyContent) RawJSON() string { return r.JSON.raw }
-func (r *TemplateBodyContent) UnmarshalJSON(data []byte) error {
+func (r Template) RawJSON() string { return r.JSON.raw }
+func (r *Template) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this TemplateBodyContent to a TemplateBodyContentParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// TemplateBodyContentParam.Overrides()
-func (r TemplateBodyContent) ToParam() TemplateBodyContentParam {
-	return param.Override[TemplateBodyContentParam](json.RawMessage(r.RawJSON()))
 }
 
 type TemplateBodyContentParam struct {
@@ -138,212 +187,6 @@ func (r TemplateBodyContentParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateBodyContentParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Complete definition of a message template including header, body, footer, and
-// buttons
-type TemplateDefinition struct {
-	// Required template body with content for different channels (multi-channel,
-	// SMS-specific, or WhatsApp-specific)
-	Body TemplateDefinitionBody `json:"body,required"`
-	// Configuration specific to AUTHENTICATION category templates (optional)
-	AuthenticationConfig TemplateDefinitionAuthenticationConfig `json:"authenticationConfig,nullable"`
-	// Optional list of interactive buttons (e.g., quick replies, URLs, phone numbers)
-	Buttons []TemplateDefinitionButton `json:"buttons,nullable"`
-	// The version of the template definition format
-	DefinitionVersion string `json:"definitionVersion,nullable"`
-	// Optional template footer with optional variables
-	Footer TemplateDefinitionFooter `json:"footer,nullable"`
-	// Optional template header with optional variables
-	Header TemplateDefinitionHeader `json:"header,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Body                 respjson.Field
-		AuthenticationConfig respjson.Field
-		Buttons              respjson.Field
-		DefinitionVersion    respjson.Field
-		Footer               respjson.Field
-		Header               respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinition) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinition) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this TemplateDefinition to a TemplateDefinitionParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// TemplateDefinitionParam.Overrides()
-func (r TemplateDefinition) ToParam() TemplateDefinitionParam {
-	return param.Override[TemplateDefinitionParam](json.RawMessage(r.RawJSON()))
-}
-
-// Required template body with content for different channels (multi-channel,
-// SMS-specific, or WhatsApp-specific)
-type TemplateDefinitionBody struct {
-	// Content that will be used for all channels (SMS and WhatsApp) unless
-	// channel-specific content is provided
-	MultiChannel TemplateBodyContent `json:"multiChannel,nullable"`
-	// SMS-specific content that overrides multi-channel content for SMS messages
-	SMS TemplateBodyContent `json:"sms,nullable"`
-	// WhatsApp-specific content that overrides multi-channel content for WhatsApp
-	// messages
-	Whatsapp TemplateBodyContent `json:"whatsapp,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		MultiChannel respjson.Field
-		SMS          respjson.Field
-		Whatsapp     respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinitionBody) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinitionBody) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Configuration specific to AUTHENTICATION category templates (optional)
-type TemplateDefinitionAuthenticationConfig struct {
-	// Whether to add the security recommendation text: "For your security, do not
-	// share this code."
-	AddSecurityRecommendation bool `json:"addSecurityRecommendation"`
-	// Code expiration time in minutes (1-90). If set, adds footer: "This code expires
-	// in X minutes."
-	CodeExpirationMinutes int64 `json:"codeExpirationMinutes,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		AddSecurityRecommendation respjson.Field
-		CodeExpirationMinutes     respjson.Field
-		ExtraFields               map[string]respjson.Field
-		raw                       string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinitionAuthenticationConfig) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinitionAuthenticationConfig) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Interactive button in a message template
-type TemplateDefinitionButton struct {
-	// The unique identifier of the button (1-based index)
-	ID int64 `json:"id"`
-	// Properties specific to the button type
-	Props TemplateDefinitionButtonProps `json:"props"`
-	// The type of button (e.g., QUICK_REPLY, URL, PHONE_NUMBER, VOICE_CALL, COPY_CODE)
-	Type string `json:"type"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Props       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinitionButton) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinitionButton) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Properties specific to the button type
-type TemplateDefinitionButtonProps struct {
-	ActiveFor      int64  `json:"activeFor,nullable"`
-	AutofillText   string `json:"autofillText,nullable"`
-	CountryCode    string `json:"countryCode,nullable"`
-	OfferCode      string `json:"offerCode,nullable"`
-	OtpType        string `json:"otpType,nullable"`
-	PackageName    string `json:"packageName,nullable"`
-	PhoneNumber    string `json:"phoneNumber,nullable"`
-	QuickReplyType string `json:"quickReplyType,nullable"`
-	SignatureHash  string `json:"signatureHash,nullable"`
-	Text           string `json:"text,nullable"`
-	URL            string `json:"url,nullable"`
-	URLType        string `json:"urlType,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ActiveFor      respjson.Field
-		AutofillText   respjson.Field
-		CountryCode    respjson.Field
-		OfferCode      respjson.Field
-		OtpType        respjson.Field
-		PackageName    respjson.Field
-		PhoneNumber    respjson.Field
-		QuickReplyType respjson.Field
-		SignatureHash  respjson.Field
-		Text           respjson.Field
-		URL            respjson.Field
-		URLType        respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinitionButtonProps) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinitionButtonProps) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Optional template footer with optional variables
-type TemplateDefinitionFooter struct {
-	// The footer template text with optional variable placeholders
-	Template string `json:"template"`
-	// The type of footer (typically "text")
-	Type string `json:"type,nullable"`
-	// List of variables used in the footer template
-	Variables []TemplateVariable `json:"variables,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Template    respjson.Field
-		Type        respjson.Field
-		Variables   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinitionFooter) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinitionFooter) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Optional template header with optional variables
-type TemplateDefinitionHeader struct {
-	// The header template text with optional variable placeholders (e.g., "Welcome to
-	// {{0:variable}}")
-	Template string `json:"template"`
-	// The type of header (e.g., "text", "image", "video", "document")
-	Type string `json:"type,nullable"`
-	// List of variables used in the header template
-	Variables []TemplateVariable `json:"variables,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Template    respjson.Field
-		Type        respjson.Field
-		Variables   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateDefinitionHeader) RawJSON() string { return r.JSON.raw }
-func (r *TemplateDefinitionHeader) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -500,112 +343,6 @@ func (r *TemplateDefinitionHeaderParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Represents a message template with comprehensive metadata including definition
-// structure
-type TemplateResponseV2 struct {
-	// The unique identifier of the template
-	ID string `json:"id" format:"uuid"`
-	// The template category (e.g., MARKETING, UTILITY, AUTHENTICATION)
-	Category string `json:"category"`
-	// The date and time when the template was created
-	CreatedAt time.Time `json:"createdAt" format:"date-time"`
-	// The complete template definition including header, body, footer, and buttons
-	Definition TemplateDefinition `json:"definition"`
-	// The display name of the template (auto-generated if not provided)
-	DisplayName string `json:"displayName"`
-	// Indicates whether the template is published and available for use
-	IsPublished bool `json:"isPublished"`
-	// The template language code (e.g., en_US, es_ES)
-	Language string `json:"language"`
-	// The approval status of the template (e.g., APPROVED, PENDING, REJECTED, DRAFT)
-	Status string `json:"status"`
-	// The date and time when the template was last updated
-	UpdatedAt time.Time `json:"updatedAt,nullable" format:"date-time"`
-	// The WhatsApp Business API template ID from Meta
-	WhatsappTemplateID string `json:"whatsappTemplateId"`
-	// The WhatsApp template name as registered with Meta
-	WhatsappTemplateName string `json:"whatsappTemplateName"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID                   respjson.Field
-		Category             respjson.Field
-		CreatedAt            respjson.Field
-		Definition           respjson.Field
-		DisplayName          respjson.Field
-		IsPublished          respjson.Field
-		Language             respjson.Field
-		Status               respjson.Field
-		UpdatedAt            respjson.Field
-		WhatsappTemplateID   respjson.Field
-		WhatsappTemplateName respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateResponseV2) RawJSON() string { return r.JSON.raw }
-func (r *TemplateResponseV2) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type TemplateVariable struct {
-	ID    int64                 `json:"id"`
-	Name  string                `json:"name"`
-	Props TemplateVariableProps `json:"props"`
-	Type  string                `json:"type"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Name        respjson.Field
-		Props       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateVariable) RawJSON() string { return r.JSON.raw }
-func (r *TemplateVariable) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this TemplateVariable to a TemplateVariableParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// TemplateVariableParam.Overrides()
-func (r TemplateVariable) ToParam() TemplateVariableParam {
-	return param.Override[TemplateVariableParam](json.RawMessage(r.RawJSON()))
-}
-
-type TemplateVariableProps struct {
-	Alt          string `json:"alt,nullable"`
-	MediaType    string `json:"mediaType,nullable"`
-	Sample       string `json:"sample,nullable"`
-	ShortURL     string `json:"shortUrl,nullable"`
-	URL          string `json:"url,nullable"`
-	VariableType string `json:"variableType,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Alt          respjson.Field
-		MediaType    respjson.Field
-		Sample       respjson.Field
-		ShortURL     respjson.Field
-		URL          respjson.Field
-		VariableType respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateVariableProps) RawJSON() string { return r.JSON.raw }
-func (r *TemplateVariableProps) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type TemplateVariableParam struct {
 	ID    param.Opt[int64]           `json:"id,omitzero"`
 	Name  param.Opt[string]          `json:"name,omitzero"`
@@ -640,19 +377,22 @@ func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Standard API response envelope for all v3 endpoints
 type TemplateListResponse struct {
-	Items      []TemplateResponseV2 `json:"items"`
-	Page       int64                `json:"page"`
-	PageSize   int64                `json:"pageSize"`
-	TotalCount int64                `json:"totalCount"`
-	TotalPages int64                `json:"totalPages"`
+	// The response data (null if error)
+	Data TemplateListResponseData `json:"data,nullable"`
+	// Error details (null if successful)
+	Error APIError `json:"error,nullable"`
+	// Metadata about the request and response
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Items       respjson.Field
-		Page        respjson.Field
-		PageSize    respjson.Field
-		TotalCount  respjson.Field
-		TotalPages  respjson.Field
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -664,19 +404,43 @@ func (r *TemplateListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The response data (null if error)
+type TemplateListResponseData struct {
+	// Pagination metadata
+	Pagination PaginationMeta `json:"pagination"`
+	// List of templates
+	Templates []Template `json:"templates"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Pagination  respjson.Field
+		Templates   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateListResponseData) RawJSON() string { return r.JSON.raw }
+func (r *TemplateListResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type TemplateNewParams struct {
-	// Template definition containing header, body, footer, and buttons
-	Definition TemplateDefinitionParam `json:"definition,omitzero,required"`
-	// The template category (e.g., MARKETING, UTILITY, AUTHENTICATION). Can only be
-	// set when creating a new template. If not provided, will be auto-generated using
-	// AI.
+	// Template category: MARKETING, UTILITY, AUTHENTICATION (optional, auto-detected
+	// if not provided)
 	Category param.Opt[string] `json:"category,omitzero"`
-	// The template language code (e.g., en_US, es_ES). Can only be set when creating a
-	// new template. If not provided, will be auto-detected using AI.
+	// Source of template creation (default: from-api)
+	CreationSource param.Opt[string] `json:"creation_source,omitzero"`
+	// Template language code (e.g., en_US) (optional, auto-detected if not provided)
 	Language param.Opt[string] `json:"language,omitzero"`
-	// When false, the template will be saved as draft. When true, the template will be
-	// submitted for review.
-	SubmitForReview param.Opt[bool] `json:"submitForReview,omitzero"`
+	// Whether to submit the template for review after creation (default: false)
+	SubmitForReview param.Opt[bool] `json:"submit_for_review,omitzero"`
+	// Test mode flag - when true, the operation is simulated without side effects
+	// Useful for testing integrations without actual execution
+	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	// Template definition including header, body, footer, and buttons
+	Definition TemplateDefinitionParam `json:"definition,omitzero"`
 	paramObj
 }
 
@@ -688,16 +452,41 @@ func (r *TemplateNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type TemplateUpdateParams struct {
+	// Template category: MARKETING, UTILITY, AUTHENTICATION
+	Category param.Opt[string] `json:"category,omitzero"`
+	// Template language code (e.g., en_US)
+	Language param.Opt[string] `json:"language,omitzero"`
+	// Template display name
+	Name param.Opt[string] `json:"name,omitzero"`
+	// Whether to submit the template for review after updating (default: false)
+	SubmitForReview param.Opt[bool] `json:"submit_for_review,omitzero"`
+	// Test mode flag - when true, the operation is simulated without side effects
+	// Useful for testing integrations without actual execution
+	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	// Template definition including header, body, footer, and buttons
+	Definition TemplateDefinitionParam `json:"definition,omitzero"`
+	paramObj
+}
+
+func (r TemplateUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type TemplateListParams struct {
-	// The page number (zero-indexed). Default is 0.
-	Page int64 `query:"page,required" json:"-"`
-	// The number of items per page (1-1000). Default is 100.
+	// Page number (1-indexed)
+	Page     int64 `query:"page,required" json:"-"`
 	PageSize int64 `query:"pageSize,required" json:"-"`
-	// Optional filter by template category (e.g., MARKETING, UTILITY, AUTHENTICATION)
+	// Optional category filter: MARKETING, UTILITY, AUTHENTICATION
 	Category param.Opt[string] `query:"category,omitzero" json:"-"`
-	// Optional search term to filter templates by name or content
+	// Optional search term for filtering templates
 	Search param.Opt[string] `query:"search,omitzero" json:"-"`
-	// Optional filter by template status (e.g., APPROVED, PENDING, REJECTED, DRAFT)
+	// Optional status filter: APPROVED, PENDING, REJECTED
 	Status param.Opt[string] `query:"status,omitzero" json:"-"`
 	paramObj
 }
@@ -708,4 +497,22 @@ func (r TemplateListParams) URLQuery() (v url.Values, err error) {
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
+}
+
+type TemplateDeleteParams struct {
+	// Whether to also delete the template from WhatsApp/Meta (optional, defaults to
+	// false)
+	DeleteFromMeta param.Opt[bool] `json:"delete_from_meta,omitzero"`
+	// Test mode flag - when true, the operation is simulated without side effects
+	// Useful for testing integrations without actual execution
+	TestMode param.Opt[bool] `json:"test_mode,omitzero"`
+	paramObj
+}
+
+func (r TemplateDeleteParams) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateDeleteParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateDeleteParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

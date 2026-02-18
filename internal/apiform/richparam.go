@@ -1,7 +1,7 @@
 package apiform
 
 import (
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 	"mime/multipart"
 	"reflect"
 )

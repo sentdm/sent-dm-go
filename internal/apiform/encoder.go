@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sentdm/sent-dm-go/packages/param"
+	"github.com/stainless-sdks/sent-dm-go/packages/param"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
