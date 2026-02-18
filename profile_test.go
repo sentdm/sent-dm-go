@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stainless-sdks/sent-dm-go"
-	"github.com/stainless-sdks/sent-dm-go/internal/testutil"
-	"github.com/stainless-sdks/sent-dm-go/option"
-	"github.com/stainless-sdks/sent-dm-go/packages/param"
+	"github.com/sentdm/sent-dm-go"
+	"github.com/sentdm/sent-dm-go/internal/testutil"
+	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
 )
 
 func TestProfileNewWithOptionalParams(t *testing.T) {

@@ -7,7 +7,7 @@ package apijson
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stainless-sdks/sent-dm-go/packages/param"
+	"github.com/sentdm/sent-dm-go/packages/param"
 	"reflect"
 	"strconv"
 	"sync"
