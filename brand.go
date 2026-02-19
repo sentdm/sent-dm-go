@@ -44,7 +44,7 @@ func NewBrandService(opts ...option.RequestOption) (r BrandService) {
 // inheritTcrBrand=false when a brand is created.
 func (r *BrandService) New(ctx context.Context, params BrandNewParams, opts ...option.RequestOption) (res *APIResponseBrandWithKYC, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/brands"
@@ -56,7 +56,7 @@ func (r *BrandService) New(ctx context.Context, params BrandNewParams, opts ...o
 // that have already been submitted to TCR or inherited brands.
 func (r *BrandService) Update(ctx context.Context, brandID string, params BrandUpdateParams, opts ...option.RequestOption) (res *APIResponseBrandWithKYC, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {

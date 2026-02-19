@@ -44,7 +44,7 @@ func NewContactService(opts ...option.RequestOption) (r ContactService) {
 // customer.
 func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
@@ -70,7 +70,7 @@ func (r *ContactService) Get(ctx context.Context, id string, opts ...option.Requ
 // cannot be updated.
 func (r *ContactService) Update(ctx context.Context, id string, params ContactUpdateParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {

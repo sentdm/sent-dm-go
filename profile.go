@@ -41,7 +41,7 @@ func NewProfileService(opts ...option.RequestOption) (r ProfileService) {
 // configuration and settings. Requires admin role in the organization.
 func (r *ProfileService) New(ctx context.Context, params ProfileNewParams, opts ...option.RequestOption) (res *APIResponseOfProfileDetail, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/profiles"
@@ -66,7 +66,7 @@ func (r *ProfileService) Get(ctx context.Context, profileID string, opts ...opti
 // organization. Only provided fields will be updated (partial update).
 func (r *ProfileService) Update(ctx context.Context, profileID string, params ProfileUpdateParams, opts ...option.RequestOption) (res *APIResponseOfProfileDetail, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {
@@ -122,7 +122,7 @@ func (r *ProfileService) Delete(ctx context.Context, profileID string, body Prof
 //	- Otherwise → COMPLETED
 func (r *ProfileService) Complete(ctx context.Context, profileID string, params ProfileCompleteParams, opts ...option.RequestOption) (res *ProfileCompleteResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {

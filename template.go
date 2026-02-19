@@ -43,7 +43,7 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 // submission.
 func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/templates"
@@ -68,7 +68,7 @@ func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.Req
 // it for review.
 func (r *TemplateService) Update(ctx context.Context, id string, params TemplateUpdateParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
