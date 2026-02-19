@@ -64,7 +64,7 @@ func (r *UserService) List(ctx context.Context, opts ...option.RequestOption) (r
 // with a token to accept. Invitation tokens expire after 7 days.
 func (r *UserService) Invite(ctx context.Context, params UserInviteParams, opts ...option.RequestOption) (res *APIResponseOfUser, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
@@ -90,7 +90,7 @@ func (r *UserService) Remove(ctx context.Context, userID string, body UserRemove
 // cannot change your own role or demote the last admin.
 func (r *UserService) UpdateRole(ctx context.Context, userID string, params UserUpdateRoleParams, opts ...option.RequestOption) (res *APIResponseOfUser, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {

@@ -43,7 +43,7 @@ func NewBrandCampaignService(opts ...option.RequestOption) (r BrandCampaignServi
 // sample messages.
 func (r *BrandCampaignService) New(ctx context.Context, brandID string, params BrandCampaignNewParams, opts ...option.RequestOption) (res *APIResponseTcrCampaignWithUseCases, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
@@ -59,7 +59,7 @@ func (r *BrandCampaignService) New(ctx context.Context, brandID string, params B
 // campaigns that have already been submitted to TCR.
 func (r *BrandCampaignService) Update(ctx context.Context, campaignID string, params BrandCampaignUpdateParams, opts ...option.RequestOption) (res *APIResponseTcrCampaignWithUseCases, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.BrandID == "" {

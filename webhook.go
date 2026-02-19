@@ -43,7 +43,7 @@ func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 // Creates a new webhook endpoint for the authenticated customer.
 func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks"
@@ -66,7 +66,7 @@ func (r *WebhookService) Get(ctx context.Context, id string, opts ...option.Requ
 // Updates an existing webhook for the authenticated customer.
 func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUpdateParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
@@ -123,7 +123,7 @@ func (r *WebhookService) ListEvents(ctx context.Context, id string, query Webhoo
 // immediately invalidated.
 func (r *WebhookService) RotateSecret(ctx context.Context, id string, params WebhookRotateSecretParams, opts ...option.RequestOption) (res *WebhookRotateSecretResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
@@ -138,7 +138,7 @@ func (r *WebhookService) RotateSecret(ctx context.Context, id string, params Web
 // Sends a test event to the specified webhook endpoint to verify connectivity.
 func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTestParams, opts ...option.RequestOption) (res *WebhookTestResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
@@ -153,7 +153,7 @@ func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTest
 // Activates or deactivates a webhook for the authenticated customer.
 func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params WebhookToggleStatusParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
