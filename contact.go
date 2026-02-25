@@ -108,9 +108,9 @@ func (r *ContactService) Delete(ctx context.Context, id string, body ContactDele
 // Standard API response envelope for all v3 endpoints
 type APIResponseContact struct {
 	// The response data (null if error)
-	Data Contact `json:"data,nullable"`
+	Data Contact `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -161,7 +161,7 @@ type Contact struct {
 	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
 	RegionCode string `json:"region_code"`
 	// When the contact was last updated
-	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                  respjson.Field
@@ -192,9 +192,9 @@ func (r *Contact) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type ContactListResponse struct {
 	// The response data (null if error)
-	Data ContactListResponseData `json:"data,nullable"`
+	Data ContactListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -277,8 +277,8 @@ func (r *ContactUpdateParams) UnmarshalJSON(data []byte) error {
 
 type ContactListParams struct {
 	// Page number (1-indexed)
-	Page     int64 `query:"page,required" json:"-"`
-	PageSize int64 `query:"pageSize,required" json:"-"`
+	Page     int64 `query:"page" api:"required" json:"-"`
+	PageSize int64 `query:"pageSize" api:"required" json:"-"`
 	// Optional channel filter (sms, whatsapp)
 	Channel param.Opt[string] `query:"channel,omitzero" json:"-"`
 	// Optional phone number filter (alternative to list view)

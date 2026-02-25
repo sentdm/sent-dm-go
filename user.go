@@ -105,9 +105,9 @@ func (r *UserService) UpdateRole(ctx context.Context, userID string, params User
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfUser struct {
 	// The response data (null if error)
-	Data UserResponse `json:"data,nullable"`
+	Data UserResponse `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -138,9 +138,9 @@ type UserResponse struct {
 	// User email address
 	Email string `json:"email"`
 	// When the user was invited
-	InvitedAt time.Time `json:"invited_at,nullable" format:"date-time"`
+	InvitedAt time.Time `json:"invited_at" api:"nullable" format:"date-time"`
 	// When the user last logged in
-	LastLoginAt time.Time `json:"last_login_at,nullable" format:"date-time"`
+	LastLoginAt time.Time `json:"last_login_at" api:"nullable" format:"date-time"`
 	// User full name
 	Name string `json:"name"`
 	// User role in the organization: admin, billing, developer
@@ -148,7 +148,7 @@ type UserResponse struct {
 	// User status: active, invited, suspended, rejected
 	Status string `json:"status"`
 	// When the user record was last updated
-	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -174,9 +174,9 @@ func (r *UserResponse) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type UserListResponse struct {
 	// The response data (null if error)
-	Data UserListResponseData `json:"data,nullable"`
+	Data UserListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful

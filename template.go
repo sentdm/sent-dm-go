@@ -106,9 +106,9 @@ func (r *TemplateService) Delete(ctx context.Context, id string, body TemplateDe
 // Standard API response envelope for all v3 endpoints
 type APIResponseTemplate struct {
 	// The response data (null if error)
-	Data Template `json:"data,nullable"`
+	Data Template `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -259,7 +259,7 @@ type Template struct {
 	// Template category: MARKETING, UTILITY, AUTHENTICATION
 	Category string `json:"category"`
 	// Supported channels: sms, whatsapp
-	Channels []string `json:"channels,nullable"`
+	Channels []string `json:"channels" api:"nullable"`
 	// When the template was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Whether the template is published and active
@@ -271,9 +271,9 @@ type Template struct {
 	// Template status: APPROVED, PENDING, REJECTED
 	Status string `json:"status"`
 	// When the template was last updated
-	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// Template variables for personalization
-	Variables []string `json:"variables,nullable"`
+	Variables []string `json:"variables" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -319,7 +319,7 @@ func (r *TemplateBodyContentParam) UnmarshalJSON(data []byte) error {
 type TemplateDefinitionParam struct {
 	// Required template body with content for different channels (multi-channel,
 	// SMS-specific, or WhatsApp-specific)
-	Body SentDmServicesCommonContractsPocOsTemplateBodyParam `json:"body,omitzero,required"`
+	Body SentDmServicesCommonContractsPocOsTemplateBodyParam `json:"body,omitzero" api:"required"`
 	// The version of the template definition format
 	DefinitionVersion param.Opt[string] `json:"definitionVersion,omitzero"`
 	// Optional list of interactive buttons (e.g., quick replies, URLs, phone numbers)
@@ -378,9 +378,9 @@ func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type TemplateListResponse struct {
 	// The response data (null if error)
-	Data TemplateListResponseData `json:"data,nullable"`
+	Data TemplateListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -478,8 +478,8 @@ func (r *TemplateUpdateParams) UnmarshalJSON(data []byte) error {
 
 type TemplateListParams struct {
 	// Page number (1-indexed)
-	Page     int64 `query:"page,required" json:"-"`
-	PageSize int64 `query:"pageSize,required" json:"-"`
+	Page     int64 `query:"page" api:"required" json:"-"`
+	PageSize int64 `query:"pageSize" api:"required" json:"-"`
 	// Optional category filter: MARKETING, UTILITY, AUTHENTICATION
 	Category param.Opt[string] `query:"category,omitzero" json:"-"`
 	// Optional search term for filtering templates

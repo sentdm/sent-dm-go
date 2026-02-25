@@ -170,9 +170,9 @@ type APIError struct {
 	// Machine-readable error code (e.g., "RESOURCE_001")
 	Code string `json:"code"`
 	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details,nullable"`
+	Details map[string][]string `json:"details" api:"nullable"`
 	// URL to documentation about this error
-	DocURL string `json:"doc_url,nullable"`
+	DocURL string `json:"doc_url" api:"nullable"`
 	// Human-readable error message
 	Message string `json:"message"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -197,7 +197,7 @@ type APIMeta struct {
 	// Unique identifier for this request (for tracing and support)
 	RequestID string `json:"request_id"`
 	// Response time in milliseconds (optional)
-	ResponseTimeMs int64 `json:"response_time_ms,nullable"`
+	ResponseTimeMs int64 `json:"response_time_ms" api:"nullable"`
 	// Server timestamp when the response was generated
 	Timestamp time.Time `json:"timestamp" format:"date-time"`
 	// API version used for this request
@@ -222,9 +222,9 @@ func (r *APIMeta) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type APIResponseWebhook struct {
 	// The response data (null if error)
-	Data WebhookResponse `json:"data,nullable"`
+	Data WebhookResponse `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -264,7 +264,7 @@ func (r *MutationRequestParam) UnmarshalJSON(data []byte) error {
 // Pagination metadata for list responses
 type PaginationMeta struct {
 	// Cursor-based pagination (optional)
-	Cursors PaginationMetaCursors `json:"cursors,nullable"`
+	Cursors PaginationMetaCursors `json:"cursors" api:"nullable"`
 	// Whether there are more pages after this one
 	HasMore bool `json:"has_more"`
 	// Current page number (1-indexed)
@@ -297,9 +297,9 @@ func (r *PaginationMeta) UnmarshalJSON(data []byte) error {
 // Cursor-based pagination (optional)
 type PaginationMetaCursors struct {
 	// Cursor to fetch the next page
-	After string `json:"after,nullable"`
+	After string `json:"after" api:"nullable"`
 	// Cursor to fetch the previous page
-	Before string `json:"before,nullable"`
+	Before string `json:"before" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		After       respjson.Field
@@ -323,12 +323,12 @@ type WebhookResponse struct {
 	EndpointURL              string    `json:"endpoint_url"`
 	EventTypes               []string  `json:"event_types"`
 	IsActive                 bool      `json:"is_active"`
-	LastDeliveryAttemptAt    time.Time `json:"last_delivery_attempt_at,nullable" format:"date-time"`
-	LastSuccessfulDeliveryAt time.Time `json:"last_successful_delivery_at,nullable" format:"date-time"`
+	LastDeliveryAttemptAt    time.Time `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	LastSuccessfulDeliveryAt time.Time `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
 	RetryCount               int64     `json:"retry_count"`
-	SigningSecret            string    `json:"signing_secret,nullable"`
+	SigningSecret            string    `json:"signing_secret" api:"nullable"`
 	TimeoutSeconds           int64     `json:"timeout_seconds"`
-	UpdatedAt                time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt                time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
@@ -358,9 +358,9 @@ func (r *WebhookResponse) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type WebhookListResponse struct {
 	// The response data (null if error)
-	Data WebhookListResponseData `json:"data,nullable"`
+	Data WebhookListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -405,9 +405,9 @@ func (r *WebhookListResponseData) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type WebhookListEventTypesResponse struct {
 	// The response data (null if error)
-	Data WebhookListEventTypesResponseData `json:"data,nullable"`
+	Data WebhookListEventTypesResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -447,7 +447,7 @@ func (r *WebhookListEventTypesResponseData) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListEventTypesResponseDataEventType struct {
-	Description string `json:"description,nullable"`
+	Description string `json:"description" api:"nullable"`
 	DisplayName string `json:"display_name"`
 	IsActive    bool   `json:"is_active"`
 	Name        string `json:"name"`
@@ -471,9 +471,9 @@ func (r *WebhookListEventTypesResponseDataEventType) UnmarshalJSON(data []byte) 
 // Standard API response envelope for all v3 endpoints
 type WebhookListEventsResponse struct {
 	// The response data (null if error)
-	Data WebhookListEventsResponseData `json:"data,nullable"`
+	Data WebhookListEventsResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -520,13 +520,13 @@ type WebhookListEventsResponseDataEvent struct {
 	CreatedAt             time.Time `json:"created_at" format:"date-time"`
 	DeliveryAttempts      int64     `json:"delivery_attempts"`
 	DeliveryStatus        string    `json:"delivery_status"`
-	ErrorMessage          string    `json:"error_message,nullable"`
+	ErrorMessage          string    `json:"error_message" api:"nullable"`
 	EventData             any       `json:"event_data"`
 	EventType             string    `json:"event_type"`
-	HTTPStatusCode        int64     `json:"http_status_code,nullable"`
-	ProcessingCompletedAt time.Time `json:"processing_completed_at,nullable" format:"date-time"`
-	ProcessingStartedAt   time.Time `json:"processing_started_at,nullable" format:"date-time"`
-	ResponseBody          string    `json:"response_body,nullable"`
+	HTTPStatusCode        int64     `json:"http_status_code" api:"nullable"`
+	ProcessingCompletedAt time.Time `json:"processing_completed_at" api:"nullable" format:"date-time"`
+	ProcessingStartedAt   time.Time `json:"processing_started_at" api:"nullable" format:"date-time"`
+	ResponseBody          string    `json:"response_body" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                    respjson.Field
@@ -554,9 +554,9 @@ func (r *WebhookListEventsResponseDataEvent) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type WebhookRotateSecretResponse struct {
 	// The response data (null if error)
-	Data WebhookRotateSecretResponseData `json:"data,nullable"`
+	Data WebhookRotateSecretResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -598,9 +598,9 @@ func (r *WebhookRotateSecretResponseData) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type WebhookTestResponse struct {
 	// The response data (null if error)
-	Data WebhookTestResponseData `json:"data,nullable"`
+	Data WebhookTestResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -684,8 +684,8 @@ func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListParams struct {
-	Page     int64             `query:"page,required" json:"-"`
-	PageSize int64             `query:"pageSize,required" json:"-"`
+	Page     int64             `query:"page" api:"required" json:"-"`
+	PageSize int64             `query:"pageSize" api:"required" json:"-"`
 	IsActive param.Opt[bool]   `query:"isActive,omitzero" json:"-"`
 	Search   param.Opt[string] `query:"search,omitzero" json:"-"`
 	paramObj
@@ -700,8 +700,8 @@ func (r WebhookListParams) URLQuery() (v url.Values, err error) {
 }
 
 type WebhookListEventsParams struct {
-	Page     int64             `query:"page,required" json:"-"`
-	PageSize int64             `query:"pageSize,required" json:"-"`
+	Page     int64             `query:"page" api:"required" json:"-"`
+	PageSize int64             `query:"pageSize" api:"required" json:"-"`
 	Search   param.Opt[string] `query:"search,omitzero" json:"-"`
 	paramObj
 }
