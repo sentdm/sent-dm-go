@@ -46,19 +46,19 @@ func (r *MeService) Get(ctx context.Context, opts ...option.RequestOption) (res 
 // Profile configuration settings
 type ProfileSettings struct {
 	// Whether contacts are shared across profiles in the organization
-	AllowContactSharing bool `json:"allow_contact_sharing,nullable"`
+	AllowContactSharing bool `json:"allow_contact_sharing" api:"nullable"`
 	// Whether templates are shared across profiles in the organization
-	AllowTemplateSharing bool `json:"allow_template_sharing,nullable"`
+	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
 	// Billing model: profile, organization, or profile_and_organization
-	BillingModel string `json:"billing_model,nullable"`
+	BillingModel string `json:"billing_model" api:"nullable"`
 	// Whether this profile inherits contacts from the organization
-	InheritContacts bool `json:"inherit_contacts,nullable"`
+	InheritContacts bool `json:"inherit_contacts" api:"nullable"`
 	// Whether this profile inherits TCR brand from the organization
-	InheritTcrBrand bool `json:"inherit_tcr_brand,nullable"`
+	InheritTcrBrand bool `json:"inherit_tcr_brand" api:"nullable"`
 	// Whether this profile inherits TCR campaign from the organization
-	InheritTcrCampaign bool `json:"inherit_tcr_campaign,nullable"`
+	InheritTcrCampaign bool `json:"inherit_tcr_campaign" api:"nullable"`
 	// Whether this profile inherits templates from the organization
-	InheritTemplates bool `json:"inherit_templates,nullable"`
+	InheritTemplates bool `json:"inherit_templates" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		AllowContactSharing  respjson.Field
@@ -82,9 +82,9 @@ func (r *ProfileSettings) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type MeGetResponse struct {
 	// The response data (null if error)
-	Data MeGetResponseData `json:"data,nullable"`
+	Data MeGetResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -113,18 +113,18 @@ type MeGetResponseData struct {
 	// When the account was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Account description
-	Description string `json:"description,nullable"`
+	Description string `json:"description" api:"nullable"`
 	// Account icon URL
-	Icon string `json:"icon,nullable"`
+	Icon string `json:"icon" api:"nullable"`
 	// Account name
 	Name string `json:"name"`
 	// List of profiles (only for organization type)
-	Profiles []MeGetResponseDataProfile `json:"profiles,nullable"`
+	Profiles []MeGetResponseDataProfile `json:"profiles" api:"nullable"`
 	// Profile settings (only for profile type)
-	Settings ProfileSettings `json:"settings,nullable"`
+	Settings ProfileSettings `json:"settings" api:"nullable"`
 	// Profile status (only for profile type): incomplete, pending_review, approved,
 	// etc.
-	Status string `json:"status,nullable"`
+	Status string `json:"status" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -153,20 +153,20 @@ type MeGetResponseDataProfile struct {
 	// When the profile was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Profile description
-	Description string `json:"description,nullable"`
+	Description string `json:"description" api:"nullable"`
 	// Profile icon URL
-	Icon string `json:"icon,nullable"`
+	Icon string `json:"icon" api:"nullable"`
 	// Profile name
 	Name string `json:"name"`
 	// User's role in this profile: admin, billing, developer (inherited from
 	// organization if not explicitly set)
-	Role string `json:"role,nullable"`
+	Role string `json:"role" api:"nullable"`
 	// Profile configuration settings
 	Settings ProfileSettings `json:"settings"`
 	// Profile short name (abbreviation)
-	ShortName string `json:"short_name,nullable"`
+	ShortName string `json:"short_name" api:"nullable"`
 	// Profile setup status: incomplete, pending_review, approved, rejected
-	Status string `json:"status,nullable"`
+	Status string `json:"status" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

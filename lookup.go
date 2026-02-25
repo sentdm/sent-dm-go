@@ -52,9 +52,9 @@ func (r *LookupService) GetPhoneInfo(ctx context.Context, phoneNumber string, op
 // Standard API response envelope for all v3 endpoints
 type LookupGetPhoneInfoResponse struct {
 	// The response data (null if error)
-	Data LookupGetPhoneInfoResponseData `json:"data,nullable"`
+	Data LookupGetPhoneInfoResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -78,13 +78,13 @@ func (r *LookupGetPhoneInfoResponse) UnmarshalJSON(data []byte) error {
 
 // The response data (null if error)
 type LookupGetPhoneInfoResponseData struct {
-	CarrierName       string `json:"carrierName,nullable"`
-	IsPorted          bool   `json:"isPorted,nullable"`
+	CarrierName       string `json:"carrierName" api:"nullable"`
+	IsPorted          bool   `json:"isPorted" api:"nullable"`
 	IsValid           bool   `json:"isValid"`
-	IsVoip            bool   `json:"isVoip,nullable"`
-	LineType          string `json:"lineType,nullable"`
-	MobileCountryCode string `json:"mobileCountryCode,nullable"`
-	MobileNetworkCode string `json:"mobileNetworkCode,nullable"`
+	IsVoip            bool   `json:"isVoip" api:"nullable"`
+	LineType          string `json:"lineType" api:"nullable"`
+	MobileCountryCode string `json:"mobileCountryCode" api:"nullable"`
+	MobileNetworkCode string `json:"mobileNetworkCode" api:"nullable"`
 	PhoneNumber       string `json:"phoneNumber"`
 	Provider          string `json:"provider"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].

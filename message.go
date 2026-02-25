@@ -80,9 +80,9 @@ func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opt
 // Standard API response envelope for all v3 endpoints
 type MessageGetActivitiesResponse struct {
 	// The response data (null if error)
-	Data MessageGetActivitiesResponseData `json:"data,nullable"`
+	Data MessageGetActivitiesResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -128,7 +128,7 @@ func (r *MessageGetActivitiesResponseData) UnmarshalJSON(data []byte) error {
 // A single message activity event for v3 API
 type MessageGetActivitiesResponseDataActivity struct {
 	// Additional content or payload for the activity (e.g., channel response)
-	Content string `json:"content,nullable"`
+	Content string `json:"content" api:"nullable"`
 	// Human-readable description of the activity
 	Description string `json:"description"`
 	// Activity status (e.g., ACCEPTED, PROCESSED, SENT, DELIVERED, FAILED)
@@ -155,9 +155,9 @@ func (r *MessageGetActivitiesResponseDataActivity) UnmarshalJSON(data []byte) er
 // Standard API response envelope for all v3 endpoints
 type MessageGetStatusResponse struct {
 	// The response data (null if error)
-	Data MessageGetStatusResponseData `json:"data,nullable"`
+	Data MessageGetStatusResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -186,17 +186,17 @@ type MessageGetStatusResponseData struct {
 	ContactID  string                              `json:"contact_id" format:"uuid"`
 	CreatedAt  time.Time                           `json:"created_at" format:"date-time"`
 	CustomerID string                              `json:"customer_id" format:"uuid"`
-	Events     []MessageGetStatusResponseDataEvent `json:"events,nullable"`
+	Events     []MessageGetStatusResponseDataEvent `json:"events" api:"nullable"`
 	// Structured message body format for database storage. Preserves channel-specific
 	// components (header, body, footer, buttons).
-	MessageBody        MessageGetStatusResponseDataMessageBody `json:"message_body,nullable"`
+	MessageBody        MessageGetStatusResponseDataMessageBody `json:"message_body" api:"nullable"`
 	Phone              string                                  `json:"phone"`
 	PhoneInternational string                                  `json:"phone_international"`
-	Price              float64                                 `json:"price,nullable"`
+	Price              float64                                 `json:"price" api:"nullable"`
 	RegionCode         string                                  `json:"region_code"`
 	Status             string                                  `json:"status"`
 	TemplateCategory   string                                  `json:"template_category"`
-	TemplateID         string                                  `json:"template_id,nullable" format:"uuid"`
+	TemplateID         string                                  `json:"template_id" api:"nullable" format:"uuid"`
 	TemplateName       string                                  `json:"template_name"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -228,7 +228,7 @@ func (r *MessageGetStatusResponseData) UnmarshalJSON(data []byte) error {
 
 // Represents a status change event in a message's lifecycle (v3)
 type MessageGetStatusResponseDataEvent struct {
-	Description string    `json:"description,nullable"`
+	Description string    `json:"description" api:"nullable"`
 	Status      string    `json:"status"`
 	Timestamp   time.Time `json:"timestamp" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -250,10 +250,10 @@ func (r *MessageGetStatusResponseDataEvent) UnmarshalJSON(data []byte) error {
 // Structured message body format for database storage. Preserves channel-specific
 // components (header, body, footer, buttons).
 type MessageGetStatusResponseDataMessageBody struct {
-	Buttons []MessageGetStatusResponseDataMessageBodyButton `json:"buttons,nullable"`
+	Buttons []MessageGetStatusResponseDataMessageBodyButton `json:"buttons" api:"nullable"`
 	Content string                                          `json:"content"`
-	Footer  string                                          `json:"footer,nullable"`
-	Header  string                                          `json:"header,nullable"`
+	Footer  string                                          `json:"footer" api:"nullable"`
+	Header  string                                          `json:"header" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Buttons     respjson.Field
@@ -292,9 +292,9 @@ func (r *MessageGetStatusResponseDataMessageBodyButton) UnmarshalJSON(data []byt
 // Standard API response envelope for all v3 endpoints
 type MessageSendResponse struct {
 	// The response data (null if error)
-	Data MessageSendResponseData `json:"data,nullable"`
+	Data MessageSendResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -319,7 +319,7 @@ func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 // The response data (null if error)
 type MessageSendResponseData struct {
 	// Resolved template body text
-	Body string `json:"body,nullable"`
+	Body string `json:"body" api:"nullable"`
 	// Per-recipient message results
 	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
 	// Overall request status (e.g. "accepted")
@@ -350,7 +350,7 @@ func (r *MessageSendResponseData) UnmarshalJSON(data []byte) error {
 type MessageSendResponseDataRecipient struct {
 	// Channel this message will be sent on (e.g. "sms", "whatsapp"), or null for
 	// auto-detect
-	Channel string `json:"channel,nullable"`
+	Channel string `json:"channel" api:"nullable"`
 	// Unique message identifier for tracking this recipient's message
 	MessageID string `json:"message_id" format:"uuid"`
 	// Phone number in E.164 format

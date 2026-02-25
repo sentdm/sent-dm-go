@@ -137,9 +137,9 @@ func (r *ProfileService) Complete(ctx context.Context, profileID string, params 
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfProfileDetail struct {
 	// The response data (null if error)
-	Data ProfileDetail `json:"data,nullable"`
+	Data ProfileDetail `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -168,23 +168,23 @@ type ProfileDetail struct {
 	// When the profile was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Profile description
-	Description string `json:"description,nullable"`
+	Description string `json:"description" api:"nullable"`
 	// Profile email (inherited from organization)
-	Email string `json:"email,nullable"`
+	Email string `json:"email" api:"nullable"`
 	// Profile icon URL
-	Icon string `json:"icon,nullable"`
+	Icon string `json:"icon" api:"nullable"`
 	// Profile name
 	Name string `json:"name"`
 	// Parent organization ID
-	OrganizationID string `json:"organization_id,nullable" format:"uuid"`
+	OrganizationID string `json:"organization_id" api:"nullable" format:"uuid"`
 	// Profile configuration settings
 	Settings ProfileDetailSettings `json:"settings"`
 	// Profile short name (abbreviation)
-	ShortName string `json:"short_name,nullable"`
+	ShortName string `json:"short_name" api:"nullable"`
 	// Profile setup status: incomplete, pending_review, approved, rejected
 	Status string `json:"status"`
 	// When the profile was last updated
-	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID             respjson.Field
@@ -214,7 +214,7 @@ type ProfileDetailSettings struct {
 	// Whether contacts are shared across profiles in the organization
 	AllowContactSharing bool `json:"allow_contact_sharing"`
 	// Whether number changes are allowed during onboarding
-	AllowNumberChangeDuringOnboarding bool `json:"allow_number_change_during_onboarding,nullable"`
+	AllowNumberChangeDuringOnboarding bool `json:"allow_number_change_during_onboarding" api:"nullable"`
 	// Whether templates are shared across profiles in the organization
 	AllowTemplateSharing bool `json:"allow_template_sharing"`
 	// Billing model: profile, organization, or profile_and_organization
@@ -228,13 +228,13 @@ type ProfileDetailSettings struct {
 	// Whether this profile inherits templates from the organization
 	InheritTemplates bool `json:"inherit_templates"`
 	// Direct SMS phone number
-	SendingPhoneNumber string `json:"sending_phone_number,nullable"`
+	SendingPhoneNumber string `json:"sending_phone_number" api:"nullable"`
 	// Reference to another profile for SMS/Telnyx configuration
-	SendingPhoneNumberProfileID string `json:"sending_phone_number_profile_id,nullable" format:"uuid"`
+	SendingPhoneNumberProfileID string `json:"sending_phone_number_profile_id" api:"nullable" format:"uuid"`
 	// Reference to another profile for WhatsApp configuration
-	SendingWhatsappNumberProfileID string `json:"sending_whatsapp_number_profile_id,nullable" format:"uuid"`
+	SendingWhatsappNumberProfileID string `json:"sending_whatsapp_number_profile_id" api:"nullable" format:"uuid"`
 	// Direct WhatsApp phone number
-	WhatsappPhoneNumber string `json:"whatsapp_phone_number,nullable"`
+	WhatsappPhoneNumber string `json:"whatsapp_phone_number" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		AllowContactSharing               respjson.Field
@@ -263,9 +263,9 @@ func (r *ProfileDetailSettings) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type ProfileListResponse struct {
 	// The response data (null if error)
-	Data ProfileListResponseData `json:"data,nullable"`
+	Data ProfileListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -415,7 +415,7 @@ func (r *ProfileDeleteParams) UnmarshalJSON(data []byte) error {
 
 type ProfileCompleteParams struct {
 	// Webhook URL to call when profile completion finishes (success or failure)
-	WebHookURL string `json:"webHookUrl,required" format:"uri"`
+	WebHookURL string `json:"webHookUrl" api:"required" format:"uri"`
 	// Test mode flag - when true, the operation is simulated without side effects
 	// Useful for testing integrations without actual execution
 	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
