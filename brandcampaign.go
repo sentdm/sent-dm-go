@@ -19,6 +19,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Register and manage 10DLC brands for SMS compliance
+//
 // BrandCampaignService contains methods and other services that help with
 // interacting with the sent-dm API.
 //

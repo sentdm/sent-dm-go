@@ -14,6 +14,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Retrieve account details
+//
 // MeService contains methods and other services that help with interacting with
 // the sent-dm API.
 //

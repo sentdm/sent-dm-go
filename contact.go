@@ -21,6 +21,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Create, update, and manage customer contact lists
+//
 // ContactService contains methods and other services that help with interacting
 // with the sent-dm API.
 //
