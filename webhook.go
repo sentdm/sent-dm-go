@@ -21,6 +21,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Configure webhook endpoints for real-time event delivery
+//
 // WebhookService contains methods and other services that help with interacting
 // with the sent-dm API.
 //

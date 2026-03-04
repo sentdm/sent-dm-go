@@ -17,6 +17,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Invite, update, and manage organization users and roles
+//
 // UserService contains methods and other services that help with interacting with
 // the sent-dm API.
 //

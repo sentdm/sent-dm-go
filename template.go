@@ -19,6 +19,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Manage message templates with variable substitution
+//
 // TemplateService contains methods and other services that help with interacting
 // with the sent-dm API.
 //

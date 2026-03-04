@@ -17,6 +17,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Manage organization profiles
+//
 // ProfileService contains methods and other services that help with interacting
 // with the sent-dm API.
 //

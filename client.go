@@ -16,16 +16,24 @@ import (
 // interacting with the sent-dm API. You should not instantiate this client
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options   []option.RequestOption
-	Webhooks  WebhookService
-	Users     UserService
+	Options []option.RequestOption
+	// Configure webhook endpoints for real-time event delivery
+	Webhooks WebhookService
+	// Invite, update, and manage organization users and roles
+	Users UserService
+	// Manage message templates with variable substitution
 	Templates TemplateService
-	Profiles  ProfileService
-	Messages  MessageService
-	Lookup    LookupService
-	Contacts  ContactService
-	Brands    BrandService
-	Me        MeService
+	// Manage organization profiles
+	Profiles ProfileService
+	// Send and track SMS and WhatsApp messages
+	Messages MessageService
+	Lookup   LookupService
+	// Create, update, and manage customer contact lists
+	Contacts ContactService
+	// Register and manage 10DLC brands for SMS compliance
+	Brands BrandService
+	// Retrieve account details
+	Me MeService
 }
 
 // DefaultClientOptions read from the environment (SENT_DM_API_KEY,

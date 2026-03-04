@@ -19,6 +19,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Register and manage 10DLC brands for SMS compliance
+//
 // BrandService contains methods and other services that help with interacting with
 // the sent-dm API.
 //
@@ -26,7 +28,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBrandService] method instead.
 type BrandService struct {
-	Options   []option.RequestOption
+	Options []option.RequestOption
+	// Register and manage 10DLC brands for SMS compliance
 	Campaigns BrandCampaignService
 }
 
