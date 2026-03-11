@@ -37,7 +37,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.7.0'
+go get -u 'github.com/sentdm/sent-dm-go@v0.7.1'
 ```
 
 <!-- x-release-please-end -->
