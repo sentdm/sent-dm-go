@@ -275,18 +275,18 @@ func (r *APIResponseWebhook) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MutationRequestParam struct {
+type MutationRequestBaseParam struct {
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
 	paramObj
 }
 
-func (r MutationRequestParam) MarshalJSON() (data []byte, err error) {
-	type shadow MutationRequestParam
+func (r MutationRequestBaseParam) MarshalJSON() (data []byte, err error) {
+	type shadow MutationRequestBaseParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *MutationRequestParam) UnmarshalJSON(data []byte) error {
+func (r *MutationRequestBaseParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -778,7 +778,7 @@ func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookRotateSecretParamsBody struct {
-	MutationRequestParam
+	MutationRequestBaseParam
 }
 
 func (r WebhookRotateSecretParamsBody) MarshalJSON() (data []byte, err error) {

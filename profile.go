@@ -30,6 +30,8 @@ import (
 // the [NewProfileService] method instead.
 type ProfileService struct {
 	Options []option.RequestOption
+	// Manage organization profiles
+	Campaigns ProfileCampaignService
 }
 
 // NewProfileService generates a new service that applies the given options to each
@@ -38,6 +40,7 @@ type ProfileService struct {
 func NewProfileService(opts ...option.RequestOption) (r ProfileService) {
 	r = ProfileService{}
 	r.Options = opts
+	r.Campaigns = NewProfileCampaignService(opts...)
 	return
 }
 
@@ -191,7 +194,7 @@ func (r *ProfileService) Delete(ctx context.Context, profileID string, params Pr
 //	- If TCR application and not inheriting brand/campaigns → SUBMITTED
 //	- If non-TCR with destination country (IsMain=true) → SUBMITTED
 //	- Otherwise → COMPLETED
-func (r *ProfileService) Complete(ctx context.Context, profileID string, params ProfileCompleteParams, opts ...option.RequestOption) (res *ProfileCompleteResponse, err error) {
+func (r *ProfileService) CompleteSetup(ctx context.Context, profileID string, params ProfileCompleteSetupParams, opts ...option.RequestOption) (res *ProfileCompleteSetupResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -235,6 +238,229 @@ func (r *APIResponseOfProfileDetail) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Billing contact information for a profile. Required when billing_model is
+// "profile" or "profile_and_organization".
+//
+// The properties Email, Name are required.
+type BillingContactInfoParam struct {
+	// Email address where invoices will be sent (required)
+	Email string `json:"email" api:"required" format:"email"`
+	// Full name of the billing contact or company (required)
+	Name string `json:"name" api:"required"`
+	// Billing address (optional). Free-form text including street, city, state, postal
+	// code, and country.
+	Address param.Opt[string] `json:"address,omitzero"`
+	// Phone number for the billing contact (optional)
+	Phone param.Opt[string] `json:"phone,omitzero"`
+	paramObj
+}
+
+func (r BillingContactInfoParam) MarshalJSON() (data []byte, err error) {
+	type shadow BillingContactInfoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BillingContactInfoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Brand and KYC data grouped into contact, business, and compliance sections
+//
+// The properties Compliance, Contact are required.
+type BrandsBrandDataParam struct {
+	// Compliance and TCR-related information
+	Compliance BrandsBrandDataComplianceParam `json:"compliance,omitzero" api:"required"`
+	// Contact information for the brand
+	Contact BrandsBrandDataContactParam `json:"contact,omitzero" api:"required"`
+	// Business details and address information
+	Business BrandsBrandDataBusinessParam `json:"business,omitzero"`
+	paramObj
+}
+
+func (r BrandsBrandDataParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandsBrandDataParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandsBrandDataParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Compliance and TCR-related information
+//
+// The properties BrandRelationship, Vertical are required.
+type BrandsBrandDataComplianceParam struct {
+	// Brand relationship level with TCR (required for TCR)
+	//
+	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
+	// "KEY_ACCOUNT".
+	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
+	// Business vertical/industry category (required for TCR)
+	//
+	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
+	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
+	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
+	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
+	// "COMMUNICATION".
+	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
+	// Expected daily messaging volume
+	ExpectedMessagingVolume param.Opt[string] `json:"expectedMessagingVolume,omitzero"`
+	// Whether this is a TCR (Campaign Registry) application
+	IsTcrApplication param.Opt[bool] `json:"isTcrApplication,omitzero"`
+	// Additional notes about the business or use case
+	Notes param.Opt[string] `json:"notes,omitzero"`
+	// Phone number prefix for messaging (e.g., "+1")
+	PhoneNumberPrefix param.Opt[string] `json:"phoneNumberPrefix,omitzero"`
+	// Primary messaging use case description
+	PrimaryUseCase param.Opt[string] `json:"primaryUseCase,omitzero"`
+	// List of destination countries for messaging
+	DestinationCountries []DestinationCountryParam `json:"destinationCountries,omitzero"`
+	paramObj
+}
+
+func (r BrandsBrandDataComplianceParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandsBrandDataComplianceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandsBrandDataComplianceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Contact information for the brand
+//
+// The property Name is required.
+type BrandsBrandDataContactParam struct {
+	// Primary contact name (required)
+	Name string `json:"name" api:"required"`
+	// Business/brand name
+	BusinessName param.Opt[string] `json:"businessName,omitzero"`
+	// Contact email address
+	Email param.Opt[string] `json:"email,omitzero" format:"email"`
+	// Contact phone number in E.164 format
+	Phone param.Opt[string] `json:"phone,omitzero"`
+	// Contact phone country code (e.g., "1" for US)
+	PhoneCountryCode param.Opt[string] `json:"phoneCountryCode,omitzero"`
+	// Contact's role in the business
+	Role param.Opt[string] `json:"role,omitzero"`
+	paramObj
+}
+
+func (r BrandsBrandDataContactParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandsBrandDataContactParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandsBrandDataContactParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Business details and address information
+type BrandsBrandDataBusinessParam struct {
+	// City
+	City param.Opt[string] `json:"city,omitzero"`
+	// Country code (e.g., US, CA)
+	Country param.Opt[string] `json:"country,omitzero"`
+	// Country where the business is registered
+	CountryOfRegistration param.Opt[string] `json:"countryOfRegistration,omitzero"`
+	// Legal business name
+	LegalName param.Opt[string] `json:"legalName,omitzero"`
+	// Postal/ZIP code
+	PostalCode param.Opt[string] `json:"postalCode,omitzero"`
+	// State/province code
+	State param.Opt[string] `json:"state,omitzero"`
+	// Street address
+	Street param.Opt[string] `json:"street,omitzero"`
+	// Tax ID/EIN number
+	TaxID param.Opt[string] `json:"taxId,omitzero"`
+	// Type of tax ID (e.g., us_ein, ca_bn)
+	TaxIDType param.Opt[string] `json:"taxIdType,omitzero"`
+	// Business website URL
+	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
+	// Business entity type
+	//
+	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
+	// "GOVERNMENT".
+	EntityType string `json:"entityType,omitzero"`
+	paramObj
+}
+
+func (r BrandsBrandDataBusinessParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandsBrandDataBusinessParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandsBrandDataBusinessParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BrandsBrandDataBusinessParam](
+		"entityType", "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR", "GOVERNMENT",
+	)
+}
+
+type DestinationCountry struct {
+	ID     string `json:"id"`
+	IsMain bool   `json:"isMain"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		IsMain      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DestinationCountry) RawJSON() string { return r.JSON.raw }
+func (r *DestinationCountry) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DestinationCountry to a DestinationCountryParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DestinationCountryParam.Overrides()
+func (r DestinationCountry) ToParam() DestinationCountryParam {
+	return param.Override[DestinationCountryParam](json.RawMessage(r.RawJSON()))
+}
+
+type DestinationCountryParam struct {
+	ID     param.Opt[string] `json:"id,omitzero"`
+	IsMain param.Opt[bool]   `json:"isMain,omitzero"`
+	paramObj
+}
+
+func (r DestinationCountryParam) MarshalJSON() (data []byte, err error) {
+	type shadow DestinationCountryParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DestinationCountryParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Payment card details for a profile. Accepted when billing_model is "profile" or
+// "profile_and_organization". These details are not stored on our servers and will
+// be forwarded to the payment processor.
+//
+// The properties CardNumber, Cvc, Expiry, ZipCode are required.
+type PaymentDetailsParam struct {
+	// Card number (digits only, 13–19 characters)
+	CardNumber string `json:"card_number" api:"required"`
+	// Card security code (3–4 digits)
+	Cvc string `json:"cvc" api:"required"`
+	// Card expiry date in MM/YY format (e.g. "09/27")
+	Expiry string `json:"expiry" api:"required"`
+	// Billing ZIP / postal code associated with the card
+	ZipCode string `json:"zip_code" api:"required"`
+	paramObj
+}
+
+func (r PaymentDetailsParam) MarshalJSON() (data []byte, err error) {
+	type shadow PaymentDetailsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *PaymentDetailsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Detailed profile response for v3 API
 type ProfileDetail struct {
 	// Profile unique identifier
@@ -252,7 +478,7 @@ type ProfileDetail struct {
 	BillingModel string `json:"billing_model"`
 	// Brand associated with this profile. Null if no brand has been configured yet.
 	// Includes KYC information and TCR registration status.
-	Brand BrandWithKYC `json:"brand" api:"nullable"`
+	Brand ProfileDetailBrand `json:"brand" api:"nullable"`
 	// When the profile was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Profile description
@@ -353,6 +579,235 @@ func (r *ProfileDetailBillingContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Brand associated with this profile. Null if no brand has been configured yet.
+// Includes KYC information and TCR registration status.
+type ProfileDetailBrand struct {
+	// Unique identifier for the brand
+	ID string `json:"id" format:"uuid"`
+	// Business details and address information
+	Business ProfileDetailBrandBusiness `json:"business" api:"nullable"`
+	// Compliance and TCR-related information
+	Compliance ProfileDetailBrandCompliance `json:"compliance" api:"nullable"`
+	// Contact information for the brand
+	Contact ProfileDetailBrandContact `json:"contact" api:"nullable"`
+	// When the brand was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// CSP (Campaign Service Provider) ID
+	CspID string `json:"csp_id" api:"nullable"`
+	// TCR brand identity verification status
+	//
+	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
+	IdentityStatus string `json:"identity_status" api:"nullable"`
+	// Whether this brand is inherited from the parent organization
+	IsInherited bool `json:"is_inherited"`
+	// TCR brand status
+	//
+	// Any of "ACTIVE", "INACTIVE", "SUSPENDED".
+	Status string `json:"status" api:"nullable"`
+	// When the brand was submitted to TCR
+	SubmittedAt time.Time `json:"submitted_at" api:"nullable" format:"date-time"`
+	// Whether this brand has been submitted to TCR
+	SubmittedToTcr bool `json:"submitted_to_tcr"`
+	// TCR brand ID (populated after TCR submission)
+	TcrBrandID string `json:"tcr_brand_id" api:"nullable"`
+	// Universal EIN from TCR
+	UniversalEin string `json:"universal_ein" api:"nullable"`
+	// When the brand was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID             respjson.Field
+		Business       respjson.Field
+		Compliance     respjson.Field
+		Contact        respjson.Field
+		CreatedAt      respjson.Field
+		CspID          respjson.Field
+		IdentityStatus respjson.Field
+		IsInherited    respjson.Field
+		Status         respjson.Field
+		SubmittedAt    respjson.Field
+		SubmittedToTcr respjson.Field
+		TcrBrandID     respjson.Field
+		UniversalEin   respjson.Field
+		UpdatedAt      respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileDetailBrand) RawJSON() string { return r.JSON.raw }
+func (r *ProfileDetailBrand) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Business details and address information
+type ProfileDetailBrandBusiness struct {
+	// City
+	City string `json:"city" api:"nullable"`
+	// Country code (e.g., US, CA)
+	Country string `json:"country" api:"nullable"`
+	// Country where the business is registered
+	CountryOfRegistration string `json:"country_of_registration" api:"nullable"`
+	// Business entity type
+	EntityType string `json:"entity_type" api:"nullable"`
+	// Legal business name
+	LegalName string `json:"legal_name" api:"nullable"`
+	// Postal/ZIP code
+	PostalCode string `json:"postal_code" api:"nullable"`
+	// State/province code
+	State string `json:"state" api:"nullable"`
+	// Street address
+	Street string `json:"street" api:"nullable"`
+	// Tax ID/EIN number
+	TaxID string `json:"tax_id" api:"nullable"`
+	// Type of tax ID (e.g., us_ein, ca_bn)
+	TaxIDType string `json:"tax_id_type" api:"nullable"`
+	// Business website URL
+	URL string `json:"url" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		City                  respjson.Field
+		Country               respjson.Field
+		CountryOfRegistration respjson.Field
+		EntityType            respjson.Field
+		LegalName             respjson.Field
+		PostalCode            respjson.Field
+		State                 respjson.Field
+		Street                respjson.Field
+		TaxID                 respjson.Field
+		TaxIDType             respjson.Field
+		URL                   respjson.Field
+		ExtraFields           map[string]respjson.Field
+		raw                   string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileDetailBrandBusiness) RawJSON() string { return r.JSON.raw }
+func (r *ProfileDetailBrandBusiness) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Compliance and TCR-related information
+type ProfileDetailBrandCompliance struct {
+	// Brand relationship level with TCR
+	//
+	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
+	// "KEY_ACCOUNT".
+	BrandRelationship TcrBrandRelationship `json:"brand_relationship" api:"nullable"`
+	// List of destination countries for messaging
+	DestinationCountries []DestinationCountry `json:"destination_countries"`
+	// Expected daily messaging volume
+	ExpectedMessagingVolume string `json:"expected_messaging_volume" api:"nullable"`
+	// Whether this is a TCR (Campaign Registry) application
+	IsTcrApplication bool `json:"is_tcr_application"`
+	// Additional notes about the business or use case
+	Notes string `json:"notes" api:"nullable"`
+	// Phone number prefix for messaging (e.g., "+1")
+	PhoneNumberPrefix string `json:"phone_number_prefix" api:"nullable"`
+	// Primary messaging use case description
+	PrimaryUseCase string `json:"primary_use_case" api:"nullable"`
+	// Business vertical/industry category
+	//
+	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
+	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
+	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
+	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
+	// "COMMUNICATION".
+	Vertical TcrVertical `json:"vertical" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BrandRelationship       respjson.Field
+		DestinationCountries    respjson.Field
+		ExpectedMessagingVolume respjson.Field
+		IsTcrApplication        respjson.Field
+		Notes                   respjson.Field
+		PhoneNumberPrefix       respjson.Field
+		PrimaryUseCase          respjson.Field
+		Vertical                respjson.Field
+		ExtraFields             map[string]respjson.Field
+		raw                     string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileDetailBrandCompliance) RawJSON() string { return r.JSON.raw }
+func (r *ProfileDetailBrandCompliance) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Contact information for the brand
+type ProfileDetailBrandContact struct {
+	// Business/brand name
+	BusinessName string `json:"business_name" api:"nullable"`
+	// Contact email address
+	Email string `json:"email" api:"nullable"`
+	// Primary contact name
+	Name string `json:"name"`
+	// Contact phone number in E.164 format
+	Phone string `json:"phone" api:"nullable"`
+	// Contact phone country code (e.g., "1" for US)
+	PhoneCountryCode string `json:"phone_country_code" api:"nullable"`
+	// Contact's role in the business
+	Role string `json:"role" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BusinessName     respjson.Field
+		Email            respjson.Field
+		Name             respjson.Field
+		Phone            respjson.Field
+		PhoneCountryCode respjson.Field
+		Role             respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileDetailBrandContact) RawJSON() string { return r.JSON.raw }
+func (r *ProfileDetailBrandContact) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type TcrBrandRelationship string
+
+const (
+	TcrBrandRelationshipBasicAccount  TcrBrandRelationship = "BASIC_ACCOUNT"
+	TcrBrandRelationshipMediumAccount TcrBrandRelationship = "MEDIUM_ACCOUNT"
+	TcrBrandRelationshipLargeAccount  TcrBrandRelationship = "LARGE_ACCOUNT"
+	TcrBrandRelationshipSmallAccount  TcrBrandRelationship = "SMALL_ACCOUNT"
+	TcrBrandRelationshipKeyAccount    TcrBrandRelationship = "KEY_ACCOUNT"
+)
+
+type TcrVertical string
+
+const (
+	TcrVerticalProfessional   TcrVertical = "PROFESSIONAL"
+	TcrVerticalRealEstate     TcrVertical = "REAL_ESTATE"
+	TcrVerticalHealthcare     TcrVertical = "HEALTHCARE"
+	TcrVerticalHumanResources TcrVertical = "HUMAN_RESOURCES"
+	TcrVerticalEnergy         TcrVertical = "ENERGY"
+	TcrVerticalEntertainment  TcrVertical = "ENTERTAINMENT"
+	TcrVerticalRetail         TcrVertical = "RETAIL"
+	TcrVerticalTransportation TcrVertical = "TRANSPORTATION"
+	TcrVerticalAgriculture    TcrVertical = "AGRICULTURE"
+	TcrVerticalInsurance      TcrVertical = "INSURANCE"
+	TcrVerticalPostal         TcrVertical = "POSTAL"
+	TcrVerticalEducation      TcrVertical = "EDUCATION"
+	TcrVerticalHospitality    TcrVertical = "HOSPITALITY"
+	TcrVerticalFinancial      TcrVertical = "FINANCIAL"
+	TcrVerticalPolitical      TcrVertical = "POLITICAL"
+	TcrVerticalGambling       TcrVertical = "GAMBLING"
+	TcrVerticalLegal          TcrVertical = "LEGAL"
+	TcrVerticalConstruction   TcrVertical = "CONSTRUCTION"
+	TcrVerticalNgo            TcrVertical = "NGO"
+	TcrVerticalManufacturing  TcrVertical = "MANUFACTURING"
+	TcrVerticalGovernment     TcrVertical = "GOVERNMENT"
+	TcrVerticalTechnology     TcrVertical = "TECHNOLOGY"
+	TcrVerticalCommunication  TcrVertical = "COMMUNICATION"
+)
+
 // Standard API response envelope for all v3 endpoints
 type ProfileListResponse struct {
 	// The response data (null if error)
@@ -398,7 +853,7 @@ func (r *ProfileListResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ProfileCompleteResponse = any
+type ProfileCompleteSetupResponse = any
 
 type ProfileNewParams struct {
 	// Billing model: profile, organization, or profile_and_organization (default:
@@ -437,24 +892,24 @@ type ProfileNewParams struct {
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// Billing contact for this profile. Required when billing_model is "profile" or
-	// "profile_and_organization". Identifies who receives invoices and who is
-	// responsible for payment.
-	BillingContact ProfileNewParamsBillingContact `json:"billing_contact,omitzero"`
-	// Payment card details for this profile (optional). Accepted when billing_model is
-	// "profile" or "profile_and_organization". Not persisted on our servers —
-	// forwarded to the payment processor.
-	PaymentDetails ProfileNewParamsPaymentDetails `json:"payment_details,omitzero"`
 	// Direct WhatsApp Business Account credentials for this profile. When provided,
 	// the profile uses its own WhatsApp Business Account instead of inheriting from
 	// the organization. When omitted, the profile inherits the organization's WhatsApp
 	// Business Account (requires the organization to have completed WhatsApp Embedded
 	// Signup).
 	WhatsappBusinessAccount ProfileNewParamsWhatsappBusinessAccount `json:"whatsapp_business_account,omitzero"`
+	// Billing contact for this profile. Required when billing_model is "profile" or
+	// "profile_and_organization". Identifies who receives invoices and who is
+	// responsible for payment.
+	BillingContact BillingContactInfoParam `json:"billing_contact,omitzero"`
 	// Brand and KYC information for this profile (optional). When provided, creates
 	// the brand associated with this profile. Cannot be set when inherit_tcr_brand is
 	// true.
-	Brand BrandDataParam `json:"brand,omitzero"`
+	Brand BrandsBrandDataParam `json:"brand,omitzero"`
+	// Payment card details for this profile (optional). Accepted when billing_model is
+	// "profile" or "profile_and_organization". Not persisted on our servers —
+	// forwarded to the payment processor.
+	PaymentDetails PaymentDetailsParam `json:"payment_details,omitzero"`
 	paramObj
 }
 
@@ -463,57 +918,6 @@ func (r ProfileNewParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ProfileNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Billing contact for this profile. Required when billing_model is "profile" or
-// "profile_and_organization". Identifies who receives invoices and who is
-// responsible for payment.
-//
-// The properties Email, Name are required.
-type ProfileNewParamsBillingContact struct {
-	// Email address where invoices will be sent (required)
-	Email string `json:"email" api:"required" format:"email"`
-	// Full name of the billing contact or company (required)
-	Name string `json:"name" api:"required"`
-	// Billing address (optional). Free-form text including street, city, state, postal
-	// code, and country.
-	Address param.Opt[string] `json:"address,omitzero"`
-	// Phone number for the billing contact (optional)
-	Phone param.Opt[string] `json:"phone,omitzero"`
-	paramObj
-}
-
-func (r ProfileNewParamsBillingContact) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileNewParamsBillingContact
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileNewParamsBillingContact) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Payment card details for this profile (optional). Accepted when billing_model is
-// "profile" or "profile_and_organization". Not persisted on our servers —
-// forwarded to the payment processor.
-//
-// The properties CardNumber, Cvc, Expiry, ZipCode are required.
-type ProfileNewParamsPaymentDetails struct {
-	// Card number (digits only, 13–19 characters)
-	CardNumber string `json:"card_number" api:"required"`
-	// Card security code (3–4 digits)
-	Cvc string `json:"cvc" api:"required"`
-	// Card expiry date in MM/YY format (e.g. "09/27")
-	Expiry string `json:"expiry" api:"required"`
-	// Billing ZIP / postal code associated with the card
-	ZipCode string `json:"zip_code" api:"required"`
-	paramObj
-}
-
-func (r ProfileNewParamsPaymentDetails) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileNewParamsPaymentDetails
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileNewParamsPaymentDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -601,16 +1005,16 @@ type ProfileUpdateParams struct {
 	// Billing contact for this profile. Required when billing_model is "profile" or
 	// "profile_and_organization" and no billing contact has been configured yet.
 	// Identifies who receives invoices and who is responsible for payment.
-	BillingContact ProfileUpdateParamsBillingContact `json:"billing_contact,omitzero"`
-	// Payment card details for this profile (optional). Accepted when billing_model is
-	// "profile" or "profile_and_organization". Not persisted on our servers —
-	// forwarded to the payment processor.
-	PaymentDetails ProfileUpdateParamsPaymentDetails `json:"payment_details,omitzero"`
+	BillingContact BillingContactInfoParam `json:"billing_contact,omitzero"`
 	// Brand and KYC information for this profile (optional). When provided, creates or
 	// updates the brand associated with this profile. Cannot be set when
 	// inherit_tcr_brand is true. Once a brand has been submitted to TCR it cannot be
 	// modified.
-	Brand BrandDataParam `json:"brand,omitzero"`
+	Brand BrandsBrandDataParam `json:"brand,omitzero"`
+	// Payment card details for this profile (optional). Accepted when billing_model is
+	// "profile" or "profile_and_organization". Not persisted on our servers —
+	// forwarded to the payment processor.
+	PaymentDetails PaymentDetailsParam `json:"payment_details,omitzero"`
 	paramObj
 }
 
@@ -619,57 +1023,6 @@ func (r ProfileUpdateParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ProfileUpdateParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Billing contact for this profile. Required when billing_model is "profile" or
-// "profile_and_organization" and no billing contact has been configured yet.
-// Identifies who receives invoices and who is responsible for payment.
-//
-// The properties Email, Name are required.
-type ProfileUpdateParamsBillingContact struct {
-	// Email address where invoices will be sent (required)
-	Email string `json:"email" api:"required" format:"email"`
-	// Full name of the billing contact or company (required)
-	Name string `json:"name" api:"required"`
-	// Billing address (optional). Free-form text including street, city, state, postal
-	// code, and country.
-	Address param.Opt[string] `json:"address,omitzero"`
-	// Phone number for the billing contact (optional)
-	Phone param.Opt[string] `json:"phone,omitzero"`
-	paramObj
-}
-
-func (r ProfileUpdateParamsBillingContact) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileUpdateParamsBillingContact
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileUpdateParamsBillingContact) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Payment card details for this profile (optional). Accepted when billing_model is
-// "profile" or "profile_and_organization". Not persisted on our servers —
-// forwarded to the payment processor.
-//
-// The properties CardNumber, Cvc, Expiry, ZipCode are required.
-type ProfileUpdateParamsPaymentDetails struct {
-	// Card number (digits only, 13–19 characters)
-	CardNumber string `json:"card_number" api:"required"`
-	// Card security code (3–4 digits)
-	Cvc string `json:"cvc" api:"required"`
-	// Card expiry date in MM/YY format (e.g. "09/27")
-	Expiry string `json:"expiry" api:"required"`
-	// Billing ZIP / postal code associated with the card
-	ZipCode string `json:"zip_code" api:"required"`
-	paramObj
-}
-
-func (r ProfileUpdateParamsPaymentDetails) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileUpdateParamsPaymentDetails
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileUpdateParamsPaymentDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -694,7 +1047,7 @@ func (r *ProfileDeleteParams) UnmarshalJSON(data []byte) error {
 
 // Request to delete a profile
 type ProfileDeleteParamsBody struct {
-	MutationRequestParam
+	MutationRequestBaseParam
 }
 
 func (r ProfileDeleteParamsBody) MarshalJSON() (data []byte, err error) {
@@ -705,7 +1058,7 @@ func (r ProfileDeleteParamsBody) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, shadow{&r, false})
 }
 
-type ProfileCompleteParams struct {
+type ProfileCompleteSetupParams struct {
 	// Webhook URL to call when profile completion finishes (success or failure)
 	WebHookURL string `json:"webHookUrl" api:"required" format:"uri"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
@@ -716,10 +1069,10 @@ type ProfileCompleteParams struct {
 	paramObj
 }
 
-func (r ProfileCompleteParams) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileCompleteParams
+func (r ProfileCompleteSetupParams) MarshalJSON() (data []byte, err error) {
+	type shadow ProfileCompleteSetupParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ProfileCompleteParams) UnmarshalJSON(data []byte) error {
+func (r *ProfileCompleteSetupParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }

@@ -25,12 +25,12 @@ type Client struct {
 	Templates TemplateService
 	// Manage organization profiles
 	Profiles ProfileService
+	// Manage and lookup phone numbers
+	Numbers NumberService
 	// Send and track SMS and WhatsApp messages
 	Messages MessageService
-	Lookup   LookupService
 	// Create, update, and manage customer contact lists
 	Contacts ContactService
-	Brands   BrandService
 	// Retrieve account details
 	Me MeService
 }
@@ -61,10 +61,9 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Users = NewUserService(opts...)
 	r.Templates = NewTemplateService(opts...)
 	r.Profiles = NewProfileService(opts...)
+	r.Numbers = NewNumberService(opts...)
 	r.Messages = NewMessageService(opts...)
-	r.Lookup = NewLookupService(opts...)
 	r.Contacts = NewContactService(opts...)
-	r.Brands = NewBrandService(opts...)
 	r.Me = NewMeService(opts...)
 
 	return
