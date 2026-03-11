@@ -151,7 +151,7 @@ func TestContactDeleteWithOptionalParams(t *testing.T) {
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.ContactDeleteParams{
 			Body: sentdm.ContactDeleteParamsBody{
-				MutationRequestParam: sentdm.MutationRequestParam{
+				MutationRequestBaseParam: sentdm.MutationRequestBaseParam{
 					Sandbox: sentdm.Bool(false),
 				},
 			},

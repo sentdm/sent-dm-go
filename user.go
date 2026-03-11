@@ -285,7 +285,7 @@ func (r *UserRemoveParams) UnmarshalJSON(data []byte) error {
 
 // Request to remove a user from an organization
 type UserRemoveParamsBody struct {
-	MutationRequestParam
+	MutationRequestBaseParam
 }
 
 func (r UserRemoveParamsBody) MarshalJSON() (data []byte, err error) {

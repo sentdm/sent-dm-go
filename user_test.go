@@ -115,7 +115,7 @@ func TestUserRemoveWithOptionalParams(t *testing.T) {
 		"userId",
 		sentdm.UserRemoveParams{
 			Body: sentdm.UserRemoveParamsBody{
-				MutationRequestParam: sentdm.MutationRequestParam{
+				MutationRequestBaseParam: sentdm.MutationRequestBaseParam{
 					Sandbox: sentdm.Bool(false),
 				},
 			},
