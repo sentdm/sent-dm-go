@@ -41,6 +41,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						Props: sentdm.TemplateVariablePropsParam{
 							Alt:          param.Null[string](),
 							MediaType:    param.Null[string](),
+							Regex:        param.Null[string](),
 							Sample:       sentdm.String("John"),
 							ShortURL:     param.Null[string](),
 							URL:          param.Null[string](),
@@ -53,6 +54,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						Props: sentdm.TemplateVariablePropsParam{
 							Alt:          param.Null[string](),
 							MediaType:    param.Null[string](),
+							Regex:        param.Null[string](),
 							Sample:       sentdm.String("SentDM"),
 							ShortURL:     param.Null[string](),
 							URL:          param.Null[string](),
@@ -70,6 +72,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						Props: sentdm.TemplateVariablePropsParam{
 							Alt:          sentdm.String("alt"),
 							MediaType:    sentdm.String("mediaType"),
+							Regex:        sentdm.String("regex"),
 							Sample:       sentdm.String("sample"),
 							ShortURL:     sentdm.String("shortUrl"),
 							URL:          sentdm.String("url"),
@@ -87,6 +90,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						Props: sentdm.TemplateVariablePropsParam{
 							Alt:          sentdm.String("alt"),
 							MediaType:    sentdm.String("mediaType"),
+							Regex:        sentdm.String("regex"),
 							Sample:       sentdm.String("sample"),
 							ShortURL:     sentdm.String("shortUrl"),
 							URL:          sentdm.String("url"),
@@ -128,6 +132,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					Props: sentdm.TemplateVariablePropsParam{
 						Alt:          sentdm.String("alt"),
 						MediaType:    sentdm.String("mediaType"),
+						Regex:        sentdm.String("regex"),
 						Sample:       sentdm.String("sample"),
 						ShortURL:     sentdm.String("shortUrl"),
 						URL:          sentdm.String("url"),
@@ -145,6 +150,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					Props: sentdm.TemplateVariablePropsParam{
 						Alt:          sentdm.String("alt"),
 						MediaType:    sentdm.String("mediaType"),
+						Regex:        sentdm.String("regex"),
 						Sample:       sentdm.String("sample"),
 						ShortURL:     sentdm.String("shortUrl"),
 						URL:          sentdm.String("url"),
@@ -155,9 +161,10 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 			},
 		},
 		Language:        sentdm.String("en_US"),
+		Sandbox:         sentdm.Bool(false),
 		SubmitForReview: sentdm.Bool(false),
-		TestMode:        sentdm.Bool(false),
 		IdempotencyKey:  sentdm.String("req_abc123_retry1"),
+		XProfileID:      sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -168,7 +175,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestTemplateGet(t *testing.T) {
+func TestTemplateGetWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -181,7 +188,13 @@ func TestTemplateGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Templates.Get(context.TODO(), "7ba7b820-9dad-11d1-80b4-00c04fd430c8")
+	_, err := client.Templates.Get(
+		context.TODO(),
+		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.TemplateGetParams{
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -220,6 +233,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 							Props: sentdm.TemplateVariablePropsParam{
 								Alt:          sentdm.String("alt"),
 								MediaType:    sentdm.String("mediaType"),
+								Regex:        sentdm.String("regex"),
 								Sample:       sentdm.String("sample"),
 								ShortURL:     sentdm.String("shortUrl"),
 								URL:          sentdm.String("url"),
@@ -237,6 +251,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 							Props: sentdm.TemplateVariablePropsParam{
 								Alt:          sentdm.String("alt"),
 								MediaType:    sentdm.String("mediaType"),
+								Regex:        sentdm.String("regex"),
 								Sample:       sentdm.String("sample"),
 								ShortURL:     sentdm.String("shortUrl"),
 								URL:          sentdm.String("url"),
@@ -254,6 +269,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 							Props: sentdm.TemplateVariablePropsParam{
 								Alt:          sentdm.String("alt"),
 								MediaType:    sentdm.String("mediaType"),
+								Regex:        sentdm.String("regex"),
 								Sample:       sentdm.String("sample"),
 								ShortURL:     sentdm.String("shortUrl"),
 								URL:          sentdm.String("url"),
@@ -295,6 +311,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						Props: sentdm.TemplateVariablePropsParam{
 							Alt:          sentdm.String("alt"),
 							MediaType:    sentdm.String("mediaType"),
+							Regex:        sentdm.String("regex"),
 							Sample:       sentdm.String("sample"),
 							ShortURL:     sentdm.String("shortUrl"),
 							URL:          sentdm.String("url"),
@@ -312,6 +329,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						Props: sentdm.TemplateVariablePropsParam{
 							Alt:          sentdm.String("alt"),
 							MediaType:    sentdm.String("mediaType"),
+							Regex:        sentdm.String("regex"),
 							Sample:       sentdm.String("sample"),
 							ShortURL:     sentdm.String("shortUrl"),
 							URL:          sentdm.String("url"),
@@ -323,9 +341,10 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 			},
 			Language:        param.Null[string](),
 			Name:            sentdm.String("Updated Welcome Message"),
+			Sandbox:         sentdm.Bool(false),
 			SubmitForReview: sentdm.Bool(false),
-			TestMode:        sentdm.Bool(false),
 			IdempotencyKey:  sentdm.String("req_abc123_retry1"),
+			XProfileID:      sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -351,11 +370,13 @@ func TestTemplateListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Templates.List(context.TODO(), sentdm.TemplateListParams{
-		Page:     0,
-		PageSize: 0,
-		Category: sentdm.String("category"),
-		Search:   sentdm.String("search"),
-		Status:   sentdm.String("status"),
+		Page:                0,
+		PageSize:            0,
+		Category:            sentdm.String("category"),
+		IsWelcomePlayground: sentdm.Bool(true),
+		Search:              sentdm.String("search"),
+		Status:              sentdm.String("status"),
+		XProfileID:          sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -384,7 +405,8 @@ func TestTemplateDeleteWithOptionalParams(t *testing.T) {
 		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.TemplateDeleteParams{
 			DeleteFromMeta: sentdm.Bool(false),
-			TestMode:       sentdm.Bool(false),
+			Sandbox:        sentdm.Bool(false),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {

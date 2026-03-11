@@ -30,8 +30,7 @@ type Client struct {
 	Lookup   LookupService
 	// Create, update, and manage customer contact lists
 	Contacts ContactService
-	// Register and manage 10DLC brands for SMS compliance
-	Brands BrandService
+	Brands   BrandService
 	// Retrieve account details
 	Me MeService
 }

@@ -31,9 +31,10 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 		EndpointURL:    sentdm.String("https://example.com/webhooks/orders"),
 		EventTypes:     []string{"messages", "templates"},
 		RetryCount:     sentdm.Int(3),
-		TestMode:       sentdm.Bool(false),
+		Sandbox:        sentdm.Bool(false),
 		TimeoutSeconds: sentdm.Int(30),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
+		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -44,7 +45,7 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestWebhookGet(t *testing.T) {
+func TestWebhookGetWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -57,7 +58,13 @@ func TestWebhookGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Webhooks.Get(context.TODO(), "d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8")
+	_, err := client.Webhooks.Get(
+		context.TODO(),
+		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
+		sentdm.WebhookGetParams{
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -88,9 +95,10 @@ func TestWebhookUpdateWithOptionalParams(t *testing.T) {
 			EndpointURL:    sentdm.String("https://example.com/webhooks/orders-v2"),
 			EventTypes:     []string{"messages", "templates"},
 			RetryCount:     sentdm.Int(5),
-			TestMode:       sentdm.Bool(false),
+			Sandbox:        sentdm.Bool(false),
 			TimeoutSeconds: sentdm.Int(60),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -116,10 +124,11 @@ func TestWebhookListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{
-		Page:     0,
-		PageSize: 0,
-		IsActive: sentdm.Bool(true),
-		Search:   sentdm.String("search"),
+		Page:       0,
+		PageSize:   0,
+		IsActive:   sentdm.Bool(true),
+		Search:     sentdm.String("search"),
+		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -130,7 +139,7 @@ func TestWebhookListWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestWebhookDelete(t *testing.T) {
+func TestWebhookDeleteWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -143,7 +152,13 @@ func TestWebhookDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	err := client.Webhooks.Delete(context.TODO(), "d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8")
+	err := client.Webhooks.Delete(
+		context.TODO(),
+		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
+		sentdm.WebhookDeleteParams{
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -153,7 +168,7 @@ func TestWebhookDelete(t *testing.T) {
 	}
 }
 
-func TestWebhookListEventTypes(t *testing.T) {
+func TestWebhookListEventTypesWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -166,7 +181,9 @@ func TestWebhookListEventTypes(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Webhooks.ListEventTypes(context.TODO())
+	_, err := client.Webhooks.ListEventTypes(context.TODO(), sentdm.WebhookListEventTypesParams{
+		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+	})
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -193,9 +210,10 @@ func TestWebhookListEventsWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookListEventsParams{
-			Page:     0,
-			PageSize: 0,
-			Search:   sentdm.String("search"),
+			Page:       0,
+			PageSize:   0,
+			Search:     sentdm.String("search"),
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -226,10 +244,11 @@ func TestWebhookRotateSecretWithOptionalParams(t *testing.T) {
 		sentdm.WebhookRotateSecretParams{
 			Body: sentdm.WebhookRotateSecretParamsBody{
 				MutationRequestParam: sentdm.MutationRequestParam{
-					TestMode: sentdm.Bool(false),
+					Sandbox: sentdm.Bool(false),
 				},
 			},
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -259,8 +278,9 @@ func TestWebhookTestWithOptionalParams(t *testing.T) {
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookTestParams{
 			EventType:      sentdm.String("message.sent"),
-			TestMode:       sentdm.Bool(false),
+			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -290,8 +310,9 @@ func TestWebhookToggleStatusWithOptionalParams(t *testing.T) {
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookToggleStatusParams{
 			IsActive:       sentdm.Bool(false),
-			TestMode:       sentdm.Bool(false),
+			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {

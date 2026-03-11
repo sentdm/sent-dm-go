@@ -48,6 +48,9 @@ func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts 
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
@@ -57,7 +60,10 @@ func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts 
 // Retrieves a specific contact by their unique identifier. Returns detailed
 // contact information including phone formats, available channels, and opt-out
 // status.
-func (r *ContactService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *APIResponseContact, err error) {
+func (r *ContactService) Get(ctx context.Context, id string, query ContactGetParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -74,6 +80,9 @@ func (r *ContactService) Update(ctx context.Context, id string, params ContactUp
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -86,16 +95,22 @@ func (r *ContactService) Update(ctx context.Context, id string, params ContactUp
 
 // Retrieves a paginated list of contacts for the authenticated customer. Supports
 // filtering by search term, channel, or phone number.
-func (r *ContactService) List(ctx context.Context, query ContactListParams, opts ...option.RequestOption) (res *ContactListResponse, err error) {
+func (r *ContactService) List(ctx context.Context, params ContactListParams, opts ...option.RequestOption) (res *ContactListResponse, err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return res, err
 }
 
 // Dissociates a contact from the authenticated customer. Inherited contacts cannot
 // be deleted.
-func (r *ContactService) Delete(ctx context.Context, id string, body ContactDeleteParams, opts ...option.RequestOption) (err error) {
+func (r *ContactService) Delete(ctx context.Context, id string, params ContactDeleteParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
@@ -103,7 +118,7 @@ func (r *ContactService) Delete(ctx context.Context, id string, body ContactDele
 		return err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
 
@@ -242,10 +257,11 @@ func (r *ContactListResponseData) UnmarshalJSON(data []byte) error {
 type ContactNewParams struct {
 	// Phone number of the contact to create
 	PhoneNumber param.Opt[string] `json:"phone_number,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -257,15 +273,21 @@ func (r *ContactNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type ContactGetParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
 type ContactUpdateParams struct {
 	// Default messaging channel: "sms" or "whatsapp"
 	DefaultChannel param.Opt[string] `json:"default_channel,omitzero"`
 	// Whether the contact has opted out of messaging
 	OptOut param.Opt[bool] `json:"opt_out,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -279,14 +301,16 @@ func (r *ContactUpdateParams) UnmarshalJSON(data []byte) error {
 
 type ContactListParams struct {
 	// Page number (1-indexed)
-	Page     int64 `query:"page" api:"required" json:"-"`
-	PageSize int64 `query:"pageSize" api:"required" json:"-"`
+	Page int64 `query:"page" api:"required" json:"-"`
+	// Number of items per page
+	PageSize int64 `query:"page_size" api:"required" json:"-"`
 	// Optional channel filter (sms, whatsapp)
 	Channel param.Opt[string] `query:"channel,omitzero" json:"-"`
 	// Optional phone number filter (alternative to list view)
 	Phone param.Opt[string] `query:"phone,omitzero" json:"-"`
 	// Optional search term for filtering contacts
-	Search param.Opt[string] `query:"search,omitzero" json:"-"`
+	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -300,7 +324,8 @@ func (r ContactListParams) URLQuery() (v url.Values, err error) {
 
 type ContactDeleteParams struct {
 	// Request to delete/dissociate a contact
-	Body ContactDeleteParamsBody
+	Body       ContactDeleteParamsBody
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 

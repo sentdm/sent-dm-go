@@ -47,6 +47,9 @@ func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts 
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
@@ -54,7 +57,10 @@ func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts 
 }
 
 // Retrieves a single webhook by ID for the authenticated customer.
-func (r *WebhookService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
+func (r *WebhookService) Get(ctx context.Context, id string, query WebhookGetParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -70,6 +76,9 @@ func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUp
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -81,15 +90,21 @@ func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUp
 }
 
 // Retrieves a paginated list of webhooks for the authenticated customer.
-func (r *WebhookService) List(ctx context.Context, query WebhookListParams, opts ...option.RequestOption) (res *WebhookListResponse, err error) {
+func (r *WebhookService) List(ctx context.Context, params WebhookListParams, opts ...option.RequestOption) (res *WebhookListResponse, err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return res, err
 }
 
 // Deletes a webhook for the authenticated customer.
-func (r *WebhookService) Delete(ctx context.Context, id string, opts ...option.RequestOption) (err error) {
+func (r *WebhookService) Delete(ctx context.Context, id string, body WebhookDeleteParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(body.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", body.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
@@ -102,7 +117,10 @@ func (r *WebhookService) Delete(ctx context.Context, id string, opts ...option.R
 }
 
 // Retrieves all available webhook event types that can be subscribed to.
-func (r *WebhookService) ListEventTypes(ctx context.Context, opts ...option.RequestOption) (res *WebhookListEventTypesResponse, err error) {
+func (r *WebhookService) ListEventTypes(ctx context.Context, query WebhookListEventTypesParams, opts ...option.RequestOption) (res *WebhookListEventTypesResponse, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks/event-types"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
@@ -110,14 +128,17 @@ func (r *WebhookService) ListEventTypes(ctx context.Context, opts ...option.Requ
 }
 
 // Retrieves a paginated list of delivery events for the specified webhook.
-func (r *WebhookService) ListEvents(ctx context.Context, id string, query WebhookListEventsParams, opts ...option.RequestOption) (res *WebhookListEventsResponse, err error) {
+func (r *WebhookService) ListEvents(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) (res *WebhookListEventsResponse, err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s/events", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return res, err
 }
 
@@ -126,6 +147,9 @@ func (r *WebhookService) ListEvents(ctx context.Context, id string, query Webhoo
 func (r *WebhookService) RotateSecret(ctx context.Context, id string, params WebhookRotateSecretParams, opts ...option.RequestOption) (res *WebhookRotateSecretResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
@@ -142,6 +166,9 @@ func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTest
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -156,6 +183,9 @@ func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTest
 func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params WebhookToggleStatusParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
@@ -198,20 +228,17 @@ func (r *APIError) UnmarshalJSON(data []byte) error {
 type APIMeta struct {
 	// Unique identifier for this request (for tracing and support)
 	RequestID string `json:"request_id"`
-	// Response time in milliseconds (optional)
-	ResponseTimeMs int64 `json:"response_time_ms" api:"nullable"`
 	// Server timestamp when the response was generated
 	Timestamp time.Time `json:"timestamp" format:"date-time"`
 	// API version used for this request
 	Version string `json:"version"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		RequestID      respjson.Field
-		ResponseTimeMs respjson.Field
-		Timestamp      respjson.Field
-		Version        respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
@@ -249,9 +276,9 @@ func (r *APIResponseWebhook) UnmarshalJSON(data []byte) error {
 }
 
 type MutationRequestParam struct {
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode param.Opt[bool] `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
 	paramObj
 }
 
@@ -647,11 +674,12 @@ type WebhookNewParams struct {
 	DisplayName param.Opt[string] `json:"display_name,omitzero"`
 	EndpointURL param.Opt[string] `json:"endpoint_url,omitzero"`
 	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	TimeoutSeconds param.Opt[int64]  `json:"timeout_seconds,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventTypes     []string          `json:"event_types,omitzero"`
 	paramObj
 }
@@ -664,15 +692,21 @@ func (r *WebhookNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type WebhookGetParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
 type WebhookUpdateParams struct {
 	DisplayName param.Opt[string] `json:"display_name,omitzero"`
 	EndpointURL param.Opt[string] `json:"endpoint_url,omitzero"`
 	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	TimeoutSeconds param.Opt[int64]  `json:"timeout_seconds,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventTypes     []string          `json:"event_types,omitzero"`
 	paramObj
 }
@@ -686,10 +720,11 @@ func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListParams struct {
-	Page     int64             `query:"page" api:"required" json:"-"`
-	PageSize int64             `query:"pageSize" api:"required" json:"-"`
-	IsActive param.Opt[bool]   `query:"isActive,omitzero" json:"-"`
-	Search   param.Opt[string] `query:"search,omitzero" json:"-"`
+	Page       int64             `query:"page" api:"required" json:"-"`
+	PageSize   int64             `query:"page_size" api:"required" json:"-"`
+	IsActive   param.Opt[bool]   `query:"is_active,omitzero" json:"-"`
+	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -701,10 +736,21 @@ func (r WebhookListParams) URLQuery() (v url.Values, err error) {
 	})
 }
 
+type WebhookDeleteParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
+type WebhookListEventTypesParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
 type WebhookListEventsParams struct {
-	Page     int64             `query:"page" api:"required" json:"-"`
-	PageSize int64             `query:"pageSize" api:"required" json:"-"`
-	Search   param.Opt[string] `query:"search,omitzero" json:"-"`
+	Page       int64             `query:"page" api:"required" json:"-"`
+	PageSize   int64             `query:"page_size" api:"required" json:"-"`
+	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -720,6 +766,7 @@ func (r WebhookListEventsParams) URLQuery() (v url.Values, err error) {
 type WebhookRotateSecretParams struct {
 	Body           WebhookRotateSecretParamsBody
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -744,10 +791,11 @@ func (r WebhookRotateSecretParamsBody) MarshalJSON() (data []byte, err error) {
 
 type WebhookTestParams struct {
 	EventType param.Opt[string] `json:"event_type,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -761,10 +809,11 @@ func (r *WebhookTestParams) UnmarshalJSON(data []byte) error {
 
 type WebhookToggleStatusParams struct {
 	IsActive param.Opt[bool] `json:"is_active,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 

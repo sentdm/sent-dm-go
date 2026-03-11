@@ -4,6 +4,7 @@ package sentdm
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"slices"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
@@ -35,10 +37,25 @@ func NewMeService(opts ...option.RequestOption) (r MeService) {
 	return
 }
 
-// Returns the account associated with the API key. For organization API keys,
-// returns the organization with its profiles. For profile API keys, returns the
-// profile with its settings.
-func (r *MeService) Get(ctx context.Context, opts ...option.RequestOption) (res *MeGetResponse, err error) {
+// Returns the account associated with the provided API key. The response includes
+// account identity, contact information, messaging channel configuration, and —
+// depending on the account type — either a list of child profiles or the profile's
+// own settings.
+//
+// **Account types:**
+//
+//   - `organization` — Has child profiles. The `profiles` array is populated.
+//   - `user` — Standalone account with no profiles.
+//   - `profile` — Child of an organization. Includes `organization_id`,
+//     `short_name`, `status`, and `settings`.
+//
+// **Channels:** The `channels` object always includes `sms`, `whatsapp`, and
+// `rcs`. Each channel has a `configured` boolean. Configured channels expose
+// additional details such as `phone_number`.
+func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.RequestOption) (res *MeGetResponse, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/me"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
@@ -110,41 +127,148 @@ func (r *MeGetResponse) UnmarshalJSON(data []byte) error {
 
 // The response data (null if error)
 type MeGetResponseData struct {
-	// Customer ID (organization or profile)
+	// Customer ID (organization, account, or profile)
 	ID string `json:"id" format:"uuid"`
+	// Messaging channel configuration
+	Channels MeGetResponseDataChannels `json:"channels"`
 	// When the account was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Account description
 	Description string `json:"description" api:"nullable"`
+	// Contact email address
+	Email string `json:"email" api:"nullable"`
 	// Account icon URL
 	Icon string `json:"icon" api:"nullable"`
 	// Account name
 	Name string `json:"name"`
-	// List of profiles (only for organization type)
-	Profiles []MeGetResponseDataProfile `json:"profiles" api:"nullable"`
+	// Organization ID (only for profile type — the parent organization)
+	OrganizationID string `json:"organization_id" api:"nullable" format:"uuid"`
+	// List of profiles (populated for organization type, empty for user and profile
+	// types)
+	Profiles []MeGetResponseDataProfile `json:"profiles"`
 	// Profile settings (only for profile type)
 	Settings ProfileSettings `json:"settings" api:"nullable"`
+	// Short name / abbreviation (only for profile type)
+	ShortName string `json:"short_name" api:"nullable"`
 	// Profile status (only for profile type): incomplete, pending_review, approved,
 	// etc.
 	Status string `json:"status" api:"nullable"`
+	// Account type: "organization" (has profiles), "user" (no profiles), or "profile"
+	// (child of an organization)
+	Type string `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		CreatedAt   respjson.Field
-		Description respjson.Field
-		Icon        respjson.Field
-		Name        respjson.Field
-		Profiles    respjson.Field
-		Settings    respjson.Field
-		Status      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID             respjson.Field
+		Channels       respjson.Field
+		CreatedAt      respjson.Field
+		Description    respjson.Field
+		Email          respjson.Field
+		Icon           respjson.Field
+		Name           respjson.Field
+		OrganizationID respjson.Field
+		Profiles       respjson.Field
+		Settings       respjson.Field
+		ShortName      respjson.Field
+		Status         respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r MeGetResponseData) RawJSON() string { return r.JSON.raw }
 func (r *MeGetResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Messaging channel configuration
+type MeGetResponseDataChannels struct {
+	// RCS channel (provider: vibes)
+	Rcs MeGetResponseDataChannelsRcs `json:"rcs"`
+	// SMS channel (providers: telnyx, sinch)
+	SMS MeGetResponseDataChannelsSMS `json:"sms"`
+	// WhatsApp Business channel (provider: meta)
+	Whatsapp MeGetResponseDataChannelsWhatsapp `json:"whatsapp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Rcs         respjson.Field
+		SMS         respjson.Field
+		Whatsapp    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MeGetResponseDataChannels) RawJSON() string { return r.JSON.raw }
+func (r *MeGetResponseDataChannels) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// RCS channel (provider: vibes)
+type MeGetResponseDataChannelsRcs struct {
+	// Whether RCS is configured for this account
+	Configured bool `json:"configured"`
+	// RCS-enabled phone number in E.164 format
+	PhoneNumber string `json:"phone_number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Configured  respjson.Field
+		PhoneNumber respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MeGetResponseDataChannelsRcs) RawJSON() string { return r.JSON.raw }
+func (r *MeGetResponseDataChannelsRcs) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// SMS channel (providers: telnyx, sinch)
+type MeGetResponseDataChannelsSMS struct {
+	// Whether SMS is configured for this account
+	Configured bool `json:"configured"`
+	// Sending phone number in E.164 format
+	PhoneNumber string `json:"phone_number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Configured  respjson.Field
+		PhoneNumber respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MeGetResponseDataChannelsSMS) RawJSON() string { return r.JSON.raw }
+func (r *MeGetResponseDataChannelsSMS) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// WhatsApp Business channel (provider: meta)
+type MeGetResponseDataChannelsWhatsapp struct {
+	// WhatsApp Business display name
+	BusinessName string `json:"business_name" api:"nullable"`
+	// Whether WhatsApp is configured for this account
+	Configured bool `json:"configured"`
+	// WhatsApp phone number in E.164 format
+	PhoneNumber string `json:"phone_number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BusinessName respjson.Field
+		Configured   respjson.Field
+		PhoneNumber  respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MeGetResponseDataChannelsWhatsapp) RawJSON() string { return r.JSON.raw }
+func (r *MeGetResponseDataChannelsWhatsapp) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -189,4 +313,9 @@ type MeGetResponseDataProfile struct {
 func (r MeGetResponseDataProfile) RawJSON() string { return r.JSON.raw }
 func (r *MeGetResponseDataProfile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type MeGetParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
 }
