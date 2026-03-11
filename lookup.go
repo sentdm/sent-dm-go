@@ -42,11 +42,11 @@ func (r *LookupService) GetPhoneInfo(ctx context.Context, phoneNumber string, op
 	opts = slices.Concat(r.Options, opts)
 	if phoneNumber == "" {
 		err = errors.New("missing required phoneNumber parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/lookup/number/%s", url.PathEscape(phoneNumber))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Standard API response envelope for all v3 endpoints

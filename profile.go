@@ -48,7 +48,7 @@ func (r *ProfileService) New(ctx context.Context, params ProfileNewParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/profiles"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves detailed information about a specific sender profile within an
@@ -57,11 +57,11 @@ func (r *ProfileService) Get(ctx context.Context, profileID string, opts ...opti
 	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {
 		err = errors.New("missing required profileId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates a profile's configuration and settings. Requires admin role in the
@@ -73,11 +73,11 @@ func (r *ProfileService) Update(ctx context.Context, profileID string, params Pr
 	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {
 		err = errors.New("missing required profileId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all sender profiles within an organization. Profiles represent
@@ -87,7 +87,7 @@ func (r *ProfileService) List(ctx context.Context, opts ...option.RequestOption)
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/profiles"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Soft deletes a sender profile. The profile will be marked as deleted but data is
@@ -97,11 +97,11 @@ func (r *ProfileService) Delete(ctx context.Context, profileID string, body Prof
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if profileID == "" {
 		err = errors.New("missing required profileId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Final step in profile compliance workflow. Validates all prerequisites (general
@@ -129,11 +129,11 @@ func (r *ProfileService) Complete(ctx context.Context, profileID string, params 
 	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {
 		err = errors.New("missing required profileId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/profiles/%s/complete", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Standard API response envelope for all v3 endpoints

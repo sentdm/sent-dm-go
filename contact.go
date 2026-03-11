@@ -51,7 +51,7 @@ func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a specific contact by their unique identifier. Returns detailed
@@ -61,11 +61,11 @@ func (r *ContactService) Get(ctx context.Context, id string, opts ...option.Requ
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates a contact's default channel and/or opt-out status. Inherited contacts
@@ -77,11 +77,11 @@ func (r *ContactService) Update(ctx context.Context, id string, params ContactUp
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a paginated list of contacts for the authenticated customer. Supports
@@ -90,7 +90,7 @@ func (r *ContactService) List(ctx context.Context, query ContactListParams, opts
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Dissociates a contact from the authenticated customer. Inherited contacts cannot
@@ -100,11 +100,11 @@ func (r *ContactService) Delete(ctx context.Context, id string, body ContactDele
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints

@@ -44,11 +44,11 @@ func (r *UserService) Get(ctx context.Context, userID string, opts ...option.Req
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all users who have access to the organization or profile identified by
@@ -58,7 +58,7 @@ func (r *UserService) List(ctx context.Context, opts ...option.RequestOption) (r
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Sends an invitation to a user to join the organization or profile with a
@@ -71,7 +71,7 @@ func (r *UserService) Invite(ctx context.Context, params UserInviteParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Removes a user's access to an organization or profile. Requires admin role. You
@@ -81,11 +81,11 @@ func (r *UserService) Remove(ctx context.Context, userID string, body UserRemove
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Updates a user's role in the organization or profile. Requires admin role. You
@@ -97,11 +97,11 @@ func (r *UserService) UpdateRole(ctx context.Context, userID string, params User
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Standard API response envelope for all v3 endpoints

@@ -52,7 +52,7 @@ func (r *BrandService) New(ctx context.Context, params BrandNewParams, opts ...o
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/brands"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates an existing brand and its associated information. Cannot update brands
@@ -64,11 +64,11 @@ func (r *BrandService) Update(ctx context.Context, brandID string, params BrandU
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all brands for the authenticated customer with information in a
@@ -77,7 +77,7 @@ func (r *BrandService) List(ctx context.Context, opts ...option.RequestOption) (
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/brands"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Delete a brand by ID. The brand must belong to the authenticated customer.
@@ -86,11 +86,11 @@ func (r *BrandService) Delete(ctx context.Context, brandID string, body BrandDel
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/brands/%s", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints

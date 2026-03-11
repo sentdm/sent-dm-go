@@ -50,7 +50,7 @@ func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a single webhook by ID for the authenticated customer.
@@ -58,11 +58,11 @@ func (r *WebhookService) Get(ctx context.Context, id string, opts ...option.Requ
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates an existing webhook for the authenticated customer.
@@ -73,11 +73,11 @@ func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUp
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a paginated list of webhooks for the authenticated customer.
@@ -85,7 +85,7 @@ func (r *WebhookService) List(ctx context.Context, query WebhookListParams, opts
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Deletes a webhook for the authenticated customer.
@@ -94,11 +94,11 @@ func (r *WebhookService) Delete(ctx context.Context, id string, opts ...option.R
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Retrieves all available webhook event types that can be subscribed to.
@@ -106,7 +106,7 @@ func (r *WebhookService) ListEventTypes(ctx context.Context, opts ...option.Requ
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/webhooks/event-types"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a paginated list of delivery events for the specified webhook.
@@ -114,11 +114,11 @@ func (r *WebhookService) ListEvents(ctx context.Context, id string, query Webhoo
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s/events", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Generates a new signing secret for the specified webhook. The old secret is
@@ -130,11 +130,11 @@ func (r *WebhookService) RotateSecret(ctx context.Context, id string, params Web
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s/rotate-secret", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Sends a test event to the specified webhook endpoint to verify connectivity.
@@ -145,11 +145,11 @@ func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTest
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s/test", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Activates or deactivates a webhook for the authenticated customer.
@@ -160,11 +160,11 @@ func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params Web
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s/toggle-status", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Error information

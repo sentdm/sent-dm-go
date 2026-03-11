@@ -50,7 +50,7 @@ func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opt
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/templates"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a specific template by its ID. Returns template details including
@@ -59,11 +59,11 @@ func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.Req
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/templates/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates an existing template's name, category, language, definition, or submits
@@ -75,11 +75,11 @@ func (r *TemplateService) Update(ctx context.Context, id string, params Template
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/templates/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a paginated list of message templates for the authenticated customer.
@@ -88,7 +88,7 @@ func (r *TemplateService) List(ctx context.Context, query TemplateListParams, op
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/templates"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Deletes a template by ID. Optionally, you can also delete the template from
@@ -98,11 +98,11 @@ func (r *TemplateService) Delete(ctx context.Context, id string, body TemplateDe
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/templates/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints
