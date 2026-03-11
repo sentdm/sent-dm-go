@@ -4,13 +4,16 @@ package sentdm
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"time"
 
 	"github.com/sentdm/sent-dm-go/internal/apijson"
+	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
 	"github.com/sentdm/sent-dm-go/packages/param"
@@ -40,13 +43,16 @@ func NewUserService(opts ...option.RequestOption) (r UserService) {
 
 // Retrieves detailed information about a specific user in an organization or
 // profile. Requires developer role or higher.
-func (r *UserService) Get(ctx context.Context, userID string, opts ...option.RequestOption) (res *APIResponseOfUser, err error) {
+func (r *UserService) Get(ctx context.Context, userID string, query UserGetParams, opts ...option.RequestOption) (res *APIResponseOfUser, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/users/%s", userID)
+	path := fmt.Sprintf("v3/users/%s", url.PathEscape(userID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -54,7 +60,10 @@ func (r *UserService) Get(ctx context.Context, userID string, opts ...option.Req
 // Retrieves all users who have access to the organization or profile identified by
 // the API key, including their roles and status. Shows invited users (pending
 // acceptance) and active users. Requires developer role or higher.
-func (r *UserService) List(ctx context.Context, opts ...option.RequestOption) (res *UserListResponse, err error) {
+func (r *UserService) List(ctx context.Context, query UserListParams, opts ...option.RequestOption) (res *UserListResponse, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
@@ -68,6 +77,9 @@ func (r *UserService) Invite(ctx context.Context, params UserInviteParams, opts 
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
@@ -76,15 +88,18 @@ func (r *UserService) Invite(ctx context.Context, params UserInviteParams, opts 
 
 // Removes a user's access to an organization or profile. Requires admin role. You
 // cannot remove yourself or remove the last admin.
-func (r *UserService) Remove(ctx context.Context, userID string, body UserRemoveParams, opts ...option.RequestOption) (err error) {
+func (r *UserService) Remove(ctx context.Context, userID string, params UserRemoveParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/users/%s", userID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
+	path := fmt.Sprintf("v3/users/%s", url.PathEscape(userID))
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
 
@@ -94,12 +109,15 @@ func (r *UserService) UpdateRole(ctx context.Context, userID string, params User
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/users/%s", userID)
+	path := fmt.Sprintf("v3/users/%s", url.PathEscape(userID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
 	return res, err
 }
@@ -218,6 +236,16 @@ func (r *UserListResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type UserGetParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
+type UserListParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
 type UserInviteParams struct {
 	// User email address (required)
 	Email param.Opt[string] `json:"email,omitzero" format:"email"`
@@ -225,10 +253,11 @@ type UserInviteParams struct {
 	Name param.Opt[string] `json:"name,omitzero"`
 	// User role: admin, billing, or developer (required)
 	Role param.Opt[string] `json:"role,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -241,31 +270,40 @@ func (r *UserInviteParams) UnmarshalJSON(data []byte) error {
 }
 
 type UserRemoveParams struct {
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode param.Opt[bool] `json:"test_mode,omitzero"`
-	// User ID from route parameter
-	UserID param.Opt[string] `json:"user_id,omitzero" format:"uuid"`
+	// Request to remove a user from an organization
+	Body       UserRemoveParamsBody
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r UserRemoveParams) MarshalJSON() (data []byte, err error) {
-	type shadow UserRemoveParams
-	return param.MarshalObject(r, (*shadow)(&r))
+	return shimjson.Marshal(r.Body)
 }
 func (r *UserRemoveParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return json.Unmarshal(data, &r.Body)
+}
+
+// Request to remove a user from an organization
+type UserRemoveParamsBody struct {
+	MutationRequestParam
+}
+
+func (r UserRemoveParamsBody) MarshalJSON() (data []byte, err error) {
+	type shadow struct {
+		*UserRemoveParamsBody
+		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
+	}
+	return param.MarshalObject(r, shadow{&r, false})
 }
 
 type UserUpdateRoleParams struct {
 	// User role: admin, billing, or developer (required)
 	Role param.Opt[string] `json:"role,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode param.Opt[bool] `json:"test_mode,omitzero"`
-	// User ID from route parameter
-	UserID         param.Opt[string] `json:"user_id,omitzero" format:"uuid"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 

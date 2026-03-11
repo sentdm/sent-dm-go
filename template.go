@@ -47,6 +47,9 @@ func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opt
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/templates"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
@@ -55,7 +58,10 @@ func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opt
 
 // Retrieves a specific template by its ID. Returns template details including
 // name, category, language, status, and definition.
-func (r *TemplateService) Get(ctx context.Context, id string, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -72,6 +78,9 @@ func (r *TemplateService) Update(ctx context.Context, id string, params Template
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -84,16 +93,22 @@ func (r *TemplateService) Update(ctx context.Context, id string, params Template
 
 // Retrieves a paginated list of message templates for the authenticated customer.
 // Supports filtering by status, category, and search term.
-func (r *TemplateService) List(ctx context.Context, query TemplateListParams, opts ...option.RequestOption) (res *TemplateListResponse, err error) {
+func (r *TemplateService) List(ctx context.Context, params TemplateListParams, opts ...option.RequestOption) (res *TemplateListResponse, err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/templates"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return res, err
 }
 
 // Deletes a template by ID. Optionally, you can also delete the template from
 // WhatsApp/Meta by setting delete_from_meta=true.
-func (r *TemplateService) Delete(ctx context.Context, id string, body TemplateDeleteParams, opts ...option.RequestOption) (err error) {
+func (r *TemplateService) Delete(ctx context.Context, id string, params TemplateDeleteParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
@@ -101,7 +116,7 @@ func (r *TemplateService) Delete(ctx context.Context, id string, body TemplateDe
 		return err
 	}
 	path := fmt.Sprintf("v3/templates/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
 
@@ -362,6 +377,7 @@ func (r *TemplateVariableParam) UnmarshalJSON(data []byte) error {
 type TemplateVariablePropsParam struct {
 	Alt          param.Opt[string] `json:"alt,omitzero"`
 	MediaType    param.Opt[string] `json:"mediaType,omitzero"`
+	Regex        param.Opt[string] `json:"regex,omitzero"`
 	Sample       param.Opt[string] `json:"sample,omitzero"`
 	ShortURL     param.Opt[string] `json:"shortUrl,omitzero"`
 	URL          param.Opt[string] `json:"url,omitzero"`
@@ -433,12 +449,13 @@ type TemplateNewParams struct {
 	CreationSource param.Opt[string] `json:"creation_source,omitzero"`
 	// Template language code (e.g., en_US) (optional, auto-detected if not provided)
 	Language param.Opt[string] `json:"language,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
 	// Whether to submit the template for review after creation (default: false)
-	SubmitForReview param.Opt[bool] `json:"submit_for_review,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	SubmitForReview param.Opt[bool]   `json:"submit_for_review,omitzero"`
+	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	// Template definition including header, body, footer, and buttons
 	Definition TemplateDefinitionParam `json:"definition,omitzero"`
 	paramObj
@@ -452,6 +469,11 @@ func (r *TemplateNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type TemplateGetParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
 type TemplateUpdateParams struct {
 	// Template category: MARKETING, UTILITY, AUTHENTICATION
 	Category param.Opt[string] `json:"category,omitzero"`
@@ -459,12 +481,13 @@ type TemplateUpdateParams struct {
 	Language param.Opt[string] `json:"language,omitzero"`
 	// Template display name
 	Name param.Opt[string] `json:"name,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
 	// Whether to submit the template for review after updating (default: false)
-	SubmitForReview param.Opt[bool] `json:"submit_for_review,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	SubmitForReview param.Opt[bool]   `json:"submit_for_review,omitzero"`
+	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	// Template definition including header, body, footer, and buttons
 	Definition TemplateDefinitionParam `json:"definition,omitzero"`
 	paramObj
@@ -480,14 +503,18 @@ func (r *TemplateUpdateParams) UnmarshalJSON(data []byte) error {
 
 type TemplateListParams struct {
 	// Page number (1-indexed)
-	Page     int64 `query:"page" api:"required" json:"-"`
-	PageSize int64 `query:"pageSize" api:"required" json:"-"`
+	Page int64 `query:"page" api:"required" json:"-"`
+	// Number of items per page
+	PageSize int64 `query:"page_size" api:"required" json:"-"`
 	// Optional category filter: MARKETING, UTILITY, AUTHENTICATION
 	Category param.Opt[string] `query:"category,omitzero" json:"-"`
+	// Optional filter by welcome playground flag
+	IsWelcomePlayground param.Opt[bool] `query:"is_welcome_playground,omitzero" json:"-"`
 	// Optional search term for filtering templates
 	Search param.Opt[string] `query:"search,omitzero" json:"-"`
 	// Optional status filter: APPROVED, PENDING, REJECTED
-	Status param.Opt[string] `query:"status,omitzero" json:"-"`
+	Status     param.Opt[string] `query:"status,omitzero" json:"-"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -503,9 +530,10 @@ type TemplateDeleteParams struct {
 	// Whether to also delete the template from WhatsApp/Meta (optional, defaults to
 	// false)
 	DeleteFromMeta param.Opt[bool] `json:"delete_from_meta,omitzero"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode param.Opt[bool] `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox    param.Opt[bool]   `json:"sandbox,omitzero"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
