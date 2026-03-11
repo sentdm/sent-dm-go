@@ -42,7 +42,7 @@ func (r *MeService) Get(ctx context.Context, opts ...option.RequestOption) (res 
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/me"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Profile configuration settings

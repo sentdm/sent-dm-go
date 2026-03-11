@@ -50,11 +50,11 @@ func (r *BrandCampaignService) New(ctx context.Context, brandID string, params B
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates an existing campaign scoped under a specific brand. Cannot update
@@ -66,15 +66,15 @@ func (r *BrandCampaignService) Update(ctx context.Context, campaignID string, pa
 	opts = slices.Concat(r.Options, opts)
 	if params.BrandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	if campaignID == "" {
 		err = errors.New("missing required campaignId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns/%s", params.BrandID, campaignID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all campaigns linked to a specific brand, including their use cases
@@ -83,11 +83,11 @@ func (r *BrandCampaignService) List(ctx context.Context, brandID string, opts ..
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Deletes a campaign by ID within a specific brand. The brand must belong to the
@@ -97,15 +97,15 @@ func (r *BrandCampaignService) Delete(ctx context.Context, campaignID string, pa
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if params.BrandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return err
 	}
 	if campaignID == "" {
 		err = errors.New("missing required campaignId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns/%s", params.BrandID, campaignID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints
