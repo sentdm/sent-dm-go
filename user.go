@@ -17,6 +17,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Invite, update, and manage organization users and roles
+//
 // UserService contains methods and other services that help with interacting with
 // the sent-dm API.
 //
@@ -42,11 +44,11 @@ func (r *UserService) Get(ctx context.Context, userID string, opts ...option.Req
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all users who have access to the organization or profile identified by
@@ -56,7 +58,7 @@ func (r *UserService) List(ctx context.Context, opts ...option.RequestOption) (r
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Sends an invitation to a user to join the organization or profile with a
@@ -64,12 +66,12 @@ func (r *UserService) List(ctx context.Context, opts ...option.RequestOption) (r
 // with a token to accept. Invitation tokens expire after 7 days.
 func (r *UserService) Invite(ctx context.Context, params UserInviteParams, opts ...option.RequestOption) (res *APIResponseOfUser, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/users"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Removes a user's access to an organization or profile. Requires admin role. You
@@ -79,35 +81,35 @@ func (r *UserService) Remove(ctx context.Context, userID string, body UserRemove
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Updates a user's role in the organization or profile. Requires admin role. You
 // cannot change your own role or demote the last admin.
 func (r *UserService) UpdateRole(ctx context.Context, userID string, params UserUpdateRoleParams, opts ...option.RequestOption) (res *APIResponseOfUser, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if userID == "" {
 		err = errors.New("missing required userId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfUser struct {
 	// The response data (null if error)
-	Data UserResponse `json:"data,nullable"`
+	Data UserResponse `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -138,9 +140,9 @@ type UserResponse struct {
 	// User email address
 	Email string `json:"email"`
 	// When the user was invited
-	InvitedAt time.Time `json:"invited_at,nullable" format:"date-time"`
+	InvitedAt time.Time `json:"invited_at" api:"nullable" format:"date-time"`
 	// When the user last logged in
-	LastLoginAt time.Time `json:"last_login_at,nullable" format:"date-time"`
+	LastLoginAt time.Time `json:"last_login_at" api:"nullable" format:"date-time"`
 	// User full name
 	Name string `json:"name"`
 	// User role in the organization: admin, billing, developer
@@ -148,7 +150,7 @@ type UserResponse struct {
 	// User status: active, invited, suspended, rejected
 	Status string `json:"status"`
 	// When the user record was last updated
-	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -174,9 +176,9 @@ func (r *UserResponse) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type UserListResponse struct {
 	// The response data (null if error)
-	Data UserListResponseData `json:"data,nullable"`
+	Data UserListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful

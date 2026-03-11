@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.1 (2026-03-11)
+
+Full Changelog: [v0.7.0...v0.7.1](https://github.com/sentdm/sent-dm-go/compare/v0.7.0...v0.7.1)
+
+### Chores
+
+* **ci:** skip uploading artifacts on stainless-internal branches ([83a8163](https://github.com/sentdm/sent-dm-go/commit/83a81631e176b618770ea4dceb0d05aa65ebcbab))
+* **internal:** codegen related update ([6f63ea8](https://github.com/sentdm/sent-dm-go/commit/6f63ea8fe011659f0605bc89dd1cba8da2493fc5))
+* **internal:** codegen related update ([1375476](https://github.com/sentdm/sent-dm-go/commit/1375476e06cb90a49e1cf465993f8309b9c9b413))
+* **internal:** minor cleanup ([ca9b532](https://github.com/sentdm/sent-dm-go/commit/ca9b53213f8724170635d07619bc37fd7c634b1e))
+* **internal:** move custom custom `json` tags to `api` ([a208d39](https://github.com/sentdm/sent-dm-go/commit/a208d390304ab21a90998b8082d1eaf7f27d9372))
+* **internal:** use explicit returns ([72af3b8](https://github.com/sentdm/sent-dm-go/commit/72af3b8d6a07bedef6725b68cccee54b124180dc))
+* **internal:** use explicit returns in more places ([ee1e9e2](https://github.com/sentdm/sent-dm-go/commit/ee1e9e2745a0384271e568a8068382a5f8a2de10))
+
 ## 0.7.0 (2026-02-18)
 
 Full Changelog: [v0.6.0...v0.7.0](https://github.com/sentdm/sent-dm-go/compare/v0.6.0...v0.7.0)

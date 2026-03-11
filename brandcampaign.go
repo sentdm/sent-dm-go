@@ -19,6 +19,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Register and manage 10DLC brands for SMS compliance
+//
 // BrandCampaignService contains methods and other services that help with
 // interacting with the sent-dm API.
 //
@@ -43,36 +45,36 @@ func NewBrandCampaignService(opts ...option.RequestOption) (r BrandCampaignServi
 // sample messages.
 func (r *BrandCampaignService) New(ctx context.Context, brandID string, params BrandCampaignNewParams, opts ...option.RequestOption) (res *APIResponseTcrCampaignWithUseCases, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates an existing campaign scoped under a specific brand. Cannot update
 // campaigns that have already been submitted to TCR.
 func (r *BrandCampaignService) Update(ctx context.Context, campaignID string, params BrandCampaignUpdateParams, opts ...option.RequestOption) (res *APIResponseTcrCampaignWithUseCases, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.BrandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	if campaignID == "" {
 		err = errors.New("missing required campaignId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns/%s", params.BrandID, campaignID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all campaigns linked to a specific brand, including their use cases
@@ -81,11 +83,11 @@ func (r *BrandCampaignService) List(ctx context.Context, brandID string, opts ..
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Deletes a campaign by ID within a specific brand. The brand must belong to the
@@ -95,23 +97,23 @@ func (r *BrandCampaignService) Delete(ctx context.Context, campaignID string, pa
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if params.BrandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return err
 	}
 	if campaignID == "" {
 		err = errors.New("missing required campaignId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/brands/%s/campaigns/%s", params.BrandID, campaignID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseTcrCampaignWithUseCases struct {
 	// The response data (null if error)
-	Data TcrCampaignWithUseCases `json:"data,nullable"`
+	Data TcrCampaignWithUseCases `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -137,7 +139,7 @@ type BaseDto struct {
 	// Unique identifier
 	ID        string    `json:"id" format:"uuid"`
 	CreatedAt time.Time `json:"createdAt" format:"date-time"`
-	UpdatedAt time.Time `json:"updatedAt,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -159,13 +161,13 @@ func (r *BaseDto) UnmarshalJSON(data []byte) error {
 // The properties Description, Name, Type, UseCases are required.
 type CampaignDataParam struct {
 	// Campaign description
-	Description string `json:"description,required"`
+	Description string `json:"description" api:"required"`
 	// Campaign name
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// Campaign type (e.g., "KYC", "App")
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// List of use cases with sample messages
-	UseCases []SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam `json:"useCases,omitzero,required"`
+	UseCases []SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam `json:"useCases,omitzero" api:"required"`
 	// Comma-separated keywords that trigger help message (e.g., "HELP, INFO, SUPPORT")
 	HelpKeywords param.Opt[string] `json:"helpKeywords,omitzero"`
 	// Message sent when user requests help
@@ -223,9 +225,9 @@ type SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCa
 	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
 	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
 	// "LOW_VOLUME".
-	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs,omitzero,required"`
+	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs,omitzero" api:"required"`
 	// Sample messages for this use case (1-5 messages, max 1024 characters each)
-	SampleMessages []string `json:"sampleMessages,omitzero,required"`
+	SampleMessages []string `json:"sampleMessages,omitzero" api:"required"`
 	paramObj
 }
 
@@ -238,35 +240,35 @@ func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignU
 }
 
 type TcrCampaignWithUseCases struct {
-	BilledDate          time.Time `json:"billedDate,nullable" format:"date-time"`
-	BrandID             string    `json:"brandId,nullable" format:"uuid"`
-	Cost                float64   `json:"cost,nullable"`
-	CspID               string    `json:"cspId,nullable"`
+	BilledDate          time.Time `json:"billedDate" api:"nullable" format:"date-time"`
+	BrandID             string    `json:"brandId" api:"nullable" format:"uuid"`
+	Cost                float64   `json:"cost" api:"nullable"`
+	CspID               string    `json:"cspId" api:"nullable"`
 	CustomerID          string    `json:"customerId" format:"uuid"`
 	Description         string    `json:"description"`
-	HelpKeywords        string    `json:"helpKeywords,nullable"`
-	HelpMessage         string    `json:"helpMessage,nullable"`
-	KYCSubmissionFormID string    `json:"kycSubmissionFormId,nullable" format:"uuid"`
-	MessageFlow         string    `json:"messageFlow,nullable"`
+	HelpKeywords        string    `json:"helpKeywords" api:"nullable"`
+	HelpMessage         string    `json:"helpMessage" api:"nullable"`
+	KYCSubmissionFormID string    `json:"kycSubmissionFormId" api:"nullable" format:"uuid"`
+	MessageFlow         string    `json:"messageFlow" api:"nullable"`
 	Name                string    `json:"name"`
-	OptinKeywords       string    `json:"optinKeywords,nullable"`
-	OptinMessage        string    `json:"optinMessage,nullable"`
-	OptoutKeywords      string    `json:"optoutKeywords,nullable"`
-	OptoutMessage       string    `json:"optoutMessage,nullable"`
-	PrivacyPolicyLink   string    `json:"privacyPolicyLink,nullable"`
-	ResellerID          string    `json:"resellerId,nullable"`
+	OptinKeywords       string    `json:"optinKeywords" api:"nullable"`
+	OptinMessage        string    `json:"optinMessage" api:"nullable"`
+	OptoutKeywords      string    `json:"optoutKeywords" api:"nullable"`
+	OptoutMessage       string    `json:"optoutMessage" api:"nullable"`
+	PrivacyPolicyLink   string    `json:"privacyPolicyLink" api:"nullable"`
+	ResellerID          string    `json:"resellerId" api:"nullable"`
 	// Any of "PENDING", "ACCEPTED", "DECLINED".
-	SharingStatus string `json:"sharingStatus,nullable"`
+	SharingStatus string `json:"sharingStatus" api:"nullable"`
 	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
-	Status                 string                           `json:"status,nullable"`
-	SubmittedAt            time.Time                        `json:"submittedAt,nullable" format:"date-time"`
+	Status                 string                           `json:"status" api:"nullable"`
+	SubmittedAt            time.Time                        `json:"submittedAt" api:"nullable" format:"date-time"`
 	SubmittedToTcr         bool                             `json:"submittedToTCR"`
-	TcrCampaignID          string                           `json:"tcrCampaignId,nullable"`
-	TcrSyncError           string                           `json:"tcrSyncError,nullable"`
-	TelnyxCampaignID       string                           `json:"telnyxCampaignId,nullable"`
-	TermsAndConditionsLink string                           `json:"termsAndConditionsLink,nullable"`
+	TcrCampaignID          string                           `json:"tcrCampaignId" api:"nullable"`
+	TcrSyncError           string                           `json:"tcrSyncError" api:"nullable"`
+	TelnyxCampaignID       string                           `json:"telnyxCampaignId" api:"nullable"`
+	TermsAndConditionsLink string                           `json:"termsAndConditionsLink" api:"nullable"`
 	Type                   string                           `json:"type"`
-	UpstreamCnpID          string                           `json:"upstreamCnpId,nullable"`
+	UpstreamCnpID          string                           `json:"upstreamCnpId" api:"nullable"`
 	UseCases               []TcrCampaignWithUseCasesUseCase `json:"useCases"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -340,9 +342,9 @@ func (r *TcrCampaignWithUseCasesUseCase) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type BrandCampaignListResponse struct {
 	// The response data (null if error)
-	Data []TcrCampaignWithUseCases `json:"data,nullable"`
+	Data []TcrCampaignWithUseCases `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -366,7 +368,7 @@ func (r *BrandCampaignListResponse) UnmarshalJSON(data []byte) error {
 
 type BrandCampaignNewParams struct {
 	// Campaign data
-	Campaign CampaignDataParam `json:"campaign,omitzero,required"`
+	Campaign CampaignDataParam `json:"campaign,omitzero" api:"required"`
 	// Test mode flag - when true, the operation is simulated without side effects
 	// Useful for testing integrations without actual execution
 	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
@@ -383,9 +385,9 @@ func (r *BrandCampaignNewParams) UnmarshalJSON(data []byte) error {
 }
 
 type BrandCampaignUpdateParams struct {
-	BrandID string `path:"brandId,required" format:"uuid" json:"-"`
+	BrandID string `path:"brandId" api:"required" format:"uuid" json:"-"`
 	// Campaign data
-	Campaign CampaignDataParam `json:"campaign,omitzero,required"`
+	Campaign CampaignDataParam `json:"campaign,omitzero" api:"required"`
 	// Test mode flag - when true, the operation is simulated without side effects
 	// Useful for testing integrations without actual execution
 	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
@@ -402,7 +404,7 @@ func (r *BrandCampaignUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type BrandCampaignDeleteParams struct {
-	BrandID string `path:"brandId,required" format:"uuid" json:"-"`
+	BrandID string `path:"brandId" api:"required" format:"uuid" json:"-"`
 	// Request to delete a campaign from a brand
 	Body BrandCampaignDeleteParamsBody
 	paramObj

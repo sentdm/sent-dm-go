@@ -21,6 +21,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Create, update, and manage customer contact lists
+//
 // ContactService contains methods and other services that help with interacting
 // with the sent-dm API.
 //
@@ -44,12 +46,12 @@ func NewContactService(opts ...option.RequestOption) (r ContactService) {
 // customer.
 func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a specific contact by their unique identifier. Returns detailed
@@ -59,27 +61,27 @@ func (r *ContactService) Get(ctx context.Context, id string, opts ...option.Requ
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates a contact's default channel and/or opt-out status. Inherited contacts
 // cannot be updated.
 func (r *ContactService) Update(ctx context.Context, id string, params ContactUpdateParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a paginated list of contacts for the authenticated customer. Supports
@@ -88,7 +90,7 @@ func (r *ContactService) List(ctx context.Context, query ContactListParams, opts
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/contacts"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Dissociates a contact from the authenticated customer. Inherited contacts cannot
@@ -98,19 +100,19 @@ func (r *ContactService) Delete(ctx context.Context, id string, body ContactDele
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/contacts/%s", id)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseContact struct {
 	// The response data (null if error)
-	Data Contact `json:"data,nullable"`
+	Data Contact `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -161,7 +163,7 @@ type Contact struct {
 	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
 	RegionCode string `json:"region_code"`
 	// When the contact was last updated
-	UpdatedAt time.Time `json:"updated_at,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                  respjson.Field
@@ -192,9 +194,9 @@ func (r *Contact) UnmarshalJSON(data []byte) error {
 // Standard API response envelope for all v3 endpoints
 type ContactListResponse struct {
 	// The response data (null if error)
-	Data ContactListResponseData `json:"data,nullable"`
+	Data ContactListResponseData `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -277,8 +279,8 @@ func (r *ContactUpdateParams) UnmarshalJSON(data []byte) error {
 
 type ContactListParams struct {
 	// Page number (1-indexed)
-	Page     int64 `query:"page,required" json:"-"`
-	PageSize int64 `query:"pageSize,required" json:"-"`
+	Page     int64 `query:"page" api:"required" json:"-"`
+	PageSize int64 `query:"pageSize" api:"required" json:"-"`
 	// Optional channel filter (sms, whatsapp)
 	Channel param.Opt[string] `query:"channel,omitzero" json:"-"`
 	// Optional phone number filter (alternative to list view)

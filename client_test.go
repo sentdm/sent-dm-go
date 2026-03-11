@@ -38,7 +38,7 @@ func TestUserAgentHeader(t *testing.T) {
 			},
 		}),
 	)
-	client.Messages.Send(context.Background(), sentdm.MessageSendParams{
+	_, _ = client.Messages.Send(context.Background(), sentdm.MessageSendParams{
 		Channel: []string{"sms"},
 		Template: sentdm.MessageSendParamsTemplate{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),

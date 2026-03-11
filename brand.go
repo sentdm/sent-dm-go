@@ -19,6 +19,8 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
+// Register and manage 10DLC brands for SMS compliance
+//
 // BrandService contains methods and other services that help with interacting with
 // the sent-dm API.
 //
@@ -26,7 +28,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBrandService] method instead.
 type BrandService struct {
-	Options   []option.RequestOption
+	Options []option.RequestOption
+	// Register and manage 10DLC brands for SMS compliance
 	Campaigns BrandCampaignService
 }
 
@@ -44,28 +47,28 @@ func NewBrandService(opts ...option.RequestOption) (r BrandService) {
 // inheritTcrBrand=false when a brand is created.
 func (r *BrandService) New(ctx context.Context, params BrandNewParams, opts ...option.RequestOption) (res *APIResponseBrandWithKYC, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/brands"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates an existing brand and its associated information. Cannot update brands
 // that have already been submitted to TCR or inherited brands.
 func (r *BrandService) Update(ctx context.Context, brandID string, params BrandUpdateParams, opts ...option.RequestOption) (res *APIResponseBrandWithKYC, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%s", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("v3/brands/%s", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves all brands for the authenticated customer with information in a
@@ -74,7 +77,7 @@ func (r *BrandService) List(ctx context.Context, opts ...option.RequestOption) (
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/brands"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Delete a brand by ID. The brand must belong to the authenticated customer.
@@ -83,19 +86,19 @@ func (r *BrandService) Delete(ctx context.Context, brandID string, body BrandDel
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if brandID == "" {
 		err = errors.New("missing required brandId parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("v3/brands/%s", brandID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseBrandWithKYC struct {
 	// The response data (null if error)
-	Data BrandWithKYC `json:"data,nullable"`
+	Data BrandWithKYC `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -125,9 +128,9 @@ type BrandDataParam struct {
 	//
 	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
 	// "KEY_ACCOUNT".
-	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero,required"`
+	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
 	// Primary contact name (required)
-	ContactName string `json:"contactName,required"`
+	ContactName string `json:"contactName" api:"required"`
 	// Business vertical/industry category (required for TCR)
 	//
 	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
@@ -135,7 +138,7 @@ type BrandDataParam struct {
 	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
 	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
 	// "COMMUNICATION".
-	Vertical TcrVertical `json:"vertical,omitzero,required"`
+	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
 	// Brand name for KYC submission
 	BrandName param.Opt[string] `json:"brandName,omitzero"`
 	// Legal business name
@@ -215,77 +218,77 @@ type BrandWithKYC struct {
 	//
 	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
 	// "KEY_ACCOUNT".
-	BrandRelationship TcrBrandRelationship `json:"brandRelationship,nullable"`
+	BrandRelationship TcrBrandRelationship `json:"brandRelationship" api:"nullable"`
 	// Legal business name
-	BusinessLegalName string `json:"businessLegalName,nullable"`
+	BusinessLegalName string `json:"businessLegalName" api:"nullable"`
 	// Business/brand name
-	BusinessName string `json:"businessName,nullable"`
+	BusinessName string `json:"businessName" api:"nullable"`
 	// Contact's role in the business
-	BusinessRole string `json:"businessRole,nullable"`
+	BusinessRole string `json:"businessRole" api:"nullable"`
 	// Business website URL
-	BusinessURL string `json:"businessUrl,nullable"`
+	BusinessURL string `json:"businessUrl" api:"nullable"`
 	// City
-	City string `json:"city,nullable"`
+	City string `json:"city" api:"nullable"`
 	// Contact email address
-	ContactEmail string `json:"contactEmail,nullable"`
+	ContactEmail string `json:"contactEmail" api:"nullable"`
 	// Primary contact name
 	ContactName string `json:"contactName"`
 	// Contact phone number
-	ContactPhone string `json:"contactPhone,nullable"`
+	ContactPhone string `json:"contactPhone" api:"nullable"`
 	// Contact phone country code
-	ContactPhoneCountryCode string `json:"contactPhoneCountryCode,nullable"`
+	ContactPhoneCountryCode string `json:"contactPhoneCountryCode" api:"nullable"`
 	// Country code
-	Country string `json:"country,nullable"`
+	Country string `json:"country" api:"nullable"`
 	// Country where the business is registered
-	CountryOfRegistration string `json:"countryOfRegistration,nullable"`
+	CountryOfRegistration string `json:"countryOfRegistration" api:"nullable"`
 	// When the brand was created
 	CreatedAt time.Time `json:"createdAt" format:"date-time"`
 	// CSP (Campaign Service Provider) ID
-	CspID string `json:"cspId,nullable"`
+	CspID string `json:"cspId" api:"nullable"`
 	// List of destination countries for messaging
 	DestinationCountries []DestinationCountry `json:"destinationCountries"`
 	// Business entity type
-	EntityType string `json:"entityType,nullable"`
+	EntityType string `json:"entityType" api:"nullable"`
 	// Expected daily messaging volume
-	ExpectedMessagingVolume string `json:"expectedMessagingVolume,nullable"`
+	ExpectedMessagingVolume string `json:"expectedMessagingVolume" api:"nullable"`
 	// TCR brand identity verification status
 	//
 	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
-	IdentityStatus BrandWithKYCIdentityStatus `json:"identityStatus,nullable"`
+	IdentityStatus BrandWithKYCIdentityStatus `json:"identityStatus" api:"nullable"`
 	// Whether this brand is inherited from parent organization
 	IsInherited bool `json:"isInherited"`
 	// Whether this is a TCR application
 	IsTcrApplication bool `json:"isTcrApplication"`
 	// Additional notes
-	Notes string `json:"notes,nullable"`
+	Notes string `json:"notes" api:"nullable"`
 	// Phone number prefix for messaging
-	PhoneNumberPrefix string `json:"phoneNumberPrefix,nullable"`
+	PhoneNumberPrefix string `json:"phoneNumberPrefix" api:"nullable"`
 	// Postal/ZIP code
-	PostalCode string `json:"postalCode,nullable"`
+	PostalCode string `json:"postalCode" api:"nullable"`
 	// Primary messaging use case description
-	PrimaryUseCase string `json:"primaryUseCase,nullable"`
+	PrimaryUseCase string `json:"primaryUseCase" api:"nullable"`
 	// State/province code
-	State string `json:"state,nullable"`
+	State string `json:"state" api:"nullable"`
 	// TCR brand status
 	//
 	// Any of "ACTIVE", "INACTIVE", "SUSPENDED".
-	Status BrandWithKYCStatus `json:"status,nullable"`
+	Status BrandWithKYCStatus `json:"status" api:"nullable"`
 	// Street address
-	Street string `json:"street,nullable"`
+	Street string `json:"street" api:"nullable"`
 	// When the brand was submitted to TCR
-	SubmittedAt time.Time `json:"submittedAt,nullable" format:"date-time"`
+	SubmittedAt time.Time `json:"submittedAt" api:"nullable" format:"date-time"`
 	// Whether this brand was submitted to TCR
 	SubmittedToTcr bool `json:"submittedToTCR"`
 	// Tax ID/EIN number
-	TaxID string `json:"taxId,nullable"`
+	TaxID string `json:"taxId" api:"nullable"`
 	// Type of tax ID
-	TaxIDType string `json:"taxIdType,nullable"`
+	TaxIDType string `json:"taxIdType" api:"nullable"`
 	// TCR brand ID (populated after TCR submission)
-	TcrBrandID string `json:"tcrBrandId,nullable"`
+	TcrBrandID string `json:"tcrBrandId" api:"nullable"`
 	// Universal EIN from TCR
-	UniversalEin string `json:"universalEin,nullable"`
+	UniversalEin string `json:"universalEin" api:"nullable"`
 	// When the brand was last updated
-	UpdatedAt time.Time `json:"updatedAt,nullable" format:"date-time"`
+	UpdatedAt time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
 	// Business vertical/industry category
 	//
 	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
@@ -293,7 +296,7 @@ type BrandWithKYC struct {
 	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
 	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
 	// "COMMUNICATION".
-	Vertical TcrVertical `json:"vertical,nullable"`
+	Vertical TcrVertical `json:"vertical" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                      respjson.Field
@@ -444,9 +447,9 @@ const (
 // Standard API response envelope for all v3 endpoints
 type BrandListResponse struct {
 	// The response data (null if error)
-	Data []BrandWithKYC `json:"data,nullable"`
+	Data []BrandWithKYC `json:"data" api:"nullable"`
 	// Error details (null if successful)
-	Error APIError `json:"error,nullable"`
+	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -470,7 +473,7 @@ func (r *BrandListResponse) UnmarshalJSON(data []byte) error {
 
 type BrandNewParams struct {
 	// Brand and KYC information
-	Brand BrandDataParam `json:"brand,omitzero,required"`
+	Brand BrandDataParam `json:"brand,omitzero" api:"required"`
 	// Test mode flag - when true, the operation is simulated without side effects
 	// Useful for testing integrations without actual execution
 	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
@@ -488,7 +491,7 @@ func (r *BrandNewParams) UnmarshalJSON(data []byte) error {
 
 type BrandUpdateParams struct {
 	// Brand and KYC information
-	Brand BrandDataParam `json:"brand,omitzero,required"`
+	Brand BrandDataParam `json:"brand,omitzero" api:"required"`
 	// Test mode flag - when true, the operation is simulated without side effects
 	// Useful for testing integrations without actual execution
 	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
