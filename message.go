@@ -40,7 +40,10 @@ func NewMessageService(opts ...option.RequestOption) (r MessageService) {
 
 // Retrieves the activity log for a specific message. Activities track the message
 // lifecycle including acceptance, processing, sending, delivery, and any errors.
-func (r *MessageService) GetActivities(ctx context.Context, id string, opts ...option.RequestOption) (res *MessageGetActivitiesResponse, err error) {
+func (r *MessageService) GetActivities(ctx context.Context, id string, query MessageGetActivitiesParams, opts ...option.RequestOption) (res *MessageGetActivitiesResponse, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -53,7 +56,10 @@ func (r *MessageService) GetActivities(ctx context.Context, id string, opts ...o
 
 // Retrieves the current status and details of a message by ID. Includes delivery
 // status, timestamps, and error information if applicable.
-func (r *MessageService) GetStatus(ctx context.Context, id string, opts ...option.RequestOption) (res *MessageGetStatusResponse, err error) {
+func (r *MessageService) GetStatus(ctx context.Context, id string, query MessageGetStatusParams, opts ...option.RequestOption) (res *MessageGetStatusResponse, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
 		err = errors.New("missing required id parameter")
@@ -72,6 +78,9 @@ func (r *MessageService) GetStatus(ctx context.Context, id string, opts ...optio
 func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/messages"
@@ -129,22 +138,27 @@ func (r *MessageGetActivitiesResponseData) UnmarshalJSON(data []byte) error {
 
 // A single message activity event for v3 API
 type MessageGetActivitiesResponseDataActivity struct {
-	// Additional content or payload for the activity (e.g., channel response)
-	Content string `json:"content" api:"nullable"`
+	// Active contact markup applied on top of the channel cost, formatted to 4 decimal
+	// places.
+	ActiveContactPrice string `json:"active_contact_price" api:"nullable"`
 	// Human-readable description of the activity
 	Description string `json:"description"`
+	// Channel cost for this activity (e.g., SMS/WhatsApp provider cost), formatted to
+	// 4 decimal places.
+	Price string `json:"price" api:"nullable"`
 	// Activity status (e.g., ACCEPTED, PROCESSED, SENT, DELIVERED, FAILED)
 	Status string `json:"status"`
 	// When this activity occurred
 	Timestamp time.Time `json:"timestamp" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Content     respjson.Field
-		Description respjson.Field
-		Status      respjson.Field
-		Timestamp   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ActiveContactPrice respjson.Field
+		Description        respjson.Field
+		Price              respjson.Field
+		Status             respjson.Field
+		Timestamp          respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
 	} `json:"-"`
 }
 
@@ -183,12 +197,13 @@ func (r *MessageGetStatusResponse) UnmarshalJSON(data []byte) error {
 
 // The response data (null if error)
 type MessageGetStatusResponseData struct {
-	ID         string                              `json:"id" format:"uuid"`
-	Channel    string                              `json:"channel"`
-	ContactID  string                              `json:"contact_id" format:"uuid"`
-	CreatedAt  time.Time                           `json:"created_at" format:"date-time"`
-	CustomerID string                              `json:"customer_id" format:"uuid"`
-	Events     []MessageGetStatusResponseDataEvent `json:"events" api:"nullable"`
+	ID                 string                              `json:"id" format:"uuid"`
+	ActiveContactPrice float64                             `json:"active_contact_price" api:"nullable"`
+	Channel            string                              `json:"channel"`
+	ContactID          string                              `json:"contact_id" format:"uuid"`
+	CreatedAt          time.Time                           `json:"created_at" format:"date-time"`
+	CustomerID         string                              `json:"customer_id" format:"uuid"`
+	Events             []MessageGetStatusResponseDataEvent `json:"events" api:"nullable"`
 	// Structured message body format for database storage. Preserves channel-specific
 	// components (header, body, footer, buttons).
 	MessageBody        MessageGetStatusResponseDataMessageBody `json:"message_body" api:"nullable"`
@@ -203,6 +218,7 @@ type MessageGetStatusResponseData struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                 respjson.Field
+		ActiveContactPrice respjson.Field
 		Channel            respjson.Field
 		ContactID          respjson.Field
 		CreatedAt          respjson.Field
@@ -373,11 +389,22 @@ func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type MessageGetActivitiesParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
+type MessageGetStatusParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
 type MessageSendParams struct {
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	// Channels to broadcast on, e.g. ["whatsapp", "sms"]. Each channel produces a
 	// separate message per recipient. "sent" = auto-detect, "rcs" = reserved
 	// (skipped). Defaults to ["sent"] (auto-detect) if omitted.

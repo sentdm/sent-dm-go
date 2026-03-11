@@ -3,24 +3,15 @@
 package sentdm
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
-	"slices"
 	"time"
 
 	"github.com/sentdm/sent-dm-go/internal/apijson"
-	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
-	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
 	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
-// Register and manage 10DLC brands for SMS compliance
-//
 // BrandService contains methods and other services that help with interacting with
 // the sent-dm API.
 //
@@ -28,8 +19,7 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBrandService] method instead.
 type BrandService struct {
-	Options []option.RequestOption
-	// Register and manage 10DLC brands for SMS compliance
+	Options   []option.RequestOption
 	Campaigns BrandCampaignService
 }
 
@@ -43,151 +33,16 @@ func NewBrandService(opts ...option.RequestOption) (r BrandService) {
 	return
 }
 
-// Creates a new brand and associated information. This endpoint automatically sets
-// inheritTcrBrand=false when a brand is created.
-func (r *BrandService) New(ctx context.Context, params BrandNewParams, opts ...option.RequestOption) (res *APIResponseBrandWithKYC, err error) {
-	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
-	}
-	opts = slices.Concat(r.Options, opts)
-	path := "v3/brands"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return res, err
-}
-
-// Updates an existing brand and its associated information. Cannot update brands
-// that have already been submitted to TCR or inherited brands.
-func (r *BrandService) Update(ctx context.Context, brandID string, params BrandUpdateParams, opts ...option.RequestOption) (res *APIResponseBrandWithKYC, err error) {
-	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
-	}
-	opts = slices.Concat(r.Options, opts)
-	if brandID == "" {
-		err = errors.New("missing required brandId parameter")
-		return nil, err
-	}
-	path := fmt.Sprintf("v3/brands/%s", brandID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return res, err
-}
-
-// Retrieves all brands for the authenticated customer with information in a
-// flattened structure. Includes inherited brands if inheritTcrBrand=true.
-func (r *BrandService) List(ctx context.Context, opts ...option.RequestOption) (res *BrandListResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "v3/brands"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return res, err
-}
-
-// Delete a brand by ID. The brand must belong to the authenticated customer.
-func (r *BrandService) Delete(ctx context.Context, brandID string, body BrandDeleteParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	if brandID == "" {
-		err = errors.New("missing required brandId parameter")
-		return err
-	}
-	path := fmt.Sprintf("v3/brands/%s", brandID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, nil, opts...)
-	return err
-}
-
-// Standard API response envelope for all v3 endpoints
-type APIResponseBrandWithKYC struct {
-	// The response data (null if error)
-	Data BrandWithKYC `json:"data" api:"nullable"`
-	// Error details (null if successful)
-	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r APIResponseBrandWithKYC) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseBrandWithKYC) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Brand and KYC data
+// Brand and KYC data grouped into contact, business, and compliance sections
 //
-// The properties BrandRelationship, ContactName, Vertical are required.
+// The properties Compliance, Contact are required.
 type BrandDataParam struct {
-	// Brand relationship level with TCR (required for TCR)
-	//
-	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
-	// "KEY_ACCOUNT".
-	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
-	// Primary contact name (required)
-	ContactName string `json:"contactName" api:"required"`
-	// Business vertical/industry category (required for TCR)
-	//
-	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
-	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
-	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
-	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
-	// "COMMUNICATION".
-	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
-	// Brand name for KYC submission
-	BrandName param.Opt[string] `json:"brandName,omitzero"`
-	// Legal business name
-	BusinessLegalName param.Opt[string] `json:"businessLegalName,omitzero"`
-	// Business/brand name
-	BusinessName param.Opt[string] `json:"businessName,omitzero"`
-	// Contact's role in the business
-	BusinessRole param.Opt[string] `json:"businessRole,omitzero"`
-	// Business website URL
-	BusinessURL param.Opt[string] `json:"businessUrl,omitzero" format:"uri"`
-	// City
-	City param.Opt[string] `json:"city,omitzero"`
-	// Contact email address
-	ContactEmail param.Opt[string] `json:"contactEmail,omitzero" format:"email"`
-	// Contact phone number in E.164 format
-	ContactPhone param.Opt[string] `json:"contactPhone,omitzero"`
-	// Contact phone country code (e.g., "1" for US)
-	ContactPhoneCountryCode param.Opt[string] `json:"contactPhoneCountryCode,omitzero"`
-	// Country code (e.g., US, CA)
-	Country param.Opt[string] `json:"country,omitzero"`
-	// Country where the business is registered
-	CountryOfRegistration param.Opt[string] `json:"countryOfRegistration,omitzero"`
-	// Expected daily messaging volume
-	ExpectedMessagingVolume param.Opt[string] `json:"expectedMessagingVolume,omitzero"`
-	// Whether this is a TCR (Campaign Registry) application
-	IsTcrApplication param.Opt[bool] `json:"isTcrApplication,omitzero"`
-	// Additional notes about the business or use case
-	Notes param.Opt[string] `json:"notes,omitzero"`
-	// Phone number prefix for messaging (e.g., "+1")
-	PhoneNumberPrefix param.Opt[string] `json:"phoneNumberPrefix,omitzero"`
-	// Postal/ZIP code
-	PostalCode param.Opt[string] `json:"postalCode,omitzero"`
-	// Primary messaging use case description
-	PrimaryUseCase param.Opt[string] `json:"primaryUseCase,omitzero"`
-	// State/province code
-	State param.Opt[string] `json:"state,omitzero"`
-	// Street address
-	Street param.Opt[string] `json:"street,omitzero"`
-	// Tax ID/EIN number
-	TaxID param.Opt[string] `json:"taxId,omitzero"`
-	// Type of tax ID (e.g., us_ein, ca_bn)
-	TaxIDType param.Opt[string] `json:"taxIdType,omitzero"`
-	// List of destination countries for messaging
-	DestinationCountries []DestinationCountryParam `json:"destinationCountries,omitzero"`
-	// Business entity type
-	//
-	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
-	// "GOVERNMENT".
-	EntityType BrandDataEntityType `json:"entityType,omitzero"`
+	// Compliance and TCR-related information
+	Compliance BrandDataComplianceParam `json:"compliance,omitzero" api:"required"`
+	// Contact information for the brand
+	Contact BrandDataContactParam `json:"contact,omitzero" api:"required"`
+	// Business details and address information
+	Business BrandDataBusinessParam `json:"business,omitzero"`
 	paramObj
 }
 
@@ -199,96 +54,246 @@ func (r *BrandDataParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Business entity type
-type BrandDataEntityType string
-
-const (
-	BrandDataEntityTypePrivateProfit  BrandDataEntityType = "PRIVATE_PROFIT"
-	BrandDataEntityTypePublicProfit   BrandDataEntityType = "PUBLIC_PROFIT"
-	BrandDataEntityTypeNonProfit      BrandDataEntityType = "NON_PROFIT"
-	BrandDataEntityTypeSoleProprietor BrandDataEntityType = "SOLE_PROPRIETOR"
-	BrandDataEntityTypeGovernment     BrandDataEntityType = "GOVERNMENT"
-)
-
-// Flattened brand response with embedded KYC information
-type BrandWithKYC struct {
-	// Unique identifier for the brand
-	ID string `json:"id" format:"uuid"`
-	// Brand relationship level with TCR
+// Compliance and TCR-related information
+//
+// The properties BrandRelationship, Vertical are required.
+type BrandDataComplianceParam struct {
+	// Brand relationship level with TCR (required for TCR)
 	//
 	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
 	// "KEY_ACCOUNT".
-	BrandRelationship TcrBrandRelationship `json:"brandRelationship" api:"nullable"`
-	// Legal business name
-	BusinessLegalName string `json:"businessLegalName" api:"nullable"`
-	// Business/brand name
-	BusinessName string `json:"businessName" api:"nullable"`
-	// Contact's role in the business
-	BusinessRole string `json:"businessRole" api:"nullable"`
-	// Business website URL
-	BusinessURL string `json:"businessUrl" api:"nullable"`
-	// City
-	City string `json:"city" api:"nullable"`
-	// Contact email address
-	ContactEmail string `json:"contactEmail" api:"nullable"`
-	// Primary contact name
-	ContactName string `json:"contactName"`
-	// Contact phone number
-	ContactPhone string `json:"contactPhone" api:"nullable"`
-	// Contact phone country code
-	ContactPhoneCountryCode string `json:"contactPhoneCountryCode" api:"nullable"`
-	// Country code
-	Country string `json:"country" api:"nullable"`
-	// Country where the business is registered
-	CountryOfRegistration string `json:"countryOfRegistration" api:"nullable"`
-	// When the brand was created
-	CreatedAt time.Time `json:"createdAt" format:"date-time"`
-	// CSP (Campaign Service Provider) ID
-	CspID string `json:"cspId" api:"nullable"`
-	// List of destination countries for messaging
-	DestinationCountries []DestinationCountry `json:"destinationCountries"`
-	// Business entity type
-	EntityType string `json:"entityType" api:"nullable"`
+	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
+	// Business vertical/industry category (required for TCR)
+	//
+	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
+	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
+	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
+	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
+	// "COMMUNICATION".
+	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
 	// Expected daily messaging volume
-	ExpectedMessagingVolume string `json:"expectedMessagingVolume" api:"nullable"`
+	ExpectedMessagingVolume param.Opt[string] `json:"expectedMessagingVolume,omitzero"`
+	// Whether this is a TCR (Campaign Registry) application
+	IsTcrApplication param.Opt[bool] `json:"isTcrApplication,omitzero"`
+	// Additional notes about the business or use case
+	Notes param.Opt[string] `json:"notes,omitzero"`
+	// Phone number prefix for messaging (e.g., "+1")
+	PhoneNumberPrefix param.Opt[string] `json:"phoneNumberPrefix,omitzero"`
+	// Primary messaging use case description
+	PrimaryUseCase param.Opt[string] `json:"primaryUseCase,omitzero"`
+	// List of destination countries for messaging
+	DestinationCountries []DestinationCountryParam `json:"destinationCountries,omitzero"`
+	paramObj
+}
+
+func (r BrandDataComplianceParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandDataComplianceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandDataComplianceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Contact information for the brand
+//
+// The property Name is required.
+type BrandDataContactParam struct {
+	// Primary contact name (required)
+	Name string `json:"name" api:"required"`
+	// Business/brand name
+	BusinessName param.Opt[string] `json:"businessName,omitzero"`
+	// Contact email address
+	Email param.Opt[string] `json:"email,omitzero" format:"email"`
+	// Contact phone number in E.164 format
+	Phone param.Opt[string] `json:"phone,omitzero"`
+	// Contact phone country code (e.g., "1" for US)
+	PhoneCountryCode param.Opt[string] `json:"phoneCountryCode,omitzero"`
+	// Contact's role in the business
+	Role param.Opt[string] `json:"role,omitzero"`
+	paramObj
+}
+
+func (r BrandDataContactParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandDataContactParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandDataContactParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Business details and address information
+type BrandDataBusinessParam struct {
+	// City
+	City param.Opt[string] `json:"city,omitzero"`
+	// Country code (e.g., US, CA)
+	Country param.Opt[string] `json:"country,omitzero"`
+	// Country where the business is registered
+	CountryOfRegistration param.Opt[string] `json:"countryOfRegistration,omitzero"`
+	// Legal business name
+	LegalName param.Opt[string] `json:"legalName,omitzero"`
+	// Postal/ZIP code
+	PostalCode param.Opt[string] `json:"postalCode,omitzero"`
+	// State/province code
+	State param.Opt[string] `json:"state,omitzero"`
+	// Street address
+	Street param.Opt[string] `json:"street,omitzero"`
+	// Tax ID/EIN number
+	TaxID param.Opt[string] `json:"taxId,omitzero"`
+	// Type of tax ID (e.g., us_ein, ca_bn)
+	TaxIDType param.Opt[string] `json:"taxIdType,omitzero"`
+	// Business website URL
+	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
+	// Business entity type
+	//
+	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
+	// "GOVERNMENT".
+	EntityType string `json:"entityType,omitzero"`
+	paramObj
+}
+
+func (r BrandDataBusinessParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandDataBusinessParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandDataBusinessParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BrandDataBusinessParam](
+		"entityType", "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR", "GOVERNMENT",
+	)
+}
+
+// Brand response with nested contact, business, and compliance sections — mirrors
+// the request structure.
+type BrandWithKYC struct {
+	// Unique identifier for the brand
+	ID string `json:"id" format:"uuid"`
+	// Business details and address information
+	Business BrandWithKYCBusiness `json:"business" api:"nullable"`
+	// Compliance and TCR-related information
+	Compliance BrandWithKYCCompliance `json:"compliance" api:"nullable"`
+	// Contact information for the brand
+	Contact BrandWithKYCContact `json:"contact" api:"nullable"`
+	// When the brand was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// CSP (Campaign Service Provider) ID
+	CspID string `json:"csp_id" api:"nullable"`
 	// TCR brand identity verification status
 	//
 	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
-	IdentityStatus BrandWithKYCIdentityStatus `json:"identityStatus" api:"nullable"`
-	// Whether this brand is inherited from parent organization
-	IsInherited bool `json:"isInherited"`
-	// Whether this is a TCR application
-	IsTcrApplication bool `json:"isTcrApplication"`
-	// Additional notes
-	Notes string `json:"notes" api:"nullable"`
-	// Phone number prefix for messaging
-	PhoneNumberPrefix string `json:"phoneNumberPrefix" api:"nullable"`
-	// Postal/ZIP code
-	PostalCode string `json:"postalCode" api:"nullable"`
-	// Primary messaging use case description
-	PrimaryUseCase string `json:"primaryUseCase" api:"nullable"`
-	// State/province code
-	State string `json:"state" api:"nullable"`
+	IdentityStatus BrandWithKYCIdentityStatus `json:"identity_status" api:"nullable"`
+	// Whether this brand is inherited from the parent organization
+	IsInherited bool `json:"is_inherited"`
 	// TCR brand status
 	//
 	// Any of "ACTIVE", "INACTIVE", "SUSPENDED".
 	Status BrandWithKYCStatus `json:"status" api:"nullable"`
+	// When the brand was submitted to TCR
+	SubmittedAt time.Time `json:"submitted_at" api:"nullable" format:"date-time"`
+	// Whether this brand has been submitted to TCR
+	SubmittedToTcr bool `json:"submitted_to_tcr"`
+	// TCR brand ID (populated after TCR submission)
+	TcrBrandID string `json:"tcr_brand_id" api:"nullable"`
+	// Universal EIN from TCR
+	UniversalEin string `json:"universal_ein" api:"nullable"`
+	// When the brand was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID             respjson.Field
+		Business       respjson.Field
+		Compliance     respjson.Field
+		Contact        respjson.Field
+		CreatedAt      respjson.Field
+		CspID          respjson.Field
+		IdentityStatus respjson.Field
+		IsInherited    respjson.Field
+		Status         respjson.Field
+		SubmittedAt    respjson.Field
+		SubmittedToTcr respjson.Field
+		TcrBrandID     respjson.Field
+		UniversalEin   respjson.Field
+		UpdatedAt      respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BrandWithKYC) RawJSON() string { return r.JSON.raw }
+func (r *BrandWithKYC) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Business details and address information
+type BrandWithKYCBusiness struct {
+	// City
+	City string `json:"city" api:"nullable"`
+	// Country code (e.g., US, CA)
+	Country string `json:"country" api:"nullable"`
+	// Country where the business is registered
+	CountryOfRegistration string `json:"country_of_registration" api:"nullable"`
+	// Business entity type
+	EntityType string `json:"entity_type" api:"nullable"`
+	// Legal business name
+	LegalName string `json:"legal_name" api:"nullable"`
+	// Postal/ZIP code
+	PostalCode string `json:"postal_code" api:"nullable"`
+	// State/province code
+	State string `json:"state" api:"nullable"`
 	// Street address
 	Street string `json:"street" api:"nullable"`
-	// When the brand was submitted to TCR
-	SubmittedAt time.Time `json:"submittedAt" api:"nullable" format:"date-time"`
-	// Whether this brand was submitted to TCR
-	SubmittedToTcr bool `json:"submittedToTCR"`
 	// Tax ID/EIN number
-	TaxID string `json:"taxId" api:"nullable"`
-	// Type of tax ID
-	TaxIDType string `json:"taxIdType" api:"nullable"`
-	// TCR brand ID (populated after TCR submission)
-	TcrBrandID string `json:"tcrBrandId" api:"nullable"`
-	// Universal EIN from TCR
-	UniversalEin string `json:"universalEin" api:"nullable"`
-	// When the brand was last updated
-	UpdatedAt time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
+	TaxID string `json:"tax_id" api:"nullable"`
+	// Type of tax ID (e.g., us_ein, ca_bn)
+	TaxIDType string `json:"tax_id_type" api:"nullable"`
+	// Business website URL
+	URL string `json:"url" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		City                  respjson.Field
+		Country               respjson.Field
+		CountryOfRegistration respjson.Field
+		EntityType            respjson.Field
+		LegalName             respjson.Field
+		PostalCode            respjson.Field
+		State                 respjson.Field
+		Street                respjson.Field
+		TaxID                 respjson.Field
+		TaxIDType             respjson.Field
+		URL                   respjson.Field
+		ExtraFields           map[string]respjson.Field
+		raw                   string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BrandWithKYCBusiness) RawJSON() string { return r.JSON.raw }
+func (r *BrandWithKYCBusiness) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Compliance and TCR-related information
+type BrandWithKYCCompliance struct {
+	// Brand relationship level with TCR
+	//
+	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
+	// "KEY_ACCOUNT".
+	BrandRelationship TcrBrandRelationship `json:"brand_relationship" api:"nullable"`
+	// List of destination countries for messaging
+	DestinationCountries []DestinationCountry `json:"destination_countries"`
+	// Expected daily messaging volume
+	ExpectedMessagingVolume string `json:"expected_messaging_volume" api:"nullable"`
+	// Whether this is a TCR (Campaign Registry) application
+	IsTcrApplication bool `json:"is_tcr_application"`
+	// Additional notes about the business or use case
+	Notes string `json:"notes" api:"nullable"`
+	// Phone number prefix for messaging (e.g., "+1")
+	PhoneNumberPrefix string `json:"phone_number_prefix" api:"nullable"`
+	// Primary messaging use case description
+	PrimaryUseCase string `json:"primary_use_case" api:"nullable"`
 	// Business vertical/industry category
 	//
 	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
@@ -299,41 +304,13 @@ type BrandWithKYC struct {
 	Vertical TcrVertical `json:"vertical" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                      respjson.Field
 		BrandRelationship       respjson.Field
-		BusinessLegalName       respjson.Field
-		BusinessName            respjson.Field
-		BusinessRole            respjson.Field
-		BusinessURL             respjson.Field
-		City                    respjson.Field
-		ContactEmail            respjson.Field
-		ContactName             respjson.Field
-		ContactPhone            respjson.Field
-		ContactPhoneCountryCode respjson.Field
-		Country                 respjson.Field
-		CountryOfRegistration   respjson.Field
-		CreatedAt               respjson.Field
-		CspID                   respjson.Field
 		DestinationCountries    respjson.Field
-		EntityType              respjson.Field
 		ExpectedMessagingVolume respjson.Field
-		IdentityStatus          respjson.Field
-		IsInherited             respjson.Field
 		IsTcrApplication        respjson.Field
 		Notes                   respjson.Field
 		PhoneNumberPrefix       respjson.Field
-		PostalCode              respjson.Field
 		PrimaryUseCase          respjson.Field
-		State                   respjson.Field
-		Status                  respjson.Field
-		Street                  respjson.Field
-		SubmittedAt             respjson.Field
-		SubmittedToTcr          respjson.Field
-		TaxID                   respjson.Field
-		TaxIDType               respjson.Field
-		TcrBrandID              respjson.Field
-		UniversalEin            respjson.Field
-		UpdatedAt               respjson.Field
 		Vertical                respjson.Field
 		ExtraFields             map[string]respjson.Field
 		raw                     string
@@ -341,8 +318,41 @@ type BrandWithKYC struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r BrandWithKYC) RawJSON() string { return r.JSON.raw }
-func (r *BrandWithKYC) UnmarshalJSON(data []byte) error {
+func (r BrandWithKYCCompliance) RawJSON() string { return r.JSON.raw }
+func (r *BrandWithKYCCompliance) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Contact information for the brand
+type BrandWithKYCContact struct {
+	// Business/brand name
+	BusinessName string `json:"business_name" api:"nullable"`
+	// Contact email address
+	Email string `json:"email" api:"nullable"`
+	// Primary contact name
+	Name string `json:"name"`
+	// Contact phone number in E.164 format
+	Phone string `json:"phone" api:"nullable"`
+	// Contact phone country code (e.g., "1" for US)
+	PhoneCountryCode string `json:"phone_country_code" api:"nullable"`
+	// Contact's role in the business
+	Role string `json:"role" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BusinessName     respjson.Field
+		Email            respjson.Field
+		Name             respjson.Field
+		Phone            respjson.Field
+		PhoneCountryCode respjson.Field
+		Role             respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BrandWithKYCContact) RawJSON() string { return r.JSON.raw }
+func (r *BrandWithKYCContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -443,92 +453,3 @@ const (
 	TcrVerticalTechnology     TcrVertical = "TECHNOLOGY"
 	TcrVerticalCommunication  TcrVertical = "COMMUNICATION"
 )
-
-// Standard API response envelope for all v3 endpoints
-type BrandListResponse struct {
-	// The response data (null if error)
-	Data []BrandWithKYC `json:"data" api:"nullable"`
-	// Error details (null if successful)
-	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r BrandListResponse) RawJSON() string { return r.JSON.raw }
-func (r *BrandListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type BrandNewParams struct {
-	// Brand and KYC information
-	Brand BrandDataParam `json:"brand,omitzero" api:"required"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	paramObj
-}
-
-func (r BrandNewParams) MarshalJSON() (data []byte, err error) {
-	type shadow BrandNewParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *BrandNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type BrandUpdateParams struct {
-	// Brand and KYC information
-	Brand BrandDataParam `json:"brand,omitzero" api:"required"`
-	// Test mode flag - when true, the operation is simulated without side effects
-	// Useful for testing integrations without actual execution
-	TestMode       param.Opt[bool]   `json:"test_mode,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	paramObj
-}
-
-func (r BrandUpdateParams) MarshalJSON() (data []byte, err error) {
-	type shadow BrandUpdateParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *BrandUpdateParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type BrandDeleteParams struct {
-	// Request to delete a brand
-	Body BrandDeleteParamsBody
-	paramObj
-}
-
-func (r BrandDeleteParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Body)
-}
-func (r *BrandDeleteParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.Body)
-}
-
-// Request to delete a brand
-type BrandDeleteParamsBody struct {
-	MutationRequestParam
-}
-
-func (r BrandDeleteParamsBody) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*BrandDeleteParamsBody
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
-}

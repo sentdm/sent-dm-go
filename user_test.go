@@ -13,7 +13,7 @@ import (
 	"github.com/sentdm/sent-dm-go/option"
 )
 
-func TestUserGet(t *testing.T) {
+func TestUserGetWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -26,7 +26,13 @@ func TestUserGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Users.Get(context.TODO(), "182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e")
+	_, err := client.Users.Get(
+		context.TODO(),
+		"userId",
+		sentdm.UserGetParams{
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -36,7 +42,7 @@ func TestUserGet(t *testing.T) {
 	}
 }
 
-func TestUserList(t *testing.T) {
+func TestUserListWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -49,7 +55,9 @@ func TestUserList(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Users.List(context.TODO())
+	_, err := client.Users.List(context.TODO(), sentdm.UserListParams{
+		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+	})
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -76,8 +84,9 @@ func TestUserInviteWithOptionalParams(t *testing.T) {
 		Email:          sentdm.String("newuser@example.com"),
 		Name:           sentdm.String("New User"),
 		Role:           sentdm.String("developer"),
-		TestMode:       sentdm.Bool(false),
+		Sandbox:        sentdm.Bool(false),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
+		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -103,10 +112,14 @@ func TestUserRemoveWithOptionalParams(t *testing.T) {
 	)
 	err := client.Users.Remove(
 		context.TODO(),
-		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
+		"userId",
 		sentdm.UserRemoveParams{
-			TestMode: sentdm.Bool(false),
-			UserID:   sentdm.String("aa0e8400-e29b-41d4-a716-446655440005"),
+			Body: sentdm.UserRemoveParamsBody{
+				MutationRequestParam: sentdm.MutationRequestParam{
+					Sandbox: sentdm.Bool(false),
+				},
+			},
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -133,12 +146,12 @@ func TestUserUpdateRoleWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Users.UpdateRole(
 		context.TODO(),
-		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
+		"userId",
 		sentdm.UserUpdateRoleParams{
 			Role:           sentdm.String("billing"),
-			TestMode:       sentdm.Bool(false),
-			UserID:         sentdm.String("aa0e8400-e29b-41d4-a716-446655440005"),
+			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {

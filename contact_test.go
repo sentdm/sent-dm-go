@@ -28,8 +28,9 @@ func TestContactNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Contacts.New(context.TODO(), sentdm.ContactNewParams{
 		PhoneNumber:    sentdm.String("+1234567890"),
-		TestMode:       sentdm.Bool(false),
+		Sandbox:        sentdm.Bool(false),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
+		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -40,7 +41,7 @@ func TestContactNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestContactGet(t *testing.T) {
+func TestContactGetWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -53,7 +54,13 @@ func TestContactGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Contacts.Get(context.TODO(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	_, err := client.Contacts.Get(
+		context.TODO(),
+		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.ContactGetParams{
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+		},
+	)
 	if err != nil {
 		var apierr *sentdm.Error
 		if errors.As(err, &apierr) {
@@ -82,8 +89,9 @@ func TestContactUpdateWithOptionalParams(t *testing.T) {
 		sentdm.ContactUpdateParams{
 			DefaultChannel: sentdm.String("whatsapp"),
 			OptOut:         sentdm.Bool(false),
-			TestMode:       sentdm.Bool(false),
+			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
@@ -109,11 +117,12 @@ func TestContactListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
-		Page:     0,
-		PageSize: 0,
-		Channel:  sentdm.String("channel"),
-		Phone:    sentdm.String("phone"),
-		Search:   sentdm.String("search"),
+		Page:       0,
+		PageSize:   0,
+		Channel:    sentdm.String("channel"),
+		Phone:      sentdm.String("phone"),
+		Search:     sentdm.String("search"),
+		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
 		var apierr *sentdm.Error
@@ -143,9 +152,10 @@ func TestContactDeleteWithOptionalParams(t *testing.T) {
 		sentdm.ContactDeleteParams{
 			Body: sentdm.ContactDeleteParamsBody{
 				MutationRequestParam: sentdm.MutationRequestParam{
-					TestMode: sentdm.Bool(false),
+					Sandbox: sentdm.Bool(false),
 				},
 			},
+			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
 	if err != nil {
