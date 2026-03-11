@@ -54,6 +54,12 @@ Methods:
 
 Params Types:
 
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsAuthenticationConfigParam">SentDmServicesCommonContractsPocOsAuthenticationConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateBodyParam">SentDmServicesCommonContractsPocOsTemplateBodyParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateButtonParam">SentDmServicesCommonContractsPocOsTemplateButtonParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateButtonPropsParam">SentDmServicesCommonContractsPocOsTemplateButtonPropsParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateFooterParam">SentDmServicesCommonContractsPocOsTemplateFooterParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateHeaderParam">SentDmServicesCommonContractsPocOsTemplateHeaderParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateBodyContentParam">TemplateBodyContentParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateDefinitionParam">TemplateDefinitionParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateVariableParam">TemplateVariableParam</a>
@@ -80,6 +86,9 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#BrandsBrandDataParam">BrandsBrandDataParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#DestinationCountryParam">DestinationCountryParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#PaymentDetailsParam">PaymentDetailsParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrBrandRelationship">TcrBrandRelationship</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrVertical">TcrVertical</a>
 
@@ -108,6 +117,7 @@ Params Types:
 
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CampaignDataParam">CampaignDataParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessagingUseCaseUs">MessagingUseCaseUs</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam</a>
 
 Response Types:
 
