@@ -44,7 +44,7 @@ func NewContactService(opts ...option.RequestOption) (r ContactService) {
 
 // Creates a new contact by phone number and associates it with the authenticated
 // customer.
-func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
+func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts ...option.RequestOption) (res *APIResponseOfContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -60,7 +60,7 @@ func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts 
 // Retrieves a specific contact by their unique identifier. Returns detailed
 // contact information including phone formats, available channels, and opt-out
 // status.
-func (r *ContactService) Get(ctx context.Context, id string, query ContactGetParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
+func (r *ContactService) Get(ctx context.Context, id string, query ContactGetParams, opts ...option.RequestOption) (res *APIResponseOfContact, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -76,7 +76,7 @@ func (r *ContactService) Get(ctx context.Context, id string, query ContactGetPar
 
 // Updates a contact's default channel and/or opt-out status. Inherited contacts
 // cannot be updated.
-func (r *ContactService) Update(ctx context.Context, id string, params ContactUpdateParams, opts ...option.RequestOption) (res *APIResponseContact, err error) {
+func (r *ContactService) Update(ctx context.Context, id string, params ContactUpdateParams, opts ...option.RequestOption) (res *APIResponseOfContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -123,9 +123,9 @@ func (r *ContactService) Delete(ctx context.Context, id string, params ContactDe
 }
 
 // Standard API response envelope for all v3 endpoints
-type APIResponseContact struct {
+type APIResponseOfContact struct {
 	// The response data (null if error)
-	Data Contact `json:"data" api:"nullable"`
+	Data ContactResponse `json:"data" api:"nullable"`
 	// Error details (null if successful)
 	Error APIError `json:"error" api:"nullable"`
 	// Metadata about the request and response
@@ -144,13 +144,13 @@ type APIResponseContact struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r APIResponseContact) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseContact) UnmarshalJSON(data []byte) error {
+func (r APIResponseOfContact) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Contact response for v3 API Uses snake_case for JSON property names
-type Contact struct {
+type ContactResponse struct {
 	// Unique identifier for the contact
 	ID string `json:"id" format:"uuid"`
 	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
@@ -201,8 +201,8 @@ type Contact struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r Contact) RawJSON() string { return r.JSON.raw }
-func (r *Contact) UnmarshalJSON(data []byte) error {
+func (r ContactResponse) RawJSON() string { return r.JSON.raw }
+func (r *ContactResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -236,7 +236,7 @@ func (r *ContactListResponse) UnmarshalJSON(data []byte) error {
 // The response data (null if error)
 type ContactListResponseData struct {
 	// List of contacts
-	Contacts []Contact `json:"contacts"`
+	Contacts []ContactResponse `json:"contacts"`
 	// Pagination metadata
 	Pagination PaginationMeta `json:"pagination"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -338,7 +338,7 @@ func (r *ContactDeleteParams) UnmarshalJSON(data []byte) error {
 
 // Request to delete/dissociate a contact
 type ContactDeleteParamsBody struct {
-	MutationRequestParam
+	MutationRequestBaseParam
 }
 
 func (r ContactDeleteParamsBody) MarshalJSON() (data []byte, err error) {
