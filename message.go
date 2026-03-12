@@ -93,7 +93,7 @@ type MessageGetActivitiesResponse struct {
 	// Response for GET /messages/{id}/activities
 	Data MessageGetActivitiesResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -173,7 +173,7 @@ type MessageGetStatusResponse struct {
 	// Message response for v3 API — same shape as v2 with snake_case JSON conventions
 	Data MessageGetStatusResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -312,7 +312,7 @@ type MessageSendResponse struct {
 	// Response for the multi-recipient send message endpoint
 	Data MessageSendResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful

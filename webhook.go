@@ -197,33 +197,6 @@ func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params Web
 	return res, err
 }
 
-// Error information
-type APIError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r APIError) RawJSON() string { return r.JSON.raw }
-func (r *APIError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Request and response metadata
 type APIMeta struct {
 	// Unique identifier for this request (for tracing and support)
@@ -253,7 +226,7 @@ type APIResponseWebhook struct {
 	// The response data (null if error)
 	Data WebhookResponse `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -272,6 +245,33 @@ type APIResponseWebhook struct {
 // Returns the unmodified JSON received from the API
 func (r APIResponseWebhook) RawJSON() string { return r.JSON.raw }
 func (r *APIResponseWebhook) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type ErrorDetail struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorDetail) RawJSON() string { return r.JSON.raw }
+func (r *ErrorDetail) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -389,7 +389,7 @@ type WebhookListResponse struct {
 	// The response data (null if error)
 	Data WebhookListResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -436,7 +436,7 @@ type WebhookListEventTypesResponse struct {
 	// The response data (null if error)
 	Data WebhookListEventTypesResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -502,7 +502,7 @@ type WebhookListEventsResponse struct {
 	// The response data (null if error)
 	Data WebhookListEventsResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -585,7 +585,7 @@ type WebhookRotateSecretResponse struct {
 	// The response data (null if error)
 	Data WebhookRotateSecretResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -629,7 +629,7 @@ type WebhookTestResponse struct {
 	// The response data (null if error)
 	Data WebhookTestResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful

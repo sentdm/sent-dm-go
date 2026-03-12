@@ -127,7 +127,7 @@ type APIResponseOfContact struct {
 	// Contact response for v3 API Uses snake_case for JSON property names
 	Data ContactResponse `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -211,7 +211,7 @@ type ContactListResponse struct {
 	// Paginated list of contacts response
 	Data ContactListResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
