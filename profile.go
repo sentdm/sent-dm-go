@@ -216,7 +216,7 @@ type APIResponseOfProfileDetail struct {
 	// Detailed profile response for v3 API
 	Data ProfileDetail `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
@@ -801,7 +801,7 @@ type ProfileListResponse struct {
 	// List of profiles response
 	Data ProfileListResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful

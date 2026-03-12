@@ -60,7 +60,7 @@ type NumberLookupResponse struct {
 	// The response data (null if error)
 	Data NumberLookupResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful

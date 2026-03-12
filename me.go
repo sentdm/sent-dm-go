@@ -105,7 +105,7 @@ type MeGetResponse struct {
 	// API key type. Always includes messaging channel configuration.
 	Data MeGetResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error APIError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
