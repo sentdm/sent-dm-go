@@ -122,11 +122,11 @@ func (r *TemplateService) Delete(ctx context.Context, id string, params Template
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseTemplate struct {
-	// The response data (null if error)
+	// Template response for v3 API
 	Data Template `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -334,18 +334,17 @@ func (r *TemplateBodyContentParam) UnmarshalJSON(data []byte) error {
 //
 // The property Body is required.
 type TemplateDefinitionParam struct {
-	// Required template body with content for different channels (multi-channel,
-	// SMS-specific, or WhatsApp-specific)
+	// Body section of a message template with channel-specific content
 	Body SentDmServicesCommonContractsPocOsTemplateBodyParam `json:"body,omitzero" api:"required"`
 	// The version of the template definition format
 	DefinitionVersion param.Opt[string] `json:"definitionVersion,omitzero"`
 	// Optional list of interactive buttons (e.g., quick replies, URLs, phone numbers)
 	Buttons []SentDmServicesCommonContractsPocOsTemplateButtonParam `json:"buttons,omitzero"`
-	// Configuration specific to AUTHENTICATION category templates (optional)
+	// Configuration for AUTHENTICATION category templates
 	AuthenticationConfig SentDmServicesCommonContractsPocOsAuthenticationConfigParam `json:"authenticationConfig,omitzero"`
-	// Optional template footer with optional variables
+	// Footer section of a message template
 	Footer SentDmServicesCommonContractsPocOsTemplateFooterParam `json:"footer,omitzero"`
-	// Optional template header with optional variables
+	// Header section of a message template
 	Header SentDmServicesCommonContractsPocOsTemplateHeaderParam `json:"header,omitzero"`
 	paramObj
 }
@@ -395,11 +394,11 @@ func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
 
 // Standard API response envelope for all v3 endpoints
 type TemplateListResponse struct {
-	// The response data (null if error)
+	// Paginated list of templates
 	Data TemplateListResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -420,9 +419,9 @@ func (r *TemplateListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// Paginated list of templates
 type TemplateListResponseData struct {
-	// Pagination metadata
+	// Pagination metadata for list responses
 	Pagination PaginationMeta `json:"pagination"`
 	// List of templates
 	Templates []Template `json:"templates"`
@@ -456,7 +455,8 @@ type TemplateNewParams struct {
 	SubmitForReview param.Opt[bool]   `json:"submit_for_review,omitzero"`
 	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// Template definition including header, body, footer, and buttons
+	// Complete definition of a message template including header, body, footer, and
+	// buttons
 	Definition TemplateDefinitionParam `json:"definition,omitzero"`
 	paramObj
 }
@@ -488,7 +488,8 @@ type TemplateUpdateParams struct {
 	SubmitForReview param.Opt[bool]   `json:"submit_for_review,omitzero"`
 	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// Template definition including header, body, footer, and buttons
+	// Complete definition of a message template including header, body, footer, and
+	// buttons
 	Definition TemplateDefinitionParam `json:"definition,omitzero"`
 	paramObj
 }

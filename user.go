@@ -124,11 +124,11 @@ func (r *UserService) UpdateRole(ctx context.Context, userID string, params User
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfUser struct {
-	// The response data (null if error)
+	// User response for v3 API
 	Data UserResponse `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -193,11 +193,11 @@ func (r *UserResponse) UnmarshalJSON(data []byte) error {
 
 // Standard API response envelope for all v3 endpoints
 type UserListResponse struct {
-	// The response data (null if error)
+	// List of users response
 	Data UserListResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -218,7 +218,7 @@ func (r *UserListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// List of users response
 type UserListResponseData struct {
 	// List of users in the organization
 	Users []UserResponse `json:"users"`

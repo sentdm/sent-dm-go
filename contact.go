@@ -124,11 +124,11 @@ func (r *ContactService) Delete(ctx context.Context, id string, params ContactDe
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfContact struct {
-	// The response data (null if error)
+	// Contact response for v3 API Uses snake_case for JSON property names
 	Data ContactResponse `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -208,11 +208,11 @@ func (r *ContactResponse) UnmarshalJSON(data []byte) error {
 
 // Standard API response envelope for all v3 endpoints
 type ContactListResponse struct {
-	// The response data (null if error)
+	// Paginated list of contacts response
 	Data ContactListResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -233,11 +233,11 @@ func (r *ContactListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// Paginated list of contacts response
 type ContactListResponseData struct {
 	// List of contacts
 	Contacts []ContactResponse `json:"contacts"`
-	// Pagination metadata
+	// Pagination metadata for list responses
 	Pagination PaginationMeta `json:"pagination"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {

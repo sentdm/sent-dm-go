@@ -90,11 +90,11 @@ func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opt
 
 // Standard API response envelope for all v3 endpoints
 type MessageGetActivitiesResponse struct {
-	// The response data (null if error)
+	// Response for GET /messages/{id}/activities
 	Data MessageGetActivitiesResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -115,7 +115,7 @@ func (r *MessageGetActivitiesResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// Response for GET /messages/{id}/activities
 type MessageGetActivitiesResponseData struct {
 	// List of activity events ordered by most recent first
 	Activities []MessageGetActivitiesResponseDataActivity `json:"activities"`
@@ -170,11 +170,11 @@ func (r *MessageGetActivitiesResponseDataActivity) UnmarshalJSON(data []byte) er
 
 // Standard API response envelope for all v3 endpoints
 type MessageGetStatusResponse struct {
-	// The response data (null if error)
+	// Message response for v3 API — same shape as v2 with snake_case JSON conventions
 	Data MessageGetStatusResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -195,7 +195,7 @@ func (r *MessageGetStatusResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// Message response for v3 API — same shape as v2 with snake_case JSON conventions
 type MessageGetStatusResponseData struct {
 	ID                 string                              `json:"id" format:"uuid"`
 	ActiveContactPrice float64                             `json:"active_contact_price" api:"nullable"`
@@ -309,11 +309,11 @@ func (r *MessageGetStatusResponseDataMessageBodyButton) UnmarshalJSON(data []byt
 
 // Standard API response envelope for all v3 endpoints
 type MessageSendResponse struct {
-	// The response data (null if error)
+	// Response for the multi-recipient send message endpoint
 	Data MessageSendResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -334,7 +334,7 @@ func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// Response for the multi-recipient send message endpoint
 type MessageSendResponseData struct {
 	// Resolved template body text
 	Body string `json:"body" api:"nullable"`
@@ -409,7 +409,8 @@ type MessageSendParams struct {
 	// separate message per recipient. "sent" = auto-detect, "rcs" = reserved
 	// (skipped). Defaults to ["sent"] (auto-detect) if omitted.
 	Channel []string `json:"channel,omitzero"`
-	// Template reference (by id or name, with optional parameters)
+	// SDK-style template reference: resolve by ID or by name, with optional
+	// parameters.
 	Template MessageSendParamsTemplate `json:"template,omitzero"`
 	// List of recipient phone numbers in E.164 format (multi-recipient fan-out)
 	To []string `json:"to,omitzero"`
@@ -424,7 +425,8 @@ func (r *MessageSendParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Template reference (by id or name, with optional parameters)
+// SDK-style template reference: resolve by ID or by name, with optional
+// parameters.
 type MessageSendParamsTemplate struct {
 	// Template ID (mutually exclusive with name)
 	ID param.Opt[string] `json:"id,omitzero" format:"uuid"`

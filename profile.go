@@ -213,11 +213,11 @@ func (r *ProfileService) CompleteSetup(ctx context.Context, profileID string, pa
 
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfProfileDetail struct {
-	// The response data (null if error)
+	// Detailed profile response for v3 API
 	Data ProfileDetail `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -267,11 +267,11 @@ func (r *BillingContactInfoParam) UnmarshalJSON(data []byte) error {
 //
 // The properties Compliance, Contact are required.
 type BrandsBrandDataParam struct {
-	// Compliance and TCR-related information
+	// Compliance and TCR information for brand registration
 	Compliance SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam `json:"compliance,omitzero" api:"required"`
-	// Contact information for the brand
+	// Contact information for brand KYC
 	Contact SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam `json:"contact,omitzero" api:"required"`
-	// Business details and address information
+	// Business details and address for brand KYC
 	Business SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam `json:"business,omitzero"`
 	paramObj
 }
@@ -360,13 +360,12 @@ type ProfileDetail struct {
 	AllowNumberChangeDuringOnboarding bool `json:"allow_number_change_during_onboarding" api:"nullable"`
 	// Whether templates are shared across profiles in the organization
 	AllowTemplateSharing bool `json:"allow_template_sharing"`
-	// Billing contact for this profile. Present when billing_model is "profile" or
-	// "profile_and_organization".
+	// Billing contact info returned in profile responses
 	BillingContact ProfileDetailBillingContact `json:"billing_contact" api:"nullable"`
 	// Billing model: profile, organization, or profile_and_organization
 	BillingModel string `json:"billing_model"`
-	// Brand associated with this profile. Null if no brand has been configured yet.
-	// Includes KYC information and TCR registration status.
+	// Brand response with nested contact, business, and compliance sections — mirrors
+	// the request structure.
 	Brand ProfileDetailBrand `json:"brand" api:"nullable"`
 	// When the profile was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
@@ -444,8 +443,7 @@ func (r *ProfileDetail) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Billing contact for this profile. Present when billing_model is "profile" or
-// "profile_and_organization".
+// Billing contact info returned in profile responses
 type ProfileDetailBillingContact struct {
 	Address string `json:"address" api:"nullable"`
 	Email   string `json:"email" api:"nullable"`
@@ -468,8 +466,8 @@ func (r *ProfileDetailBillingContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Brand associated with this profile. Null if no brand has been configured yet.
-// Includes KYC information and TCR registration status.
+// Brand response with nested contact, business, and compliance sections — mirrors
+// the request structure.
 type ProfileDetailBrand struct {
 	// Unique identifier for the brand
 	ID string `json:"id" format:"uuid"`
@@ -483,14 +481,10 @@ type ProfileDetailBrand struct {
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// CSP (Campaign Service Provider) ID
 	CspID string `json:"csp_id" api:"nullable"`
-	// TCR brand identity verification status
-	//
 	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
 	IdentityStatus string `json:"identity_status" api:"nullable"`
 	// Whether this brand is inherited from the parent organization
 	IsInherited bool `json:"is_inherited"`
-	// TCR brand status
-	//
 	// Any of "ACTIVE", "INACTIVE", "SUSPENDED".
 	Status string `json:"status" api:"nullable"`
 	// When the brand was submitted to TCR
@@ -580,8 +574,6 @@ func (r *ProfileDetailBrandBusiness) UnmarshalJSON(data []byte) error {
 
 // Compliance and TCR-related information
 type ProfileDetailBrandCompliance struct {
-	// Brand relationship level with TCR
-	//
 	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
 	// "KEY_ACCOUNT".
 	BrandRelationship TcrBrandRelationship `json:"brand_relationship" api:"nullable"`
@@ -597,8 +589,6 @@ type ProfileDetailBrandCompliance struct {
 	PhoneNumberPrefix string `json:"phone_number_prefix" api:"nullable"`
 	// Primary messaging use case description
 	PrimaryUseCase string `json:"primary_use_case" api:"nullable"`
-	// Business vertical/industry category
-	//
 	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
 	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
 	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
@@ -681,8 +671,6 @@ type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInf
 	TaxIDType param.Opt[string] `json:"taxIdType,omitzero"`
 	// Business website URL
 	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
-	// Business entity type
-	//
 	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
 	// "GOVERNMENT".
 	EntityType SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType `json:"entityType,omitzero"`
@@ -697,7 +685,6 @@ func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusines
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Business entity type
 type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType string
 
 const (
@@ -712,13 +699,9 @@ const (
 //
 // The properties BrandRelationship, Vertical are required.
 type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam struct {
-	// Brand relationship level with TCR (required for TCR)
-	//
 	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
 	// "KEY_ACCOUNT".
 	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
-	// Business vertical/industry category (required for TCR)
-	//
 	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
 	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
 	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
@@ -815,11 +798,11 @@ const (
 
 // Standard API response envelope for all v3 endpoints
 type ProfileListResponse struct {
-	// The response data (null if error)
+	// List of profiles response
 	Data ProfileListResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -840,7 +823,7 @@ func (r *ProfileListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// List of profiles response
 type ProfileListResponseData struct {
 	// List of profiles in the organization
 	Profiles []ProfileDetail `json:"profiles"`
@@ -897,23 +880,20 @@ type ProfileNewParams struct {
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// Direct WhatsApp Business Account credentials for this profile. When provided,
-	// the profile uses its own WhatsApp Business Account instead of inheriting from
-	// the organization. When omitted, the profile inherits the organization's WhatsApp
-	// Business Account (requires the organization to have completed WhatsApp Embedded
-	// Signup).
+	// Direct WhatsApp Business Account credentials for a profile. Use this when the
+	// profile should have its own WhatsApp Business Account instead of inheriting from
+	// the organization. Credentials must be obtained from Meta Business Manager by
+	// creating a System User with whatsapp_business_messaging and
+	// whatsapp_business_management scopes.
 	WhatsappBusinessAccount ProfileNewParamsWhatsappBusinessAccount `json:"whatsapp_business_account,omitzero"`
-	// Billing contact for this profile. Required when billing_model is "profile" or
-	// "profile_and_organization". Identifies who receives invoices and who is
-	// responsible for payment.
+	// Billing contact information for a profile. Required when billing_model is
+	// "profile" or "profile_and_organization".
 	BillingContact BillingContactInfoParam `json:"billing_contact,omitzero"`
-	// Brand and KYC information for this profile (optional). When provided, creates
-	// the brand associated with this profile. Cannot be set when inherit_tcr_brand is
-	// true.
+	// Brand and KYC data grouped into contact, business, and compliance sections
 	Brand BrandsBrandDataParam `json:"brand,omitzero"`
-	// Payment card details for this profile (optional). Accepted when billing_model is
-	// "profile" or "profile_and_organization". Not persisted on our servers —
-	// forwarded to the payment processor.
+	// Payment card details for a profile. Accepted when billing_model is "profile" or
+	// "profile_and_organization". These details are not stored on our servers and will
+	// be forwarded to the payment processor.
 	PaymentDetails PaymentDetailsParam `json:"payment_details,omitzero"`
 	paramObj
 }
@@ -926,11 +906,11 @@ func (r *ProfileNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Direct WhatsApp Business Account credentials for this profile. When provided,
-// the profile uses its own WhatsApp Business Account instead of inheriting from
-// the organization. When omitted, the profile inherits the organization's WhatsApp
-// Business Account (requires the organization to have completed WhatsApp Embedded
-// Signup).
+// Direct WhatsApp Business Account credentials for a profile. Use this when the
+// profile should have its own WhatsApp Business Account instead of inheriting from
+// the organization. Credentials must be obtained from Meta Business Manager by
+// creating a System User with whatsapp_business_messaging and
+// whatsapp_business_management scopes.
 //
 // The properties AccessToken, WabaID are required.
 type ProfileNewParamsWhatsappBusinessAccount struct {
@@ -1007,18 +987,14 @@ type ProfileUpdateParams struct {
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// Billing contact for this profile. Required when billing_model is "profile" or
-	// "profile_and_organization" and no billing contact has been configured yet.
-	// Identifies who receives invoices and who is responsible for payment.
+	// Billing contact information for a profile. Required when billing_model is
+	// "profile" or "profile_and_organization".
 	BillingContact BillingContactInfoParam `json:"billing_contact,omitzero"`
-	// Brand and KYC information for this profile (optional). When provided, creates or
-	// updates the brand associated with this profile. Cannot be set when
-	// inherit_tcr_brand is true. Once a brand has been submitted to TCR it cannot be
-	// modified.
+	// Brand and KYC data grouped into contact, business, and compliance sections
 	Brand BrandsBrandDataParam `json:"brand,omitzero"`
-	// Payment card details for this profile (optional). Accepted when billing_model is
-	// "profile" or "profile_and_organization". Not persisted on our servers —
-	// forwarded to the payment processor.
+	// Payment card details for a profile. Accepted when billing_model is "profile" or
+	// "profile_and_organization". These details are not stored on our servers and will
+	// be forwarded to the payment processor.
 	PaymentDetails PaymentDetailsParam `json:"payment_details,omitzero"`
 	paramObj
 }
