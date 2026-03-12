@@ -100,11 +100,13 @@ func (r *ProfileSettings) UnmarshalJSON(data []byte) error {
 
 // Standard API response envelope for all v3 endpoints
 type MeGetResponse struct {
-	// The response data (null if error)
+	// Account response for GET /v3/me endpoint. Returns organization (with profiles),
+	// user (standalone), or profile (child of an organization) data depending on the
+	// API key type. Always includes messaging channel configuration.
 	Data MeGetResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -125,11 +127,14 @@ func (r *MeGetResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
+// Account response for GET /v3/me endpoint. Returns organization (with profiles),
+// user (standalone), or profile (child of an organization) data depending on the
+// API key type. Always includes messaging channel configuration.
 type MeGetResponseData struct {
 	// Customer ID (organization, account, or profile)
 	ID string `json:"id" format:"uuid"`
-	// Messaging channel configuration
+	// Messaging channel configuration. All three channels are always present. Each
+	// channel has a "configured" flag; configured channels expose additional details.
 	Channels MeGetResponseDataChannels `json:"channels"`
 	// When the account was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
@@ -146,7 +151,7 @@ type MeGetResponseData struct {
 	// List of profiles (populated for organization type, empty for user and profile
 	// types)
 	Profiles []MeGetResponseDataProfile `json:"profiles"`
-	// Profile settings (only for profile type)
+	// Profile configuration settings
 	Settings ProfileSettings `json:"settings" api:"nullable"`
 	// Short name / abbreviation (only for profile type)
 	ShortName string `json:"short_name" api:"nullable"`
@@ -182,13 +187,15 @@ func (r *MeGetResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Messaging channel configuration
+// Messaging channel configuration. All three channels are always present. Each
+// channel has a "configured" flag; configured channels expose additional details.
 type MeGetResponseDataChannels struct {
-	// RCS channel (provider: vibes)
+	// RCS channel configuration. When configured, includes the RCS phone number.
 	Rcs MeGetResponseDataChannelsRcs `json:"rcs"`
-	// SMS channel (providers: telnyx, sinch)
+	// SMS channel configuration. When configured, includes the sending phone number.
 	SMS MeGetResponseDataChannelsSMS `json:"sms"`
-	// WhatsApp Business channel (provider: meta)
+	// WhatsApp Business channel configuration. When configured, includes the WhatsApp
+	// phone number and business name.
 	Whatsapp MeGetResponseDataChannelsWhatsapp `json:"whatsapp"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -206,7 +213,7 @@ func (r *MeGetResponseDataChannels) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// RCS channel (provider: vibes)
+// RCS channel configuration. When configured, includes the RCS phone number.
 type MeGetResponseDataChannelsRcs struct {
 	// Whether RCS is configured for this account
 	Configured bool `json:"configured"`
@@ -227,7 +234,7 @@ func (r *MeGetResponseDataChannelsRcs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// SMS channel (providers: telnyx, sinch)
+// SMS channel configuration. When configured, includes the sending phone number.
 type MeGetResponseDataChannelsSMS struct {
 	// Whether SMS is configured for this account
 	Configured bool `json:"configured"`
@@ -248,7 +255,8 @@ func (r *MeGetResponseDataChannelsSMS) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// WhatsApp Business channel (provider: meta)
+// WhatsApp Business channel configuration. When configured, includes the WhatsApp
+// phone number and business name.
 type MeGetResponseDataChannelsWhatsapp struct {
 	// WhatsApp Business display name
 	BusinessName string `json:"business_name" api:"nullable"`

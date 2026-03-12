@@ -59,9 +59,9 @@ func (r *NumberService) Lookup(ctx context.Context, phoneNumber string, query Nu
 type NumberLookupResponse struct {
 	// The response data (null if error)
 	Data NumberLookupResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
