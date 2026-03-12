@@ -124,9 +124,9 @@ func (r *ProfileCampaignService) Delete(ctx context.Context, campaignID string, 
 type APIResponseOfTcrCampaignWithUseCases struct {
 	// The response data (null if error)
 	Data TcrCampaignWithUseCases `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -210,8 +210,6 @@ const (
 //
 // The properties MessagingUseCaseUs, SampleMessages are required.
 type SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam struct {
-	// US messaging use case category
-	//
 	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
 	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
 	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
@@ -334,9 +332,9 @@ func (r *TcrCampaignWithUseCasesUseCase) UnmarshalJSON(data []byte) error {
 type ProfileCampaignListResponse struct {
 	// The response data (null if error)
 	Data []TcrCampaignWithUseCases `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -358,7 +356,7 @@ func (r *ProfileCampaignListResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ProfileCampaignNewParams struct {
-	// Campaign data
+	// Campaign data for create or update operation
 	Campaign CampaignDataParam `json:"campaign,omitzero" api:"required"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
@@ -378,7 +376,7 @@ func (r *ProfileCampaignNewParams) UnmarshalJSON(data []byte) error {
 
 type ProfileCampaignUpdateParams struct {
 	ProfileID string `path:"profileId" api:"required" format:"uuid" json:"-"`
-	// Campaign data
+	// Campaign data for create or update operation
 	Campaign CampaignDataParam `json:"campaign,omitzero" api:"required"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution

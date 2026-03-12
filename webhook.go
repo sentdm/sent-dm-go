@@ -252,9 +252,9 @@ func (r *APIMeta) UnmarshalJSON(data []byte) error {
 type APIResponseWebhook struct {
 	// The response data (null if error)
 	Data WebhookResponse `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -292,7 +292,7 @@ func (r *MutationRequestBaseParam) UnmarshalJSON(data []byte) error {
 
 // Pagination metadata for list responses
 type PaginationMeta struct {
-	// Cursor-based pagination (optional)
+	// Cursor-based pagination pointers
 	Cursors PaginationMetaCursors `json:"cursors" api:"nullable"`
 	// Whether there are more pages after this one
 	HasMore bool `json:"has_more"`
@@ -323,7 +323,7 @@ func (r *PaginationMeta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Cursor-based pagination (optional)
+// Cursor-based pagination pointers
 type PaginationMetaCursors struct {
 	// Cursor to fetch the next page
 	After string `json:"after" api:"nullable"`
@@ -388,9 +388,9 @@ func (r *WebhookResponse) UnmarshalJSON(data []byte) error {
 type WebhookListResponse struct {
 	// The response data (null if error)
 	Data WebhookListResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -435,9 +435,9 @@ func (r *WebhookListResponseData) UnmarshalJSON(data []byte) error {
 type WebhookListEventTypesResponse struct {
 	// The response data (null if error)
 	Data WebhookListEventTypesResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -501,9 +501,9 @@ func (r *WebhookListEventTypesResponseDataEventType) UnmarshalJSON(data []byte) 
 type WebhookListEventsResponse struct {
 	// The response data (null if error)
 	Data WebhookListEventsResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -584,9 +584,9 @@ func (r *WebhookListEventsResponseDataEvent) UnmarshalJSON(data []byte) error {
 type WebhookRotateSecretResponse struct {
 	// The response data (null if error)
 	Data WebhookRotateSecretResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
@@ -628,9 +628,9 @@ func (r *WebhookRotateSecretResponseData) UnmarshalJSON(data []byte) error {
 type WebhookTestResponse struct {
 	// The response data (null if error)
 	Data WebhookTestResponseData `json:"data" api:"nullable"`
-	// Error details (null if successful)
+	// Error information
 	Error APIError `json:"error" api:"nullable"`
-	// Metadata about the request and response
+	// Request and response metadata
 	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
