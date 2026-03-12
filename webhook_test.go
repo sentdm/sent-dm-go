@@ -243,7 +243,7 @@ func TestWebhookRotateSecretWithOptionalParams(t *testing.T) {
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookRotateSecretParams{
 			Body: sentdm.WebhookRotateSecretParamsBody{
-				MutationRequestBaseParam: sentdm.MutationRequestBaseParam{
+				MutationRequestParam: sentdm.MutationRequestParam{
 					Sandbox: sentdm.Bool(false),
 				},
 			},

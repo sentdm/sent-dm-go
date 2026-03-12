@@ -1,12 +1,8 @@
-# Shared Response Types
-
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/shared#BaseDto">BaseDto</a>
-
 # Webhooks
 
 Params Types:
 
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MutationRequestBaseParam">MutationRequestBaseParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MutationRequestParam">MutationRequestParam</a>
 
 Response Types:
 
@@ -54,12 +50,6 @@ Methods:
 
 Params Types:
 
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsAuthenticationConfigParam">SentDmServicesCommonContractsPocOsAuthenticationConfigParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateBodyParam">SentDmServicesCommonContractsPocOsTemplateBodyParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateButtonParam">SentDmServicesCommonContractsPocOsTemplateButtonParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateButtonPropsParam">SentDmServicesCommonContractsPocOsTemplateButtonPropsParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateFooterParam">SentDmServicesCommonContractsPocOsTemplateFooterParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesCommonContractsPocOsTemplateHeaderParam">SentDmServicesCommonContractsPocOsTemplateHeaderParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateBodyContentParam">TemplateBodyContentParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateDefinitionParam">TemplateDefinitionParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateVariableParam">TemplateVariableParam</a>
@@ -86,9 +76,6 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#BrandsBrandDataParam">BrandsBrandDataParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#DestinationCountryParam">DestinationCountryParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#PaymentDetailsParam">PaymentDetailsParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrBrandRelationship">TcrBrandRelationship</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrVertical">TcrVertical</a>
 
@@ -100,7 +87,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrBrandRelationship">TcrBrandRelationship</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrVertical">TcrVertical</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileListResponse">ProfileListResponse</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCompleteSetupResponse">ProfileCompleteSetupResponse</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCompleteResponse">ProfileCompleteResponse</a>
 
 Methods:
 
@@ -109,7 +96,7 @@ Methods:
 - <code title="patch /v3/profiles/{profileId}">client.Profiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, profileID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileUpdateParams">ProfileUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfProfileDetail">APIResponseOfProfileDetail</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /v3/profiles">client.Profiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileListParams">ProfileListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileListResponse">ProfileListResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="delete /v3/profiles/{profileId}">client.Profiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, profileID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileDeleteParams">ProfileDeleteParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
-- <code title="post /v3/profiles/{profileId}/complete">client.Profiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileService.CompleteSetup">CompleteSetup</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, profileID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCompleteSetupParams">ProfileCompleteSetupParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCompleteSetupResponse">ProfileCompleteSetupResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/profiles/{profileId}/complete">client.Profiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileService.Complete">Complete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, profileID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCompleteParams">ProfileCompleteParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCompleteResponse">ProfileCompleteResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ## Campaigns
 
@@ -117,11 +104,11 @@ Params Types:
 
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CampaignDataParam">CampaignDataParam</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessagingUseCaseUs">MessagingUseCaseUs</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam">SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam</a>
 
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfTcrCampaignWithUseCases">APIResponseOfTcrCampaignWithUseCases</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#BaseDto">BaseDto</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessagingUseCaseUs">MessagingUseCaseUs</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TcrCampaignWithUseCases">TcrCampaignWithUseCases</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignListResponse">ProfileCampaignListResponse</a>

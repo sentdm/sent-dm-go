@@ -5,7 +5,6 @@ package sentdm
 import (
 	"github.com/sentdm/sent-dm-go/internal/apierror"
 	"github.com/sentdm/sent-dm-go/packages/param"
-	"github.com/sentdm/sent-dm-go/shared"
 )
 
 // aliased to make [param.APIUnion] private when embedding
@@ -15,6 +14,3 @@ type paramUnion = param.APIUnion
 type paramObj = param.APIObject
 
 type Error = apierror.Error
-
-// This is an alias to an internal type.
-type BaseDto = shared.BaseDto

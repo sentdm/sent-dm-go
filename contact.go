@@ -338,7 +338,7 @@ func (r *ContactDeleteParams) UnmarshalJSON(data []byte) error {
 
 // Request to delete/dissociate a contact
 type ContactDeleteParamsBody struct {
-	MutationRequestBaseParam
+	MutationRequestParam
 }
 
 func (r ContactDeleteParamsBody) MarshalJSON() (data []byte, err error) {
