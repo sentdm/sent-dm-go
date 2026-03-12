@@ -38,7 +38,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 		},
 		BillingModel: sentdm.String("profile"),
 		Brand: sentdm.BrandsBrandDataParam{
-			Compliance: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam{
+			Compliance: sentdm.BrandsBrandDataComplianceParam{
 				BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 				Vertical:          sentdm.TcrVerticalProfessional,
 				DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -51,7 +51,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				PhoneNumberPrefix:       sentdm.String("+1"),
 				PrimaryUseCase:          sentdm.String("Customer notifications and appointment reminders"),
 			},
-			Contact: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam{
+			Contact: sentdm.BrandsBrandDataContactParam{
 				Name:             "John Smith",
 				BusinessName:     sentdm.String("Acme Corp"),
 				Email:            sentdm.String("john@acmecorp.com"),
@@ -59,11 +59,11 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				PhoneCountryCode: sentdm.String("1"),
 				Role:             sentdm.String("CEO"),
 			},
-			Business: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam{
+			Business: sentdm.BrandsBrandDataBusinessParam{
 				City:                  sentdm.String("New York"),
 				Country:               sentdm.String("US"),
 				CountryOfRegistration: sentdm.String("US"),
-				EntityType:            sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypePrivateProfit,
+				EntityType:            "PRIVATE_PROFIT",
 				LegalName:             sentdm.String("Acme Corporation LLC"),
 				PostalCode:            sentdm.String("10001"),
 				State:                 sentdm.String("NY"),
@@ -162,7 +162,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 			},
 			BillingModel: sentdm.String("organization"),
 			Brand: sentdm.BrandsBrandDataParam{
-				Compliance: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam{
+				Compliance: sentdm.BrandsBrandDataComplianceParam{
 					BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 					Vertical:          sentdm.TcrVerticalProfessional,
 					DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -175,7 +175,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					PhoneNumberPrefix:       sentdm.String("+1"),
 					PrimaryUseCase:          sentdm.String("Customer notifications and appointment reminders"),
 				},
-				Contact: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam{
+				Contact: sentdm.BrandsBrandDataContactParam{
 					Name:             "John Smith",
 					BusinessName:     sentdm.String("Acme Corp"),
 					Email:            sentdm.String("john@acmecorp.com"),
@@ -183,11 +183,11 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					PhoneCountryCode: sentdm.String("1"),
 					Role:             sentdm.String("CEO"),
 				},
-				Business: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam{
+				Business: sentdm.BrandsBrandDataBusinessParam{
 					City:                  sentdm.String("New York"),
 					Country:               sentdm.String("US"),
 					CountryOfRegistration: sentdm.String("US"),
-					EntityType:            sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypePrivateProfit,
+					EntityType:            "PRIVATE_PROFIT",
 					LegalName:             sentdm.String("Acme Corporation LLC"),
 					PostalCode:            sentdm.String("10001"),
 					State:                 sentdm.String("NY"),
@@ -272,7 +272,7 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 		"profileId",
 		sentdm.ProfileDeleteParams{
 			Body: sentdm.ProfileDeleteParamsBody{
-				MutationRequestBaseParam: sentdm.MutationRequestBaseParam{
+				MutationRequestParam: sentdm.MutationRequestParam{
 					Sandbox: sentdm.Bool(false),
 				},
 			},
@@ -288,7 +288,7 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestProfileCompleteSetupWithOptionalParams(t *testing.T) {
+func TestProfileCompleteWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -301,10 +301,10 @@ func TestProfileCompleteSetupWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Profiles.CompleteSetup(
+	_, err := client.Profiles.Complete(
 		context.TODO(),
 		"660e8400-e29b-41d4-a716-446655440000",
-		sentdm.ProfileCompleteSetupParams{
+		sentdm.ProfileCompleteParams{
 			WebHookURL:     "https://your-app.com/webhook/profile-complete",
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
