@@ -336,8 +336,6 @@ func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 
 // Response for the multi-recipient send message endpoint
 type MessageSendResponseData struct {
-	// Resolved template body text
-	Body string `json:"body" api:"nullable"`
 	// Per-recipient message results
 	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
 	// Overall request status (e.g. "accepted")
@@ -348,7 +346,6 @@ type MessageSendResponseData struct {
 	TemplateName string `json:"template_name"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Body         respjson.Field
 		Recipients   respjson.Field
 		Status       respjson.Field
 		TemplateID   respjson.Field
@@ -366,6 +363,9 @@ func (r *MessageSendResponseData) UnmarshalJSON(data []byte) error {
 
 // Per-recipient result in the send message response
 type MessageSendResponseDataRecipient struct {
+	// Resolved template body text for this recipient's channel, or null for
+	// auto-detect
+	Body string `json:"body" api:"nullable"`
 	// Channel this message will be sent on (e.g. "sms", "whatsapp"), or null for
 	// auto-detect
 	Channel string `json:"channel" api:"nullable"`
@@ -375,6 +375,7 @@ type MessageSendResponseDataRecipient struct {
 	To string `json:"to"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Body        respjson.Field
 		Channel     respjson.Field
 		MessageID   respjson.Field
 		To          respjson.Field
