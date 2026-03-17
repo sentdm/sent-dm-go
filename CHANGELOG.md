@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.1 (2026-03-17)
+
+Full Changelog: [v0.13.0...v0.13.1](https://github.com/sentdm/sent-dm-go/compare/v0.13.0...v0.13.1)
+
+### Chores
+
+* **internal:** tweak CI branches ([e9fc6ce](https://github.com/sentdm/sent-dm-go/commit/e9fc6ce70eed087349799728898ae36f90f8e1bb))
+
 ## 0.13.0 (2026-03-16)
 
 Full Changelog: [v0.12.0...v0.13.0](https://github.com/sentdm/sent-dm-go/compare/v0.12.0...v0.13.0)
