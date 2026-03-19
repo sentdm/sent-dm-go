@@ -146,7 +146,7 @@ type MessageGetActivitiesResponseDataActivity struct {
 	// Channel cost for this activity (e.g., SMS/WhatsApp provider cost), formatted to
 	// 4 decimal places.
 	Price string `json:"price" api:"nullable"`
-	// Activity status (e.g., ACCEPTED, PROCESSED, SENT, DELIVERED, FAILED)
+	// Activity status (e.g., QUEUED, PROCESSED, SENT, DELIVERED, FAILED)
 	Status string `json:"status"`
 	// When this activity occurred
 	Timestamp time.Time `json:"timestamp" format:"date-time"`
@@ -338,7 +338,8 @@ func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 type MessageSendResponseData struct {
 	// Per-recipient message results
 	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
-	// Overall request status (e.g. "accepted")
+	// Overall request status: "QUEUED" when the batch has been accepted and published
+	// to Kafka.
 	Status string `json:"status"`
 	// Template ID that was used
 	TemplateID string `json:"template_id" format:"uuid"`
