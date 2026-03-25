@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.14.0 (2026-03-25)
+
+Full Changelog: [v0.13.1...v0.14.0](https://github.com/sentdm/sent-dm-go/compare/v0.13.1...v0.14.0)
+
+### Features
+
+* **api:** api update ([aabf001](https://github.com/sentdm/sent-dm-go/commit/aabf001530b2c77d36cf2371176cfbfbc97c9bb8))
+* **api:** api update ([8b17379](https://github.com/sentdm/sent-dm-go/commit/8b1737970cd68ef554e8a722eeac6720ffad15d7))
+
+
+### Chores
+
+* **ci:** skip lint on metadata-only changes ([2bb5272](https://github.com/sentdm/sent-dm-go/commit/2bb527290da0338f9db1768b67fd1a2244d50f71))
+* **internal:** update gitignore ([d670de7](https://github.com/sentdm/sent-dm-go/commit/d670de7fb5f184f7801c8f0552fb698b0b085e9a))
+
 ## 0.13.1 (2026-03-17)
 
 Full Changelog: [v0.13.0...v0.13.1](https://github.com/sentdm/sent-dm-go/compare/v0.13.0...v0.13.1)
