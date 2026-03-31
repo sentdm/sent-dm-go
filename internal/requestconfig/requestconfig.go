@@ -26,7 +26,7 @@ import (
 
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
-		"User-Agent": fmt.Sprintf("SentDm/Go %s", internal.PackageVersion),
+		"User-Agent": fmt.Sprintf("Sent/Go %s", internal.PackageVersion),
 	}
 }
 
