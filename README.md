@@ -37,7 +37,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.14.0'
+go get -u 'github.com/sentdm/sent-dm-go@v0.15.0'
 ```
 
 <!-- x-release-please-end -->
@@ -90,7 +90,7 @@ func main() {
 The sentdm library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
 semantics from the Go 1.24+ `encoding/json` release for request fields.
 
-Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`json:"...,required"\`</code>. These
+Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`api:"required"\`</code>. These
 fields are always serialized, even their zero values.
 
 Optional primitive types are wrapped in a `param.Opt[T]`. These fields can be set with the provided constructors, `sentdm.String(string)`, `sentdm.Int(int64)`, etc.
