@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.0 (2026-03-31)
+
+Full Changelog: [v0.15.0...v0.16.0](https://github.com/sentdm/sent-dm-go/compare/v0.15.0...v0.16.0)
+
+### Features
+
+* **api:** manual updates ([527c9d2](https://github.com/sentdm/sent-dm-go/commit/527c9d225764d95d569ba569241426327b45af8e))
+
 ## 0.15.0 (2026-03-31)
 
 Full Changelog: [v0.14.0...v0.15.0](https://github.com/sentdm/sent-dm-go/compare/v0.14.0...v0.15.0)
