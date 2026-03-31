@@ -50,7 +50,7 @@ func TestUserAgentHeader(t *testing.T) {
 		},
 		To: []string{"+14155551234"},
 	})
-	if userAgent != fmt.Sprintf("SentDm/Go %s", internal.PackageVersion) {
+	if userAgent != fmt.Sprintf("Sent/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
 	}
 }
