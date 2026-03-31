@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.15.0 (2026-03-31)
+
+Full Changelog: [v0.14.0...v0.15.0](https://github.com/sentdm/sent-dm-go/compare/v0.14.0...v0.15.0)
+
+### Features
+
+* **internal:** support comma format in multipart form encoding ([31ab267](https://github.com/sentdm/sent-dm-go/commit/31ab267c9557a3d841f32467a5b54b418b05e607))
+
+
+### Bug Fixes
+
+* prevent duplicate ? in query params ([ff23ab0](https://github.com/sentdm/sent-dm-go/commit/ff23ab045caee21dd34532bb104e08d272255215))
+
+
+### Chores
+
+* **ci:** support opting out of skipping builds on metadata-only commits ([791f9ba](https://github.com/sentdm/sent-dm-go/commit/791f9bae36c571500651c8d043bee3ba0b573020))
+* **client:** fix multipart serialisation of Default() fields ([affa363](https://github.com/sentdm/sent-dm-go/commit/affa363479d8daf2163106ad44cd789e9031db84))
+* **internal:** support default value struct tag ([173c9e3](https://github.com/sentdm/sent-dm-go/commit/173c9e31857bf467fdddc03f5c336802935ecfc2))
+* remove unnecessary error check for url parsing ([af61338](https://github.com/sentdm/sent-dm-go/commit/af613384ef47cd7f2423fe44a99f83018ff5737f))
+* update docs for api:"required" ([c63067e](https://github.com/sentdm/sent-dm-go/commit/c63067ed8e482d483a460192f46ab7fd59f107c5))
+
 ## 0.14.0 (2026-03-25)
 
 Full Changelog: [v0.13.1...v0.14.0](https://github.com/sentdm/sent-dm-go/compare/v0.13.1...v0.14.0)
