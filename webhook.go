@@ -4,7 +4,6 @@ package sentdm
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -774,7 +773,7 @@ func (r WebhookRotateSecretParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.Body)
 }
 func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.Body)
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type WebhookRotateSecretParamsBody struct {

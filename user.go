@@ -4,7 +4,6 @@ package sentdm
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -280,7 +279,7 @@ func (r UserRemoveParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.Body)
 }
 func (r *UserRemoveParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.Body)
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Request to remove a user from an organization
