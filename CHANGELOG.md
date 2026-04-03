@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.1 (2026-04-03)
+
+Full Changelog: [v0.16.0...v0.16.1](https://github.com/sentdm/sent-dm-go/compare/v0.16.0...v0.16.1)
+
+### Bug Fixes
+
+* fix issue with unmarshaling in some cases ([1ec2c95](https://github.com/sentdm/sent-dm-go/commit/1ec2c958bfb0cda0d2d8198dbbbf5c3de9620049))
+
 ## 0.16.0 (2026-03-31)
 
 Full Changelog: [v0.15.0...v0.16.0](https://github.com/sentdm/sent-dm-go/compare/v0.15.0...v0.16.0)
