@@ -188,13 +188,15 @@ func (r *SentDmServicesCommonContractsPocOsTemplateBodyParam) UnmarshalJSON(data
 }
 
 // Interactive button in a message template
+//
+// The properties Props, Type are required.
 type SentDmServicesCommonContractsPocOsTemplateButtonParam struct {
+	// Properties specific to the button type
+	Props SentDmServicesCommonContractsPocOsTemplateButtonPropsParam `json:"props,omitzero" api:"required"`
+	// The type of button (e.g., QUICK_REPLY, URL, PHONE_NUMBER, VOICE_CALL, COPY_CODE)
+	Type string `json:"type" api:"required"`
 	// The unique identifier of the button (1-based index)
 	ID param.Opt[int64] `json:"id,omitzero"`
-	// The type of button (e.g., QUICK_REPLY, URL, PHONE_NUMBER, VOICE_CALL, COPY_CODE)
-	Type param.Opt[string] `json:"type,omitzero"`
-	// Properties specific to the button type
-	Props SentDmServicesCommonContractsPocOsTemplateButtonPropsParam `json:"props,omitzero"`
 	paramObj
 }
 
@@ -206,19 +208,21 @@ func (r *SentDmServicesCommonContractsPocOsTemplateButtonParam) UnmarshalJSON(da
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties ActiveFor, CountryCode, OfferCode, PhoneNumber, QuickReplyType,
+// Text, URL, URLType are required.
 type SentDmServicesCommonContractsPocOsTemplateButtonPropsParam struct {
-	ActiveFor      param.Opt[int64]  `json:"activeFor,omitzero"`
+	ActiveFor      int64             `json:"activeFor" api:"required"`
+	CountryCode    string            `json:"countryCode" api:"required"`
+	OfferCode      string            `json:"offerCode" api:"required"`
+	PhoneNumber    string            `json:"phoneNumber" api:"required"`
+	QuickReplyType string            `json:"quickReplyType" api:"required"`
+	Text           string            `json:"text" api:"required"`
+	URL            string            `json:"url" api:"required"`
+	URLType        string            `json:"urlType" api:"required"`
 	AutofillText   param.Opt[string] `json:"autofillText,omitzero"`
-	CountryCode    param.Opt[string] `json:"countryCode,omitzero"`
-	OfferCode      param.Opt[string] `json:"offerCode,omitzero"`
 	OtpType        param.Opt[string] `json:"otpType,omitzero"`
 	PackageName    param.Opt[string] `json:"packageName,omitzero"`
-	PhoneNumber    param.Opt[string] `json:"phoneNumber,omitzero"`
-	QuickReplyType param.Opt[string] `json:"quickReplyType,omitzero"`
 	SignatureHash  param.Opt[string] `json:"signatureHash,omitzero"`
-	Text           param.Opt[string] `json:"text,omitzero"`
-	URL            param.Opt[string] `json:"url,omitzero"`
-	URLType        param.Opt[string] `json:"urlType,omitzero"`
 	paramObj
 }
 
@@ -231,11 +235,13 @@ func (r *SentDmServicesCommonContractsPocOsTemplateButtonPropsParam) UnmarshalJS
 }
 
 // Footer section of a message template
+//
+// The property Template is required.
 type SentDmServicesCommonContractsPocOsTemplateFooterParam struct {
+	// The footer template text with optional variable placeholders
+	Template string `json:"template" api:"required"`
 	// The type of footer (typically "text")
 	Type param.Opt[string] `json:"type,omitzero"`
-	// The footer template text with optional variable placeholders
-	Template param.Opt[string] `json:"template,omitzero"`
 	// List of variables used in the footer template
 	Variables []TemplateVariableParam `json:"variables,omitzero"`
 	paramObj
@@ -250,12 +256,14 @@ func (r *SentDmServicesCommonContractsPocOsTemplateFooterParam) UnmarshalJSON(da
 }
 
 // Header section of a message template
+//
+// The property Template is required.
 type SentDmServicesCommonContractsPocOsTemplateHeaderParam struct {
-	// The type of header (e.g., "text", "image", "video", "document")
-	Type param.Opt[string] `json:"type,omitzero"`
 	// The header template text with optional variable placeholders (e.g., "Welcome to
 	// {{0:variable}}")
-	Template param.Opt[string] `json:"template,omitzero"`
+	Template string `json:"template" api:"required"`
+	// The type of header (e.g., "text", "image", "video", "document")
+	Type param.Opt[string] `json:"type,omitzero"`
 	// List of variables used in the header template
 	Variables []TemplateVariableParam `json:"variables,omitzero"`
 	paramObj
@@ -314,9 +322,10 @@ func (r *Template) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The property Template is required.
 type TemplateBodyContentParam struct {
+	Template  string                  `json:"template" api:"required"`
 	Type      param.Opt[string]       `json:"type,omitzero"`
-	Template  param.Opt[string]       `json:"template,omitzero"`
 	Variables []TemplateVariableParam `json:"variables,omitzero"`
 	paramObj
 }
@@ -357,11 +366,12 @@ func (r *TemplateDefinitionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties Name, Props, Type are required.
 type TemplateVariableParam struct {
+	Name  string                     `json:"name" api:"required"`
+	Props TemplateVariablePropsParam `json:"props,omitzero" api:"required"`
+	Type  string                     `json:"type" api:"required"`
 	ID    param.Opt[int64]           `json:"id,omitzero"`
-	Name  param.Opt[string]          `json:"name,omitzero"`
-	Type  param.Opt[string]          `json:"type,omitzero"`
-	Props TemplateVariablePropsParam `json:"props,omitzero"`
 	paramObj
 }
 
@@ -373,14 +383,15 @@ func (r *TemplateVariableParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties MediaType, Sample, URL, VariableType are required.
 type TemplateVariablePropsParam struct {
+	MediaType    string            `json:"mediaType" api:"required"`
+	Sample       string            `json:"sample" api:"required"`
+	URL          string            `json:"url" api:"required"`
+	VariableType string            `json:"variableType" api:"required"`
 	Alt          param.Opt[string] `json:"alt,omitzero"`
-	MediaType    param.Opt[string] `json:"mediaType,omitzero"`
 	Regex        param.Opt[string] `json:"regex,omitzero"`
-	Sample       param.Opt[string] `json:"sample,omitzero"`
 	ShortURL     param.Opt[string] `json:"shortUrl,omitzero"`
-	URL          param.Opt[string] `json:"url,omitzero"`
-	VariableType param.Opt[string] `json:"variableType,omitzero"`
 	paramObj
 }
 
