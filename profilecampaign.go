@@ -250,7 +250,7 @@ func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignU
 type TcrCampaignWithUseCases struct {
 	BilledDate          time.Time `json:"billedDate" api:"nullable" format:"date-time"`
 	BrandID             string    `json:"brandId" api:"nullable" format:"uuid"`
-	Cost                float64   `json:"cost" api:"nullable"`
+	Cost                float64   `json:"cost" api:"nullable" format:"decimal"`
 	CspID               string    `json:"cspId" api:"nullable"`
 	CustomerID          string    `json:"customerId" format:"uuid"`
 	Description         string    `json:"description"`
