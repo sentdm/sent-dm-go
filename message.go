@@ -198,7 +198,7 @@ func (r *MessageGetStatusResponse) UnmarshalJSON(data []byte) error {
 // Message response for v3 API — same shape as v2 with snake_case JSON conventions
 type MessageGetStatusResponseData struct {
 	ID                 string                              `json:"id" format:"uuid"`
-	ActiveContactPrice float64                             `json:"active_contact_price" api:"nullable"`
+	ActiveContactPrice float64                             `json:"active_contact_price" api:"nullable" format:"decimal"`
 	Channel            string                              `json:"channel"`
 	ContactID          string                              `json:"contact_id" format:"uuid"`
 	CreatedAt          time.Time                           `json:"created_at" format:"date-time"`
@@ -209,7 +209,7 @@ type MessageGetStatusResponseData struct {
 	MessageBody        MessageGetStatusResponseDataMessageBody `json:"message_body" api:"nullable"`
 	Phone              string                                  `json:"phone"`
 	PhoneInternational string                                  `json:"phone_international"`
-	Price              float64                                 `json:"price" api:"nullable"`
+	Price              float64                                 `json:"price" api:"nullable" format:"decimal"`
 	RegionCode         string                                  `json:"region_code"`
 	Status             string                                  `json:"status"`
 	TemplateCategory   string                                  `json:"template_category"`
