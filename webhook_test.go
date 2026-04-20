@@ -27,9 +27,12 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Webhooks.New(context.TODO(), sentdm.WebhookNewParams{
-		DisplayName:    sentdm.String("Order Notifications"),
-		EndpointURL:    sentdm.String("https://example.com/webhooks/orders"),
-		EventTypes:     []string{"messages", "templates"},
+		DisplayName: sentdm.String("Order Notifications"),
+		EndpointURL: sentdm.String("https://example.com/webhooks/orders"),
+		EventFilters: map[string][]string{
+			"message": {"delivered", "failed"},
+		},
+		EventTypes:     []string{"message", "templates"},
 		RetryCount:     sentdm.Int(3),
 		Sandbox:        sentdm.Bool(false),
 		TimeoutSeconds: sentdm.Int(30),
@@ -91,9 +94,12 @@ func TestWebhookUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookUpdateParams{
-			DisplayName:    sentdm.String("Updated Order Notifications"),
-			EndpointURL:    sentdm.String("https://example.com/webhooks/orders-v2"),
-			EventTypes:     []string{"messages", "templates"},
+			DisplayName: sentdm.String("Updated Order Notifications"),
+			EndpointURL: sentdm.String("https://example.com/webhooks/orders-v2"),
+			EventFilters: map[string][]string{
+				"message": {"delivered", "failed"},
+			},
+			EventTypes:     []string{"message", "templates"},
 			RetryCount:     sentdm.Int(5),
 			Sandbox:        sentdm.Bool(false),
 			TimeoutSeconds: sentdm.Int(60),

@@ -143,6 +143,10 @@ type MessageGetActivitiesResponseDataActivity struct {
 	ActiveContactPrice string `json:"active_contact_price" api:"nullable"`
 	// Human-readable description of the activity
 	Description string `json:"description"`
+	// Sender phone number for this activity (the customer's sending number for
+	// outbound, the external sender for inbound). Null when not reported by the
+	// provider.
+	From string `json:"from" api:"nullable"`
 	// Channel cost for this activity (e.g., SMS/WhatsApp provider cost), formatted to
 	// 4 decimal places.
 	Price string `json:"price" api:"nullable"`
@@ -154,6 +158,7 @@ type MessageGetActivitiesResponseDataActivity struct {
 	JSON struct {
 		ActiveContactPrice respjson.Field
 		Description        respjson.Field
+		From               respjson.Field
 		Price              respjson.Field
 		Status             respjson.Field
 		Timestamp          respjson.Field
