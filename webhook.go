@@ -344,19 +344,20 @@ func (r *PaginationMetaCursors) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookResponse struct {
-	ID                       string    `json:"id" format:"uuid"`
-	ConsecutiveFailures      int64     `json:"consecutive_failures"`
-	CreatedAt                time.Time `json:"created_at" format:"date-time"`
-	DisplayName              string    `json:"display_name"`
-	EndpointURL              string    `json:"endpoint_url"`
-	EventTypes               []string  `json:"event_types"`
-	IsActive                 bool      `json:"is_active"`
-	LastDeliveryAttemptAt    time.Time `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
-	LastSuccessfulDeliveryAt time.Time `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
-	RetryCount               int64     `json:"retry_count"`
-	SigningSecret            string    `json:"signing_secret" api:"nullable"`
-	TimeoutSeconds           int64     `json:"timeout_seconds"`
-	UpdatedAt                time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	ID                       string              `json:"id" format:"uuid"`
+	ConsecutiveFailures      int64               `json:"consecutive_failures"`
+	CreatedAt                time.Time           `json:"created_at" format:"date-time"`
+	DisplayName              string              `json:"display_name"`
+	EndpointURL              string              `json:"endpoint_url"`
+	EventFilters             map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes               []string            `json:"event_types"`
+	IsActive                 bool                `json:"is_active"`
+	LastDeliveryAttemptAt    time.Time           `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	LastSuccessfulDeliveryAt time.Time           `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
+	RetryCount               int64               `json:"retry_count"`
+	SigningSecret            string              `json:"signing_secret" api:"nullable"`
+	TimeoutSeconds           int64               `json:"timeout_seconds"`
+	UpdatedAt                time.Time           `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
@@ -364,6 +365,7 @@ type WebhookResponse struct {
 		CreatedAt                respjson.Field
 		DisplayName              respjson.Field
 		EndpointURL              respjson.Field
+		EventFilters             respjson.Field
 		EventTypes               respjson.Field
 		IsActive                 respjson.Field
 		LastDeliveryAttemptAt    respjson.Field
@@ -477,14 +479,18 @@ func (r *WebhookListEventTypesResponseData) UnmarshalJSON(data []byte) error {
 type WebhookListEventTypesResponseDataEventType struct {
 	Description string `json:"description" api:"nullable"`
 	DisplayName string `json:"display_name"`
+	EventType   string `json:"event_type" api:"nullable"`
 	IsActive    bool   `json:"is_active"`
 	Name        string `json:"name"`
+	SubTypes    []any  `json:"sub_types" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Description respjson.Field
 		DisplayName respjson.Field
+		EventType   respjson.Field
 		IsActive    respjson.Field
 		Name        respjson.Field
+		SubTypes    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -675,11 +681,12 @@ type WebhookNewParams struct {
 	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
-	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
-	TimeoutSeconds param.Opt[int64]  `json:"timeout_seconds,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	EventTypes     []string          `json:"event_types,omitzero"`
+	Sandbox        param.Opt[bool]     `json:"sandbox,omitzero"`
+	TimeoutSeconds param.Opt[int64]    `json:"timeout_seconds,omitzero"`
+	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	EventFilters   map[string][]string `json:"event_filters,omitzero"`
+	EventTypes     []string            `json:"event_types,omitzero"`
 	paramObj
 }
 
@@ -702,11 +709,12 @@ type WebhookUpdateParams struct {
 	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
-	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
-	TimeoutSeconds param.Opt[int64]  `json:"timeout_seconds,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	EventTypes     []string          `json:"event_types,omitzero"`
+	Sandbox        param.Opt[bool]     `json:"sandbox,omitzero"`
+	TimeoutSeconds param.Opt[int64]    `json:"timeout_seconds,omitzero"`
+	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	EventFilters   map[string][]string `json:"event_filters,omitzero"`
+	EventTypes     []string            `json:"event_types,omitzero"`
 	paramObj
 }
 
