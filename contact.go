@@ -154,6 +154,11 @@ type ContactResponse struct {
 	ID string `json:"id" format:"uuid"`
 	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
 	AvailableChannels string `json:"available_channels"`
+	// Consent status by channel. Keys: "sms", "whatsapp". Values: "opted_in",
+	// "opted_out". All channels will have the same status because consent is global
+	// across channels. A STOP on any channel opts out of all channels; a START opts in
+	// to all.
+	ChannelConsent map[string]string `json:"channel_consent" api:"nullable"`
 	// Country calling code (e.g., 1 for US/Canada)
 	CountryCode string `json:"country_code"`
 	// When the contact was created
@@ -182,6 +187,7 @@ type ContactResponse struct {
 	JSON struct {
 		ID                  respjson.Field
 		AvailableChannels   respjson.Field
+		ChannelConsent      respjson.Field
 		CountryCode         respjson.Field
 		CreatedAt           respjson.Field
 		DefaultChannel      respjson.Field
@@ -287,6 +293,13 @@ type ContactUpdateParams struct {
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	// Consent status by channel. Keys: "sms", "whatsapp". Values: "opted_in",
+	// "opted_out". All entries must have the same status — mixed values (e.g., sms:
+	// opted_out + whatsapp: opted_in) are rejected with 400. The provided status is
+	// applied to ALL channels regardless of which keys are specified, because consent
+	// is global across channels. When provided, takes precedence over the opt_out
+	// field.
+	ChannelConsent map[string]string `json:"channel_consent,omitzero"`
 	paramObj
 }
 

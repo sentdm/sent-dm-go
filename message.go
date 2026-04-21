@@ -208,6 +208,7 @@ type MessageGetStatusResponseData struct {
 	ContactID          string                              `json:"contact_id" format:"uuid"`
 	CreatedAt          time.Time                           `json:"created_at" format:"date-time"`
 	CustomerID         string                              `json:"customer_id" format:"uuid"`
+	Direction          string                              `json:"direction"`
 	Events             []MessageGetStatusResponseDataEvent `json:"events" api:"nullable"`
 	// Structured message body format for database storage. Preserves channel-specific
 	// components (header, body, footer, buttons).
@@ -217,9 +218,9 @@ type MessageGetStatusResponseData struct {
 	Price              float64                                 `json:"price" api:"nullable" format:"decimal"`
 	RegionCode         string                                  `json:"region_code"`
 	Status             string                                  `json:"status"`
-	TemplateCategory   string                                  `json:"template_category"`
+	TemplateCategory   string                                  `json:"template_category" api:"nullable"`
 	TemplateID         string                                  `json:"template_id" api:"nullable" format:"uuid"`
-	TemplateName       string                                  `json:"template_name"`
+	TemplateName       string                                  `json:"template_name" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                 respjson.Field
@@ -228,6 +229,7 @@ type MessageGetStatusResponseData struct {
 		ContactID          respjson.Field
 		CreatedAt          respjson.Field
 		CustomerID         respjson.Field
+		Direction          respjson.Field
 		Events             respjson.Field
 		MessageBody        respjson.Field
 		Phone              respjson.Field
