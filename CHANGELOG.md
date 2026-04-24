@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.1 (2026-04-24)
+
+Full Changelog: [v0.19.0...v0.19.1](https://github.com/sentdm/sent-dm-go/compare/v0.19.0...v0.19.1)
+
+### Chores
+
+* **internal:** more robust bootstrap script ([f65ebd5](https://github.com/sentdm/sent-dm-go/commit/f65ebd5d1a3a8d85979e169cb99467c674bdb1a6))
+
 ## 0.19.0 (2026-04-21)
 
 Full Changelog: [v0.18.0...v0.19.0](https://github.com/sentdm/sent-dm-go/compare/v0.18.0...v0.19.0)
