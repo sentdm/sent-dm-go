@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.20.0 (2026-04-28)
+
+Full Changelog: [v0.19.1...v0.20.0](https://github.com/sentdm/sent-dm-go/compare/v0.19.1...v0.20.0)
+
+### Features
+
+* **go:** add default http client with timeout ([2238e68](https://github.com/sentdm/sent-dm-go/commit/2238e6893398eeb5051783a6e240c29c812f267b))
+* support setting headers via env ([490ce5e](https://github.com/sentdm/sent-dm-go/commit/490ce5e4023b39cfa2ba12ba02cec009193c7b87))
+
 ## 0.19.1 (2026-04-24)
 
 Full Changelog: [v0.19.0...v0.19.1](https://github.com/sentdm/sent-dm-go/compare/v0.19.0...v0.19.1)
