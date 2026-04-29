@@ -10,6 +10,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseWebhook">APIResponseWebhook</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ErrorDetail">ErrorDetail</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#PaginationMeta">PaginationMeta</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#WebhookEventType">WebhookEventType</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#WebhookResponse">WebhookResponse</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#WebhookListResponse">WebhookListResponse</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#WebhookListEventTypesResponse">WebhookListEventTypesResponse</a>
