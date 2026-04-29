@@ -160,10 +160,8 @@ func TestProfileCampaignDeleteWithOptionalParams(t *testing.T) {
 		"b2c3d4e5-f6a7-8901-bcde-f12345678901",
 		sentdm.ProfileCampaignDeleteParams{
 			ProfileID: "770e8400-e29b-41d4-a716-446655440002",
-			Body: sentdm.ProfileCampaignDeleteParamsBody{
-				MutationRequestParam: sentdm.MutationRequestParam{
-					Sandbox: sentdm.Bool(false),
-				},
+			MutationRequest: sentdm.MutationRequestParam{
+				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},

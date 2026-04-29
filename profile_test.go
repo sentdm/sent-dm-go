@@ -271,10 +271,8 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"profileId",
 		sentdm.ProfileDeleteParams{
-			Body: sentdm.ProfileDeleteParamsBody{
-				MutationRequestParam: sentdm.MutationRequestParam{
-					Sandbox: sentdm.Bool(false),
-				},
+			MutationRequest: sentdm.MutationRequestParam{
+				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
