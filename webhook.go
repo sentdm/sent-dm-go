@@ -343,6 +343,32 @@ func (r *PaginationMetaCursors) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type WebhookEventType struct {
+	Description string             `json:"description" api:"nullable"`
+	DisplayName string             `json:"display_name"`
+	EventType   string             `json:"event_type" api:"nullable"`
+	IsActive    bool               `json:"is_active"`
+	Name        string             `json:"name"`
+	SubTypes    []WebhookEventType `json:"sub_types" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		DisplayName respjson.Field
+		EventType   respjson.Field
+		IsActive    respjson.Field
+		Name        respjson.Field
+		SubTypes    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEventType) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEventType) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type WebhookResponse struct {
 	ID                       string              `json:"id" format:"uuid"`
 	ConsecutiveFailures      int64               `json:"consecutive_failures"`
@@ -461,7 +487,7 @@ func (r *WebhookListEventTypesResponse) UnmarshalJSON(data []byte) error {
 
 // The response data (null if error)
 type WebhookListEventTypesResponseData struct {
-	EventTypes []WebhookListEventTypesResponseDataEventType `json:"event_types"`
+	EventTypes []WebhookEventType `json:"event_types"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventTypes  respjson.Field
@@ -473,32 +499,6 @@ type WebhookListEventTypesResponseData struct {
 // Returns the unmodified JSON received from the API
 func (r WebhookListEventTypesResponseData) RawJSON() string { return r.JSON.raw }
 func (r *WebhookListEventTypesResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type WebhookListEventTypesResponseDataEventType struct {
-	Description string `json:"description" api:"nullable"`
-	DisplayName string `json:"display_name"`
-	EventType   string `json:"event_type" api:"nullable"`
-	IsActive    bool   `json:"is_active"`
-	Name        string `json:"name"`
-	SubTypes    []any  `json:"sub_types" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		DisplayName respjson.Field
-		EventType   respjson.Field
-		IsActive    respjson.Field
-		Name        respjson.Field
-		SubTypes    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookListEventTypesResponseDataEventType) RawJSON() string { return r.JSON.raw }
-func (r *WebhookListEventTypesResponseDataEventType) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
