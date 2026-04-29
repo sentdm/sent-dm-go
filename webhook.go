@@ -771,29 +771,17 @@ func (r WebhookListEventsParams) URLQuery() (v url.Values, err error) {
 }
 
 type WebhookRotateSecretParams struct {
-	Body           WebhookRotateSecretParamsBody
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	MutationRequest MutationRequestParam
+	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r WebhookRotateSecretParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Body)
+	return shimjson.Marshal(r.MutationRequest)
 }
 func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-type WebhookRotateSecretParamsBody struct {
-	MutationRequestParam
-}
-
-func (r WebhookRotateSecretParamsBody) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*WebhookRotateSecretParamsBody
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
 }
 
 type WebhookTestParams struct {

@@ -335,28 +335,14 @@ func (r ContactListParams) URLQuery() (v url.Values, err error) {
 }
 
 type ContactDeleteParams struct {
-	// Request to delete/dissociate a contact
-	Body       ContactDeleteParamsBody
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	MutationRequest MutationRequestParam
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r ContactDeleteParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Body)
+	return shimjson.Marshal(r.MutationRequest)
 }
 func (r *ContactDeleteParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request to delete/dissociate a contact
-type ContactDeleteParamsBody struct {
-	MutationRequestParam
-}
-
-func (r ContactDeleteParamsBody) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*ContactDeleteParamsBody
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
 }

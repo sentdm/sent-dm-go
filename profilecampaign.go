@@ -419,29 +419,15 @@ type ProfileCampaignListParams struct {
 }
 
 type ProfileCampaignDeleteParams struct {
-	ProfileID string `path:"profileId" api:"required" format:"uuid" json:"-"`
-	// Request to delete a campaign from a brand
-	Body       ProfileCampaignDeleteParamsBody
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	ProfileID       string `path:"profileId" api:"required" format:"uuid" json:"-"`
+	MutationRequest MutationRequestParam
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r ProfileCampaignDeleteParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Body)
+	return shimjson.Marshal(r.MutationRequest)
 }
 func (r *ProfileCampaignDeleteParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request to delete a campaign from a brand
-type ProfileCampaignDeleteParamsBody struct {
-	MutationRequestParam
-}
-
-func (r ProfileCampaignDeleteParamsBody) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*ProfileCampaignDeleteParamsBody
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
 }
