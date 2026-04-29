@@ -841,7 +841,56 @@ func (r *ProfileListResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ProfileCompleteResponse = any
+// Standard API response envelope for all v3 endpoints
+type ProfileCompleteResponse struct {
+	// Response when a profile is already in the completed state and no further action
+	// is taken.
+	Data ProfileCompleteResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCompleteResponse) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCompleteResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Response when a profile is already in the completed state and no further action
+// is taken.
+type ProfileCompleteResponseData struct {
+	// Human-readable message describing the result.
+	Message string `json:"message"`
+	// Current process status of the profile (e.g., "completed", "submitted",
+	// "in_progress").
+	Status string `json:"status"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		Status      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCompleteResponseData) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCompleteResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type ProfileNewParams struct {
 	// Billing model: profile, organization, or profile_and_organization (default:
@@ -1013,30 +1062,16 @@ type ProfileListParams struct {
 }
 
 type ProfileDeleteParams struct {
-	// Request to delete a profile
-	Body       ProfileDeleteParamsBody
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	MutationRequest MutationRequestParam
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r ProfileDeleteParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Body)
+	return shimjson.Marshal(r.MutationRequest)
 }
 func (r *ProfileDeleteParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request to delete a profile
-type ProfileDeleteParamsBody struct {
-	MutationRequestParam
-}
-
-func (r ProfileDeleteParamsBody) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*ProfileDeleteParamsBody
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
 }
 
 type ProfileCompleteParams struct {

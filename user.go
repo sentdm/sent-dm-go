@@ -269,30 +269,16 @@ func (r *UserInviteParams) UnmarshalJSON(data []byte) error {
 }
 
 type UserRemoveParams struct {
-	// Request to remove a user from an organization
-	Body       UserRemoveParamsBody
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	MutationRequest MutationRequestParam
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r UserRemoveParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Body)
+	return shimjson.Marshal(r.MutationRequest)
 }
 func (r *UserRemoveParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request to remove a user from an organization
-type UserRemoveParamsBody struct {
-	MutationRequestParam
-}
-
-func (r UserRemoveParamsBody) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*UserRemoveParamsBody
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
 }
 
 type UserUpdateRoleParams struct {
