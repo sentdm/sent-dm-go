@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.1 (2026-05-01)
+
+Full Changelog: [v0.22.0...v0.22.1](https://github.com/sentdm/sent-dm-go/compare/v0.22.0...v0.22.1)
+
+### Chores
+
+* avoid embedding reflect.Type for dead code elimination ([7b390c2](https://github.com/sentdm/sent-dm-go/commit/7b390c2c05ae260d8c7babcaf58acb3389bb5cfd))
+
 ## 0.22.0 (2026-04-29)
 
 Full Changelog: [v0.21.0...v0.22.0](https://github.com/sentdm/sent-dm-go/compare/v0.21.0...v0.22.0)
