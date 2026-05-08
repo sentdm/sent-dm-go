@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.22.2 (2026-05-08)
+
+Full Changelog: [v0.22.1...v0.22.2](https://github.com/sentdm/sent-dm-go/compare/v0.22.1...v0.22.2)
+
+### Bug Fixes
+
+* **go:** avoid panic when http.DefaultTransport is wrapped ([231d7a2](https://github.com/sentdm/sent-dm-go/commit/231d7a26180e5cf850d66da96bcca7312e569780))
+
+
+### Chores
+
+* redact api-key headers in debug logs ([d0e58f4](https://github.com/sentdm/sent-dm-go/commit/d0e58f4e70f282ed6a03df7747e9fa67cb08d642))
+
 ## 0.22.1 (2026-05-01)
 
 Full Changelog: [v0.22.0...v0.22.1](https://github.com/sentdm/sent-dm-go/compare/v0.22.0...v0.22.1)
