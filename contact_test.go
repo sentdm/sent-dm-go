@@ -87,9 +87,6 @@ func TestContactUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.ContactUpdateParams{
-			ChannelConsent: map[string]string{
-				"foo": "string",
-			},
 			DefaultChannel: sentdm.String("whatsapp"),
 			OptOut:         sentdm.Bool(false),
 			Sandbox:        sentdm.Bool(false),
@@ -153,9 +150,7 @@ func TestContactDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.ContactDeleteParams{
-			MutationRequest: sentdm.MutationRequestParam{
-				Sandbox: sentdm.Bool(false),
-			},
+			Sandbox:    sentdm.Bool(false),
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
