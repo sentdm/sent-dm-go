@@ -93,9 +93,9 @@ type MessageGetActivitiesResponse struct {
 	// Response for GET /messages/{id}/activities
 	Data MessageGetActivitiesResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error MessageGetActivitiesResponseError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta MessageGetActivitiesResponseMeta `json:"meta"`
+	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -173,65 +173,14 @@ func (r *MessageGetActivitiesResponseDataActivity) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Error information
-type MessageGetActivitiesResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageGetActivitiesResponseError) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetActivitiesResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type MessageGetActivitiesResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageGetActivitiesResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetActivitiesResponseMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Standard API response envelope for all v3 endpoints
 type MessageGetStatusResponse struct {
 	// Message response for v3 API — same shape as v2 with snake_case JSON conventions
 	Data MessageGetStatusResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error MessageGetStatusResponseError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta MessageGetStatusResponseMeta `json:"meta"`
+	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -369,65 +318,14 @@ func (r *MessageGetStatusResponseDataMessageBodyButton) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Error information
-type MessageGetStatusResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageGetStatusResponseError) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetStatusResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type MessageGetStatusResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageGetStatusResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *MessageGetStatusResponseMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Standard API response envelope for all v3 endpoints
 type MessageSendResponse struct {
 	// Response for the multi-recipient send message endpoint
 	Data MessageSendResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error MessageSendResponseError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta MessageSendResponseMeta `json:"meta"`
+	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -501,57 +399,6 @@ type MessageSendResponseDataRecipient struct {
 // Returns the unmodified JSON received from the API
 func (r MessageSendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
 func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Error information
-type MessageSendResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageSendResponseError) RawJSON() string { return r.JSON.raw }
-func (r *MessageSendResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type MessageSendResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageSendResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *MessageSendResponseMeta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

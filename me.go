@@ -62,6 +62,42 @@ func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.R
 	return res, err
 }
 
+// Profile configuration settings
+type ProfileSettings struct {
+	// Whether contacts are shared across profiles in the organization
+	AllowContactSharing bool `json:"allow_contact_sharing" api:"nullable"`
+	// Whether templates are shared across profiles in the organization
+	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
+	// Billing model: profile, organization, or profile_and_organization
+	BillingModel string `json:"billing_model" api:"nullable"`
+	// Whether this profile inherits contacts from the organization
+	InheritContacts bool `json:"inherit_contacts" api:"nullable"`
+	// Whether this profile inherits TCR brand from the organization
+	InheritTcrBrand bool `json:"inherit_tcr_brand" api:"nullable"`
+	// Whether this profile inherits TCR campaign from the organization
+	InheritTcrCampaign bool `json:"inherit_tcr_campaign" api:"nullable"`
+	// Whether this profile inherits templates from the organization
+	InheritTemplates bool `json:"inherit_templates" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AllowContactSharing  respjson.Field
+		AllowTemplateSharing respjson.Field
+		BillingModel         respjson.Field
+		InheritContacts      respjson.Field
+		InheritTcrBrand      respjson.Field
+		InheritTcrCampaign   respjson.Field
+		InheritTemplates     respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileSettings) RawJSON() string { return r.JSON.raw }
+func (r *ProfileSettings) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Standard API response envelope for all v3 endpoints
 type MeGetResponse struct {
 	// Account response for GET /v3/me endpoint. Returns organization (with profiles),
@@ -69,9 +105,9 @@ type MeGetResponse struct {
 	// API key type. Always includes messaging channel configuration.
 	Data MeGetResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error MeGetResponseError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta MeGetResponseMeta `json:"meta"`
+	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -116,7 +152,7 @@ type MeGetResponseData struct {
 	// types)
 	Profiles []MeGetResponseDataProfile `json:"profiles"`
 	// Profile configuration settings
-	Settings MeGetResponseDataSettings `json:"settings" api:"nullable"`
+	Settings ProfileSettings `json:"settings" api:"nullable"`
 	// Short name / abbreviation (only for profile type)
 	ShortName string `json:"short_name" api:"nullable"`
 	// Profile status (only for profile type): incomplete, pending_review, approved,
@@ -260,7 +296,7 @@ type MeGetResponseDataProfile struct {
 	// organization if not explicitly set)
 	Role string `json:"role" api:"nullable"`
 	// Profile configuration settings
-	Settings MeGetResponseDataProfileSettings `json:"settings"`
+	Settings ProfileSettings `json:"settings"`
 	// Profile short name (abbreviation)
 	ShortName string `json:"short_name" api:"nullable"`
 	// Profile setup status: incomplete, pending_review, approved, rejected
@@ -284,129 +320,6 @@ type MeGetResponseDataProfile struct {
 // Returns the unmodified JSON received from the API
 func (r MeGetResponseDataProfile) RawJSON() string { return r.JSON.raw }
 func (r *MeGetResponseDataProfile) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Profile configuration settings
-type MeGetResponseDataProfileSettings struct {
-	// Whether contacts are shared across profiles in the organization
-	AllowContactSharing bool `json:"allow_contact_sharing" api:"nullable"`
-	// Whether templates are shared across profiles in the organization
-	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
-	// Billing model: profile, organization, or profile_and_organization
-	BillingModel string `json:"billing_model" api:"nullable"`
-	// Whether this profile inherits contacts from the organization
-	InheritContacts bool `json:"inherit_contacts" api:"nullable"`
-	// Whether this profile inherits TCR brand from the organization
-	InheritTcrBrand bool `json:"inherit_tcr_brand" api:"nullable"`
-	// Whether this profile inherits TCR campaign from the organization
-	InheritTcrCampaign bool `json:"inherit_tcr_campaign" api:"nullable"`
-	// Whether this profile inherits templates from the organization
-	InheritTemplates bool `json:"inherit_templates" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		AllowContactSharing  respjson.Field
-		AllowTemplateSharing respjson.Field
-		BillingModel         respjson.Field
-		InheritContacts      respjson.Field
-		InheritTcrBrand      respjson.Field
-		InheritTcrCampaign   respjson.Field
-		InheritTemplates     respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseDataProfileSettings) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataProfileSettings) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Profile configuration settings
-type MeGetResponseDataSettings struct {
-	// Whether contacts are shared across profiles in the organization
-	AllowContactSharing bool `json:"allow_contact_sharing" api:"nullable"`
-	// Whether templates are shared across profiles in the organization
-	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
-	// Billing model: profile, organization, or profile_and_organization
-	BillingModel string `json:"billing_model" api:"nullable"`
-	// Whether this profile inherits contacts from the organization
-	InheritContacts bool `json:"inherit_contacts" api:"nullable"`
-	// Whether this profile inherits TCR brand from the organization
-	InheritTcrBrand bool `json:"inherit_tcr_brand" api:"nullable"`
-	// Whether this profile inherits TCR campaign from the organization
-	InheritTcrCampaign bool `json:"inherit_tcr_campaign" api:"nullable"`
-	// Whether this profile inherits templates from the organization
-	InheritTemplates bool `json:"inherit_templates" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		AllowContactSharing  respjson.Field
-		AllowTemplateSharing respjson.Field
-		BillingModel         respjson.Field
-		InheritContacts      respjson.Field
-		InheritTcrBrand      respjson.Field
-		InheritTcrCampaign   respjson.Field
-		InheritTemplates     respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseDataSettings) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataSettings) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Error information
-type MeGetResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseError) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type MeGetResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseMeta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
