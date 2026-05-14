@@ -30,14 +30,14 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 	_, err := client.Templates.New(context.TODO(), sentdm.TemplateNewParams{
 		Category:       sentdm.String("MARKETING"),
 		CreationSource: param.Null[string](),
-		Definition: sentdm.TemplateNewParamsDefinition{
-			Body: sentdm.TemplateNewParamsDefinitionBody{
-				MultiChannel: sentdm.TemplateNewParamsDefinitionBodyMultiChannel{
+		Definition: sentdm.TemplateDefinitionParam{
+			Body: sentdm.SentDmServicesCommonContractsPocOsTemplateBodyParam{
+				MultiChannel: sentdm.TemplateBodyContentParam{
 					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}.",
 					Type:     param.Null[string](),
-					Variables: []sentdm.TemplateNewParamsDefinitionBodyMultiChannelVariable{{
+					Variables: []sentdm.TemplateVariableParam{{
 						Name: "name",
-						Props: sentdm.TemplateNewParamsDefinitionBodyMultiChannelVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "John",
 							URL:          "x",
@@ -50,7 +50,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						ID:   sentdm.Int(0),
 					}, {
 						Name: "company",
-						Props: sentdm.TemplateNewParamsDefinitionBodyMultiChannelVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "SentDM",
 							URL:          "x",
@@ -63,12 +63,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						ID:   sentdm.Int(1),
 					}},
 				},
-				Rcs: sentdm.TemplateNewParamsDefinitionBodyRcs{
+				Rcs: sentdm.TemplateBodyContentParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
-					Variables: []sentdm.TemplateNewParamsDefinitionBodyRcsVariable{{
+					Variables: []sentdm.TemplateVariableParam{{
 						Name: "x",
-						Props: sentdm.TemplateNewParamsDefinitionBodyRcsVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "x",
 							URL:          "x",
@@ -81,12 +81,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						ID:   sentdm.Int(0),
 					}},
 				},
-				SMS: sentdm.TemplateNewParamsDefinitionBodySMS{
+				SMS: sentdm.TemplateBodyContentParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
-					Variables: []sentdm.TemplateNewParamsDefinitionBodySMSVariable{{
+					Variables: []sentdm.TemplateVariableParam{{
 						Name: "x",
-						Props: sentdm.TemplateNewParamsDefinitionBodySMSVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "x",
 							URL:          "x",
@@ -99,12 +99,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 						ID:   sentdm.Int(0),
 					}},
 				},
-				Whatsapp: sentdm.TemplateNewParamsDefinitionBodyWhatsapp{
+				Whatsapp: sentdm.TemplateBodyContentParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
-					Variables: []sentdm.TemplateNewParamsDefinitionBodyWhatsappVariable{{
+					Variables: []sentdm.TemplateVariableParam{{
 						Name: "x",
-						Props: sentdm.TemplateNewParamsDefinitionBodyWhatsappVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "x",
 							URL:          "x",
@@ -118,12 +118,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					}},
 				},
 			},
-			AuthenticationConfig: sentdm.TemplateNewParamsDefinitionAuthenticationConfig{
+			AuthenticationConfig: sentdm.SentDmServicesCommonContractsPocOsAuthenticationConfigParam{
 				AddSecurityRecommendation: sentdm.Bool(true),
 				CodeExpirationMinutes:     sentdm.Int(0),
 			},
-			Buttons: []sentdm.TemplateNewParamsDefinitionButton{{
-				Props: sentdm.TemplateNewParamsDefinitionButtonProps{
+			Buttons: []sentdm.SentDmServicesCommonContractsPocOsTemplateButtonParam{{
+				Props: sentdm.SentDmServicesCommonContractsPocOsTemplateButtonPropsParam{
 					ActiveFor:      1,
 					CountryCode:    "x",
 					OfferCode:      "x",
@@ -141,12 +141,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 				ID:   sentdm.Int(0),
 			}},
 			DefinitionVersion: sentdm.String("1.0"),
-			Footer: sentdm.TemplateNewParamsDefinitionFooter{
+			Footer: sentdm.SentDmServicesCommonContractsPocOsTemplateFooterParam{
 				Template: "template",
 				Type:     sentdm.String("type"),
-				Variables: []sentdm.TemplateNewParamsDefinitionFooterVariable{{
+				Variables: []sentdm.TemplateVariableParam{{
 					Name: "x",
-					Props: sentdm.TemplateNewParamsDefinitionFooterVariableProps{
+					Props: sentdm.TemplateVariablePropsParam{
 						MediaType:    "x",
 						Sample:       "x",
 						URL:          "x",
@@ -159,12 +159,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					ID:   sentdm.Int(0),
 				}},
 			},
-			Header: sentdm.TemplateNewParamsDefinitionHeader{
+			Header: sentdm.SentDmServicesCommonContractsPocOsTemplateHeaderParam{
 				Template: "template",
 				Type:     sentdm.String("type"),
-				Variables: []sentdm.TemplateNewParamsDefinitionHeaderVariable{{
+				Variables: []sentdm.TemplateVariableParam{{
 					Name: "x",
-					Props: sentdm.TemplateNewParamsDefinitionHeaderVariableProps{
+					Props: sentdm.TemplateVariablePropsParam{
 						MediaType:    "x",
 						Sample:       "x",
 						URL:          "x",
@@ -240,14 +240,14 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.TemplateUpdateParams{
 			Category: sentdm.String("MARKETING"),
-			Definition: sentdm.TemplateUpdateParamsDefinition{
-				Body: sentdm.TemplateUpdateParamsDefinitionBody{
-					MultiChannel: sentdm.TemplateUpdateParamsDefinitionBodyMultiChannel{
+			Definition: sentdm.TemplateDefinitionParam{
+				Body: sentdm.SentDmServicesCommonContractsPocOsTemplateBodyParam{
+					MultiChannel: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
-						Variables: []sentdm.TemplateUpdateParamsDefinitionBodyMultiChannelVariable{{
+						Variables: []sentdm.TemplateVariableParam{{
 							Name: "x",
-							Props: sentdm.TemplateUpdateParamsDefinitionBodyMultiChannelVariableProps{
+							Props: sentdm.TemplateVariablePropsParam{
 								MediaType:    "x",
 								Sample:       "x",
 								URL:          "x",
@@ -260,12 +260,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 							ID:   sentdm.Int(0),
 						}},
 					},
-					Rcs: sentdm.TemplateUpdateParamsDefinitionBodyRcs{
+					Rcs: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
-						Variables: []sentdm.TemplateUpdateParamsDefinitionBodyRcsVariable{{
+						Variables: []sentdm.TemplateVariableParam{{
 							Name: "x",
-							Props: sentdm.TemplateUpdateParamsDefinitionBodyRcsVariableProps{
+							Props: sentdm.TemplateVariablePropsParam{
 								MediaType:    "x",
 								Sample:       "x",
 								URL:          "x",
@@ -278,12 +278,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 							ID:   sentdm.Int(0),
 						}},
 					},
-					SMS: sentdm.TemplateUpdateParamsDefinitionBodySMS{
+					SMS: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
-						Variables: []sentdm.TemplateUpdateParamsDefinitionBodySMSVariable{{
+						Variables: []sentdm.TemplateVariableParam{{
 							Name: "x",
-							Props: sentdm.TemplateUpdateParamsDefinitionBodySMSVariableProps{
+							Props: sentdm.TemplateVariablePropsParam{
 								MediaType:    "x",
 								Sample:       "x",
 								URL:          "x",
@@ -296,12 +296,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 							ID:   sentdm.Int(0),
 						}},
 					},
-					Whatsapp: sentdm.TemplateUpdateParamsDefinitionBodyWhatsapp{
+					Whatsapp: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
-						Variables: []sentdm.TemplateUpdateParamsDefinitionBodyWhatsappVariable{{
+						Variables: []sentdm.TemplateVariableParam{{
 							Name: "x",
-							Props: sentdm.TemplateUpdateParamsDefinitionBodyWhatsappVariableProps{
+							Props: sentdm.TemplateVariablePropsParam{
 								MediaType:    "x",
 								Sample:       "x",
 								URL:          "x",
@@ -315,12 +315,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						}},
 					},
 				},
-				AuthenticationConfig: sentdm.TemplateUpdateParamsDefinitionAuthenticationConfig{
+				AuthenticationConfig: sentdm.SentDmServicesCommonContractsPocOsAuthenticationConfigParam{
 					AddSecurityRecommendation: sentdm.Bool(true),
 					CodeExpirationMinutes:     sentdm.Int(0),
 				},
-				Buttons: []sentdm.TemplateUpdateParamsDefinitionButton{{
-					Props: sentdm.TemplateUpdateParamsDefinitionButtonProps{
+				Buttons: []sentdm.SentDmServicesCommonContractsPocOsTemplateButtonParam{{
+					Props: sentdm.SentDmServicesCommonContractsPocOsTemplateButtonPropsParam{
 						ActiveFor:      1,
 						CountryCode:    "x",
 						OfferCode:      "x",
@@ -338,12 +338,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 					ID:   sentdm.Int(0),
 				}},
 				DefinitionVersion: sentdm.String("definitionVersion"),
-				Footer: sentdm.TemplateUpdateParamsDefinitionFooter{
+				Footer: sentdm.SentDmServicesCommonContractsPocOsTemplateFooterParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
-					Variables: []sentdm.TemplateUpdateParamsDefinitionFooterVariable{{
+					Variables: []sentdm.TemplateVariableParam{{
 						Name: "x",
-						Props: sentdm.TemplateUpdateParamsDefinitionFooterVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "x",
 							URL:          "x",
@@ -356,12 +356,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						ID:   sentdm.Int(0),
 					}},
 				},
-				Header: sentdm.TemplateUpdateParamsDefinitionHeader{
+				Header: sentdm.SentDmServicesCommonContractsPocOsTemplateHeaderParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
-					Variables: []sentdm.TemplateUpdateParamsDefinitionHeaderVariable{{
+					Variables: []sentdm.TemplateVariableParam{{
 						Name: "x",
-						Props: sentdm.TemplateUpdateParamsDefinitionHeaderVariableProps{
+						Props: sentdm.TemplateVariablePropsParam{
 							MediaType:    "x",
 							Sample:       "x",
 							URL:          "x",
