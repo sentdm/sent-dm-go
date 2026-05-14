@@ -13,7 +13,6 @@ import (
 
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	"github.com/sentdm/sent-dm-go/internal/apiquery"
-	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
 	"github.com/sentdm/sent-dm-go/packages/param"
@@ -42,7 +41,7 @@ func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 }
 
 // Creates a new webhook endpoint for the authenticated customer.
-func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
+func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts ...option.RequestOption) (res *WebhookNewResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -56,7 +55,7 @@ func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts 
 }
 
 // Retrieves a single webhook by ID for the authenticated customer.
-func (r *WebhookService) Get(ctx context.Context, id string, query WebhookGetParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
+func (r *WebhookService) Get(ctx context.Context, id string, query WebhookGetParams, opts ...option.RequestOption) (res *WebhookGetResponse, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -71,7 +70,7 @@ func (r *WebhookService) Get(ctx context.Context, id string, query WebhookGetPar
 }
 
 // Updates an existing webhook for the authenticated customer.
-func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUpdateParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
+func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUpdateParams, opts ...option.RequestOption) (res *WebhookUpdateResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -179,7 +178,7 @@ func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTest
 }
 
 // Activates or deactivates a webhook for the authenticated customer.
-func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params WebhookToggleStatusParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
+func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params WebhookToggleStatusParams, opts ...option.RequestOption) (res *WebhookToggleStatusResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -196,38 +195,14 @@ func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params Web
 	return res, err
 }
 
-// Request and response metadata
-type APIMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r APIMeta) RawJSON() string { return r.JSON.raw }
-func (r *APIMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Standard API response envelope for all v3 endpoints
-type APIResponseWebhook struct {
+type WebhookNewResponse struct {
 	// The response data (null if error)
-	Data WebhookResponse `json:"data" api:"nullable"`
+	Data WebhookNewResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error WebhookNewResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta WebhookNewResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -242,134 +217,13 @@ type APIResponseWebhook struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r APIResponseWebhook) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseWebhook) UnmarshalJSON(data []byte) error {
+func (r WebhookNewResponse) RawJSON() string { return r.JSON.raw }
+func (r *WebhookNewResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Error information
-type ErrorDetail struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ErrorDetail) RawJSON() string { return r.JSON.raw }
-func (r *ErrorDetail) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type MutationRequestParam struct {
-	// Sandbox flag - when true, the operation is simulated without side effects Useful
-	// for testing integrations without actual execution
-	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
-	paramObj
-}
-
-func (r MutationRequestParam) MarshalJSON() (data []byte, err error) {
-	type shadow MutationRequestParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *MutationRequestParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Pagination metadata for list responses
-type PaginationMeta struct {
-	// Cursor-based pagination pointers
-	Cursors PaginationMetaCursors `json:"cursors" api:"nullable"`
-	// Whether there are more pages after this one
-	HasMore bool `json:"has_more"`
-	// Current page number (1-indexed)
-	Page int64 `json:"page"`
-	// Number of items per page
-	PageSize int64 `json:"page_size"`
-	// Total number of items across all pages
-	TotalCount int64 `json:"total_count"`
-	// Total number of pages
-	TotalPages int64 `json:"total_pages"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Cursors     respjson.Field
-		HasMore     respjson.Field
-		Page        respjson.Field
-		PageSize    respjson.Field
-		TotalCount  respjson.Field
-		TotalPages  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r PaginationMeta) RawJSON() string { return r.JSON.raw }
-func (r *PaginationMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Cursor-based pagination pointers
-type PaginationMetaCursors struct {
-	// Cursor to fetch the next page
-	After string `json:"after" api:"nullable"`
-	// Cursor to fetch the previous page
-	Before string `json:"before" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		After       respjson.Field
-		Before      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r PaginationMetaCursors) RawJSON() string { return r.JSON.raw }
-func (r *PaginationMetaCursors) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type WebhookEventType struct {
-	Description string             `json:"description" api:"nullable"`
-	DisplayName string             `json:"display_name"`
-	EventType   string             `json:"event_type" api:"nullable"`
-	IsActive    bool               `json:"is_active"`
-	Name        string             `json:"name"`
-	SubTypes    []WebhookEventType `json:"sub_types" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		DisplayName respjson.Field
-		EventType   respjson.Field
-		IsActive    respjson.Field
-		Name        respjson.Field
-		SubTypes    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookEventType) RawJSON() string { return r.JSON.raw }
-func (r *WebhookEventType) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type WebhookResponse struct {
+// The response data (null if error)
+type WebhookNewResponseData struct {
 	ID                       string              `json:"id" format:"uuid"`
 	ConsecutiveFailures      int64               `json:"consecutive_failures"`
 	CreatedAt                time.Time           `json:"created_at" format:"date-time"`
@@ -406,8 +260,301 @@ type WebhookResponse struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r WebhookResponse) RawJSON() string { return r.JSON.raw }
-func (r *WebhookResponse) UnmarshalJSON(data []byte) error {
+func (r WebhookNewResponseData) RawJSON() string { return r.JSON.raw }
+func (r *WebhookNewResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookNewResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookNewResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookNewResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookNewResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookNewResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookNewResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type WebhookGetResponse struct {
+	// The response data (null if error)
+	Data WebhookGetResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error WebhookGetResponseError `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta WebhookGetResponseMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *WebhookGetResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The response data (null if error)
+type WebhookGetResponseData struct {
+	ID                       string              `json:"id" format:"uuid"`
+	ConsecutiveFailures      int64               `json:"consecutive_failures"`
+	CreatedAt                time.Time           `json:"created_at" format:"date-time"`
+	DisplayName              string              `json:"display_name"`
+	EndpointURL              string              `json:"endpoint_url"`
+	EventFilters             map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes               []string            `json:"event_types"`
+	IsActive                 bool                `json:"is_active"`
+	LastDeliveryAttemptAt    time.Time           `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	LastSuccessfulDeliveryAt time.Time           `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
+	RetryCount               int64               `json:"retry_count"`
+	SigningSecret            string              `json:"signing_secret" api:"nullable"`
+	TimeoutSeconds           int64               `json:"timeout_seconds"`
+	UpdatedAt                time.Time           `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                       respjson.Field
+		ConsecutiveFailures      respjson.Field
+		CreatedAt                respjson.Field
+		DisplayName              respjson.Field
+		EndpointURL              respjson.Field
+		EventFilters             respjson.Field
+		EventTypes               respjson.Field
+		IsActive                 respjson.Field
+		LastDeliveryAttemptAt    respjson.Field
+		LastSuccessfulDeliveryAt respjson.Field
+		RetryCount               respjson.Field
+		SigningSecret            respjson.Field
+		TimeoutSeconds           respjson.Field
+		UpdatedAt                respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookGetResponseData) RawJSON() string { return r.JSON.raw }
+func (r *WebhookGetResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookGetResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookGetResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookGetResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookGetResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookGetResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookGetResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type WebhookUpdateResponse struct {
+	// The response data (null if error)
+	Data WebhookUpdateResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error WebhookUpdateResponseError `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta WebhookUpdateResponseMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookUpdateResponse) RawJSON() string { return r.JSON.raw }
+func (r *WebhookUpdateResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The response data (null if error)
+type WebhookUpdateResponseData struct {
+	ID                       string              `json:"id" format:"uuid"`
+	ConsecutiveFailures      int64               `json:"consecutive_failures"`
+	CreatedAt                time.Time           `json:"created_at" format:"date-time"`
+	DisplayName              string              `json:"display_name"`
+	EndpointURL              string              `json:"endpoint_url"`
+	EventFilters             map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes               []string            `json:"event_types"`
+	IsActive                 bool                `json:"is_active"`
+	LastDeliveryAttemptAt    time.Time           `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	LastSuccessfulDeliveryAt time.Time           `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
+	RetryCount               int64               `json:"retry_count"`
+	SigningSecret            string              `json:"signing_secret" api:"nullable"`
+	TimeoutSeconds           int64               `json:"timeout_seconds"`
+	UpdatedAt                time.Time           `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                       respjson.Field
+		ConsecutiveFailures      respjson.Field
+		CreatedAt                respjson.Field
+		DisplayName              respjson.Field
+		EndpointURL              respjson.Field
+		EventFilters             respjson.Field
+		EventTypes               respjson.Field
+		IsActive                 respjson.Field
+		LastDeliveryAttemptAt    respjson.Field
+		LastSuccessfulDeliveryAt respjson.Field
+		RetryCount               respjson.Field
+		SigningSecret            respjson.Field
+		TimeoutSeconds           respjson.Field
+		UpdatedAt                respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookUpdateResponseData) RawJSON() string { return r.JSON.raw }
+func (r *WebhookUpdateResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookUpdateResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookUpdateResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookUpdateResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookUpdateResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookUpdateResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookUpdateResponseMeta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -416,9 +563,9 @@ type WebhookListResponse struct {
 	// The response data (null if error)
 	Data WebhookListResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error WebhookListResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta WebhookListResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -441,8 +588,8 @@ func (r *WebhookListResponse) UnmarshalJSON(data []byte) error {
 // The response data (null if error)
 type WebhookListResponseData struct {
 	// Pagination metadata for list responses
-	Pagination PaginationMeta    `json:"pagination"`
-	Webhooks   []WebhookResponse `json:"webhooks"`
+	Pagination WebhookListResponseDataPagination `json:"pagination"`
+	Webhooks   []WebhookListResponseDataWebhook  `json:"webhooks"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Pagination  respjson.Field
@@ -458,14 +605,161 @@ func (r *WebhookListResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Pagination metadata for list responses
+type WebhookListResponseDataPagination struct {
+	// Cursor-based pagination pointers
+	Cursors WebhookListResponseDataPaginationCursors `json:"cursors" api:"nullable"`
+	// Whether there are more pages after this one
+	HasMore bool `json:"has_more"`
+	// Current page number (1-indexed)
+	Page int64 `json:"page"`
+	// Number of items per page
+	PageSize int64 `json:"page_size"`
+	// Total number of items across all pages
+	TotalCount int64 `json:"total_count"`
+	// Total number of pages
+	TotalPages int64 `json:"total_pages"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cursors     respjson.Field
+		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListResponseDataPagination) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListResponseDataPagination) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Cursor-based pagination pointers
+type WebhookListResponseDataPaginationCursors struct {
+	// Cursor to fetch the next page
+	After string `json:"after" api:"nullable"`
+	// Cursor to fetch the previous page
+	Before string `json:"before" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		After       respjson.Field
+		Before      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListResponseDataPaginationCursors) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListResponseDataPaginationCursors) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookListResponseDataWebhook struct {
+	ID                       string              `json:"id" format:"uuid"`
+	ConsecutiveFailures      int64               `json:"consecutive_failures"`
+	CreatedAt                time.Time           `json:"created_at" format:"date-time"`
+	DisplayName              string              `json:"display_name"`
+	EndpointURL              string              `json:"endpoint_url"`
+	EventFilters             map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes               []string            `json:"event_types"`
+	IsActive                 bool                `json:"is_active"`
+	LastDeliveryAttemptAt    time.Time           `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	LastSuccessfulDeliveryAt time.Time           `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
+	RetryCount               int64               `json:"retry_count"`
+	SigningSecret            string              `json:"signing_secret" api:"nullable"`
+	TimeoutSeconds           int64               `json:"timeout_seconds"`
+	UpdatedAt                time.Time           `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                       respjson.Field
+		ConsecutiveFailures      respjson.Field
+		CreatedAt                respjson.Field
+		DisplayName              respjson.Field
+		EndpointURL              respjson.Field
+		EventFilters             respjson.Field
+		EventTypes               respjson.Field
+		IsActive                 respjson.Field
+		LastDeliveryAttemptAt    respjson.Field
+		LastSuccessfulDeliveryAt respjson.Field
+		RetryCount               respjson.Field
+		SigningSecret            respjson.Field
+		TimeoutSeconds           respjson.Field
+		UpdatedAt                respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListResponseDataWebhook) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListResponseDataWebhook) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookListResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookListResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Standard API response envelope for all v3 endpoints
 type WebhookListEventTypesResponse struct {
 	// The response data (null if error)
 	Data WebhookListEventTypesResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error WebhookListEventTypesResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta WebhookListEventTypesResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -487,7 +781,7 @@ func (r *WebhookListEventTypesResponse) UnmarshalJSON(data []byte) error {
 
 // The response data (null if error)
 type WebhookListEventTypesResponseData struct {
-	EventTypes []WebhookEventType `json:"event_types"`
+	EventTypes []WebhookListEventTypesResponseDataEventType `json:"event_types"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventTypes  respjson.Field
@@ -502,14 +796,91 @@ func (r *WebhookListEventTypesResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type WebhookListEventTypesResponseDataEventType struct {
+	Description string `json:"description" api:"nullable"`
+	DisplayName string `json:"display_name"`
+	EventType   string `json:"event_type" api:"nullable"`
+	IsActive    bool   `json:"is_active"`
+	Name        string `json:"name"`
+	SubTypes    []any  `json:"sub_types" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		DisplayName respjson.Field
+		EventType   respjson.Field
+		IsActive    respjson.Field
+		Name        respjson.Field
+		SubTypes    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventTypesResponseDataEventType) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventTypesResponseDataEventType) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookListEventTypesResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventTypesResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventTypesResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookListEventTypesResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventTypesResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventTypesResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Standard API response envelope for all v3 endpoints
 type WebhookListEventsResponse struct {
 	// The response data (null if error)
 	Data WebhookListEventsResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error WebhookListEventsResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta WebhookListEventsResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -533,7 +904,7 @@ func (r *WebhookListEventsResponse) UnmarshalJSON(data []byte) error {
 type WebhookListEventsResponseData struct {
 	Events []WebhookListEventsResponseDataEvent `json:"events"`
 	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
+	Pagination WebhookListEventsResponseDataPagination `json:"pagination"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Events      respjson.Field
@@ -585,14 +956,119 @@ func (r *WebhookListEventsResponseDataEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Pagination metadata for list responses
+type WebhookListEventsResponseDataPagination struct {
+	// Cursor-based pagination pointers
+	Cursors WebhookListEventsResponseDataPaginationCursors `json:"cursors" api:"nullable"`
+	// Whether there are more pages after this one
+	HasMore bool `json:"has_more"`
+	// Current page number (1-indexed)
+	Page int64 `json:"page"`
+	// Number of items per page
+	PageSize int64 `json:"page_size"`
+	// Total number of items across all pages
+	TotalCount int64 `json:"total_count"`
+	// Total number of pages
+	TotalPages int64 `json:"total_pages"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cursors     respjson.Field
+		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseDataPagination) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventsResponseDataPagination) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Cursor-based pagination pointers
+type WebhookListEventsResponseDataPaginationCursors struct {
+	// Cursor to fetch the next page
+	After string `json:"after" api:"nullable"`
+	// Cursor to fetch the previous page
+	Before string `json:"before" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		After       respjson.Field
+		Before      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseDataPaginationCursors) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventsResponseDataPaginationCursors) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookListEventsResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventsResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookListEventsResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventsResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Standard API response envelope for all v3 endpoints
 type WebhookRotateSecretResponse struct {
 	// The response data (null if error)
 	Data WebhookRotateSecretResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error WebhookRotateSecretResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta WebhookRotateSecretResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -629,14 +1105,65 @@ func (r *WebhookRotateSecretResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Error information
+type WebhookRotateSecretResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookRotateSecretResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookRotateSecretResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookRotateSecretResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookRotateSecretResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookRotateSecretResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Standard API response envelope for all v3 endpoints
 type WebhookTestResponse struct {
 	// The response data (null if error)
 	Data WebhookTestResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error WebhookTestResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta WebhookTestResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -672,6 +1199,178 @@ type WebhookTestResponseData struct {
 // Returns the unmodified JSON received from the API
 func (r WebhookTestResponseData) RawJSON() string { return r.JSON.raw }
 func (r *WebhookTestResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookTestResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookTestResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookTestResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookTestResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookTestResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookTestResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type WebhookToggleStatusResponse struct {
+	// The response data (null if error)
+	Data WebhookToggleStatusResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error WebhookToggleStatusResponseError `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta WebhookToggleStatusResponseMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookToggleStatusResponse) RawJSON() string { return r.JSON.raw }
+func (r *WebhookToggleStatusResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The response data (null if error)
+type WebhookToggleStatusResponseData struct {
+	ID                       string              `json:"id" format:"uuid"`
+	ConsecutiveFailures      int64               `json:"consecutive_failures"`
+	CreatedAt                time.Time           `json:"created_at" format:"date-time"`
+	DisplayName              string              `json:"display_name"`
+	EndpointURL              string              `json:"endpoint_url"`
+	EventFilters             map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes               []string            `json:"event_types"`
+	IsActive                 bool                `json:"is_active"`
+	LastDeliveryAttemptAt    time.Time           `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	LastSuccessfulDeliveryAt time.Time           `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
+	RetryCount               int64               `json:"retry_count"`
+	SigningSecret            string              `json:"signing_secret" api:"nullable"`
+	TimeoutSeconds           int64               `json:"timeout_seconds"`
+	UpdatedAt                time.Time           `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                       respjson.Field
+		ConsecutiveFailures      respjson.Field
+		CreatedAt                respjson.Field
+		DisplayName              respjson.Field
+		EndpointURL              respjson.Field
+		EventFilters             respjson.Field
+		EventTypes               respjson.Field
+		IsActive                 respjson.Field
+		LastDeliveryAttemptAt    respjson.Field
+		LastSuccessfulDeliveryAt respjson.Field
+		RetryCount               respjson.Field
+		SigningSecret            respjson.Field
+		TimeoutSeconds           respjson.Field
+		UpdatedAt                respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookToggleStatusResponseData) RawJSON() string { return r.JSON.raw }
+func (r *WebhookToggleStatusResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type WebhookToggleStatusResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookToggleStatusResponseError) RawJSON() string { return r.JSON.raw }
+func (r *WebhookToggleStatusResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type WebhookToggleStatusResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookToggleStatusResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *WebhookToggleStatusResponseMeta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -771,14 +1470,17 @@ func (r WebhookListEventsParams) URLQuery() (v url.Values, err error) {
 }
 
 type WebhookRotateSecretParams struct {
-	MutationRequest MutationRequestParam
-	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
+	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r WebhookRotateSecretParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.MutationRequest)
+	type shadow WebhookRotateSecretParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
