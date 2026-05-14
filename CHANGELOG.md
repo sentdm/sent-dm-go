@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.23.0 (2026-05-14)
+
+Full Changelog: [v0.22.2...v0.23.0](https://github.com/sentdm/sent-dm-go/compare/v0.22.2...v0.23.0)
+
+### Features
+
+* **api:** api update ([bc87961](https://github.com/sentdm/sent-dm-go/commit/bc879613d047e25034ca8e0ae2683a7420d285ed))
+* **client:** optimize json encoder for internal types ([9fc2d0e](https://github.com/sentdm/sent-dm-go/commit/9fc2d0e67692fbd5a9111b3ee51c1ad48b67261f))
+
 ## 0.22.2 (2026-05-08)
 
 Full Changelog: [v0.22.1...v0.22.2](https://github.com/sentdm/sent-dm-go/compare/v0.22.1...v0.22.2)
