@@ -253,7 +253,7 @@ type TcrCampaignWithUseCases struct {
 	Cost                    float64   `json:"cost" api:"nullable" format:"decimal"`
 	CspID                   string    `json:"cspId" api:"nullable"`
 	CustomerID              string    `json:"customerId" format:"uuid"`
-	DcaElectionsComplete    bool      `json:"dcaElectionsComplete"`
+	DcaElectionsComplete    bool      `json:"dcaElectionsComplete" api:"nullable"`
 	DcaElectionsCompletedAt time.Time `json:"dcaElectionsCompletedAt" api:"nullable" format:"date-time"`
 	Description             string    `json:"description"`
 	HelpKeywords            string    `json:"helpKeywords" api:"nullable"`
