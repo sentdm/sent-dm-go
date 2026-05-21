@@ -150,7 +150,8 @@ type MessageGetActivitiesResponseDataActivity struct {
 	// Channel cost for this activity (e.g., SMS/WhatsApp provider cost), formatted to
 	// 4 decimal places.
 	Price string `json:"price" api:"nullable"`
-	// Activity status (e.g., QUEUED, PROCESSED, ROUTED, SENT, DELIVERED, FAILED)
+	// Activity status. Outbound: QUEUED, PROCESSED, ROUTED, SENT, DELIVERED, READ,
+	// FAILED. Inbound (from contact): RECEIVED (terminal).
 	Status string `json:"status"`
 	// When this activity occurred
 	Timestamp time.Time `json:"timestamp" format:"date-time"`

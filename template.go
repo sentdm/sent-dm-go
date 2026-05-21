@@ -211,20 +211,24 @@ func (r *SentDmServicesCommonContractsPocOsTemplateButtonParam) UnmarshalJSON(da
 }
 
 // The properties ActiveFor, CountryCode, OfferCode, PhoneNumber, QuickReplyType,
-// Text, URL, URLType are required.
+// Text, URL, URLType, Variables are required.
 type SentDmServicesCommonContractsPocOsTemplateButtonPropsParam struct {
-	ActiveFor      int64             `json:"activeFor" api:"required"`
-	CountryCode    string            `json:"countryCode" api:"required"`
-	OfferCode      string            `json:"offerCode" api:"required"`
-	PhoneNumber    string            `json:"phoneNumber" api:"required"`
-	QuickReplyType string            `json:"quickReplyType" api:"required"`
-	Text           string            `json:"text" api:"required"`
-	URL            string            `json:"url" api:"required"`
-	URLType        string            `json:"urlType" api:"required"`
-	AutofillText   param.Opt[string] `json:"autofillText,omitzero"`
-	OtpType        param.Opt[string] `json:"otpType,omitzero"`
-	PackageName    param.Opt[string] `json:"packageName,omitzero"`
-	SignatureHash  param.Opt[string] `json:"signatureHash,omitzero"`
+	ActiveFor      int64  `json:"activeFor" api:"required"`
+	CountryCode    string `json:"countryCode" api:"required"`
+	OfferCode      string `json:"offerCode" api:"required"`
+	PhoneNumber    string `json:"phoneNumber" api:"required"`
+	QuickReplyType string `json:"quickReplyType" api:"required"`
+	Text           string `json:"text" api:"required"`
+	URL            string `json:"url" api:"required"`
+	URLType        string `json:"urlType" api:"required"`
+	// Variables embedded in a dynamic URL button (only when UrlType = dynamic). Count
+	// is capped by TemplateContentLimits.MaxUrlButtonVariables; the placeholder must
+	// appear at the end of Url (validated in TemplateDefinitionValidator).
+	Variables     []TemplateVariableParam `json:"variables,omitzero" api:"required"`
+	AutofillText  param.Opt[string]       `json:"autofillText,omitzero"`
+	OtpType       param.Opt[string]       `json:"otpType,omitzero"`
+	PackageName   param.Opt[string]       `json:"packageName,omitzero"`
+	SignatureHash param.Opt[string]       `json:"signatureHash,omitzero"`
 	paramObj
 }
 
