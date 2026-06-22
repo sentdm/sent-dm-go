@@ -256,17 +256,21 @@ type TcrCampaignWithUseCases struct {
 	DcaElectionsComplete    bool      `json:"dcaElectionsComplete" api:"nullable"`
 	DcaElectionsCompletedAt time.Time `json:"dcaElectionsCompletedAt" api:"nullable" format:"date-time"`
 	Description             string    `json:"description"`
-	HelpKeywords            string    `json:"helpKeywords" api:"nullable"`
-	HelpMessage             string    `json:"helpMessage" api:"nullable"`
-	KYCSubmissionFormID     string    `json:"kycSubmissionFormId" api:"nullable" format:"uuid"`
-	MessageFlow             string    `json:"messageFlow" api:"nullable"`
-	Name                    string    `json:"name"`
-	OptinKeywords           string    `json:"optinKeywords" api:"nullable"`
-	OptinMessage            string    `json:"optinMessage" api:"nullable"`
-	OptoutKeywords          string    `json:"optoutKeywords" api:"nullable"`
-	OptoutMessage           string    `json:"optoutMessage" api:"nullable"`
-	PrivacyPolicyLink       string    `json:"privacyPolicyLink" api:"nullable"`
-	ResellerID              string    `json:"resellerId" api:"nullable"`
+	// True when this campaign already has a billing transaction of reference type
+	// TCR_CAMPAIGN_SUBMISSION (the one-time submission fee was charged). Populated
+	// only by the campaigns-list path; defaults false on other responses.
+	HasSubmissionTransaction bool   `json:"hasSubmissionTransaction"`
+	HelpKeywords             string `json:"helpKeywords" api:"nullable"`
+	HelpMessage              string `json:"helpMessage" api:"nullable"`
+	KYCSubmissionFormID      string `json:"kycSubmissionFormId" api:"nullable" format:"uuid"`
+	MessageFlow              string `json:"messageFlow" api:"nullable"`
+	Name                     string `json:"name"`
+	OptinKeywords            string `json:"optinKeywords" api:"nullable"`
+	OptinMessage             string `json:"optinMessage" api:"nullable"`
+	OptoutKeywords           string `json:"optoutKeywords" api:"nullable"`
+	OptoutMessage            string `json:"optoutMessage" api:"nullable"`
+	PrivacyPolicyLink        string `json:"privacyPolicyLink" api:"nullable"`
+	ResellerID               string `json:"resellerId" api:"nullable"`
 	// Any of "PENDING", "ACCEPTED", "DECLINED".
 	SharingStatus string `json:"sharingStatus" api:"nullable"`
 	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
@@ -282,38 +286,39 @@ type TcrCampaignWithUseCases struct {
 	UseCases               []TcrCampaignWithUseCasesUseCase `json:"useCases"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		BilledDate              respjson.Field
-		BrandID                 respjson.Field
-		Cost                    respjson.Field
-		CspID                   respjson.Field
-		CustomerID              respjson.Field
-		DcaElectionsComplete    respjson.Field
-		DcaElectionsCompletedAt respjson.Field
-		Description             respjson.Field
-		HelpKeywords            respjson.Field
-		HelpMessage             respjson.Field
-		KYCSubmissionFormID     respjson.Field
-		MessageFlow             respjson.Field
-		Name                    respjson.Field
-		OptinKeywords           respjson.Field
-		OptinMessage            respjson.Field
-		OptoutKeywords          respjson.Field
-		OptoutMessage           respjson.Field
-		PrivacyPolicyLink       respjson.Field
-		ResellerID              respjson.Field
-		SharingStatus           respjson.Field
-		Status                  respjson.Field
-		SubmittedAt             respjson.Field
-		SubmittedToTcr          respjson.Field
-		TcrCampaignID           respjson.Field
-		TcrSyncError            respjson.Field
-		TelnyxCampaignID        respjson.Field
-		TermsAndConditionsLink  respjson.Field
-		Type                    respjson.Field
-		UpstreamCnpID           respjson.Field
-		UseCases                respjson.Field
-		ExtraFields             map[string]respjson.Field
-		raw                     string
+		BilledDate               respjson.Field
+		BrandID                  respjson.Field
+		Cost                     respjson.Field
+		CspID                    respjson.Field
+		CustomerID               respjson.Field
+		DcaElectionsComplete     respjson.Field
+		DcaElectionsCompletedAt  respjson.Field
+		Description              respjson.Field
+		HasSubmissionTransaction respjson.Field
+		HelpKeywords             respjson.Field
+		HelpMessage              respjson.Field
+		KYCSubmissionFormID      respjson.Field
+		MessageFlow              respjson.Field
+		Name                     respjson.Field
+		OptinKeywords            respjson.Field
+		OptinMessage             respjson.Field
+		OptoutKeywords           respjson.Field
+		OptoutMessage            respjson.Field
+		PrivacyPolicyLink        respjson.Field
+		ResellerID               respjson.Field
+		SharingStatus            respjson.Field
+		Status                   respjson.Field
+		SubmittedAt              respjson.Field
+		SubmittedToTcr           respjson.Field
+		TcrCampaignID            respjson.Field
+		TcrSyncError             respjson.Field
+		TelnyxCampaignID         respjson.Field
+		TermsAndConditionsLink   respjson.Field
+		Type                     respjson.Field
+		UpstreamCnpID            respjson.Field
+		UseCases                 respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 	BaseDto
 }
