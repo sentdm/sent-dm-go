@@ -414,6 +414,8 @@ type MessageGetStatusParams struct {
 }
 
 type MessageSendParams struct {
+	// Plain-text (free-form) message body. Provide either Template or this.
+	Text param.Opt[string] `json:"text,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`

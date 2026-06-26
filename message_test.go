@@ -11,6 +11,7 @@ import (
 	"github.com/sentdm/sent-dm-go"
 	"github.com/sentdm/sent-dm-go/internal/testutil"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
 )
 
 func TestMessageGetActivitiesWithOptionalParams(t *testing.T) {
@@ -95,6 +96,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 				"order_id": "12345",
 			},
 		},
+		Text:           param.Null[string](),
 		To:             []string{"+14155551234", "+14155555678"},
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
 		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
