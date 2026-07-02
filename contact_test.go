@@ -27,7 +27,7 @@ func TestContactNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Contacts.New(context.TODO(), sentdm.ContactNewParams{
-		PhoneNumber:    sentdm.String("+1234567890"),
+		PhoneNumber:    "+1234567890",
 		Sandbox:        sentdm.Bool(false),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
 		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
