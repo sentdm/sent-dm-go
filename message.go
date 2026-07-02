@@ -254,14 +254,14 @@ func (r *MessageGetStatusResponseData) UnmarshalJSON(data []byte) error {
 
 // Represents a status change event in a message's lifecycle (v3)
 type MessageGetStatusResponseDataEvent struct {
+	Status      string    `json:"status" api:"required"`
+	Timestamp   time.Time `json:"timestamp" api:"required" format:"date-time"`
 	Description string    `json:"description" api:"nullable"`
-	Status      string    `json:"status"`
-	Timestamp   time.Time `json:"timestamp" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Description respjson.Field
 		Status      respjson.Field
 		Timestamp   respjson.Field
+		Description respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`

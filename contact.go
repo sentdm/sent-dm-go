@@ -256,7 +256,7 @@ func (r *ContactListResponseData) UnmarshalJSON(data []byte) error {
 
 type ContactNewParams struct {
 	// Phone number of the contact to create
-	PhoneNumber param.Opt[string] `json:"phone_number,omitzero"`
+	PhoneNumber string `json:"phone_number" api:"required"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`

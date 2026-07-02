@@ -248,6 +248,9 @@ func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignU
 }
 
 type TcrCampaignWithUseCases struct {
+	Description             string    `json:"description" api:"required"`
+	Name                    string    `json:"name" api:"required"`
+	Type                    string    `json:"type" api:"required"`
 	BilledDate              time.Time `json:"billedDate" api:"nullable" format:"date-time"`
 	BrandID                 string    `json:"brandId" api:"nullable" format:"uuid"`
 	Cost                    float64   `json:"cost" api:"nullable" format:"decimal"`
@@ -255,7 +258,6 @@ type TcrCampaignWithUseCases struct {
 	CustomerID              string    `json:"customerId" format:"uuid"`
 	DcaElectionsComplete    bool      `json:"dcaElectionsComplete" api:"nullable"`
 	DcaElectionsCompletedAt time.Time `json:"dcaElectionsCompletedAt" api:"nullable" format:"date-time"`
-	Description             string    `json:"description"`
 	// True when this campaign already has a billing transaction of reference type
 	// TCR_CAMPAIGN_SUBMISSION (the one-time submission fee was charged). Populated
 	// only by the campaigns-list path; defaults false on other responses.
@@ -264,7 +266,6 @@ type TcrCampaignWithUseCases struct {
 	HelpMessage              string `json:"helpMessage" api:"nullable"`
 	KYCSubmissionFormID      string `json:"kycSubmissionFormId" api:"nullable" format:"uuid"`
 	MessageFlow              string `json:"messageFlow" api:"nullable"`
-	Name                     string `json:"name"`
 	OptinKeywords            string `json:"optinKeywords" api:"nullable"`
 	OptinMessage             string `json:"optinMessage" api:"nullable"`
 	OptoutKeywords           string `json:"optoutKeywords" api:"nullable"`
@@ -281,11 +282,13 @@ type TcrCampaignWithUseCases struct {
 	TcrSyncError           string                           `json:"tcrSyncError" api:"nullable"`
 	TelnyxCampaignID       string                           `json:"telnyxCampaignId" api:"nullable"`
 	TermsAndConditionsLink string                           `json:"termsAndConditionsLink" api:"nullable"`
-	Type                   string                           `json:"type"`
 	UpstreamCnpID          string                           `json:"upstreamCnpId" api:"nullable"`
 	UseCases               []TcrCampaignWithUseCasesUseCase `json:"useCases"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Description              respjson.Field
+		Name                     respjson.Field
+		Type                     respjson.Field
 		BilledDate               respjson.Field
 		BrandID                  respjson.Field
 		Cost                     respjson.Field
@@ -293,13 +296,11 @@ type TcrCampaignWithUseCases struct {
 		CustomerID               respjson.Field
 		DcaElectionsComplete     respjson.Field
 		DcaElectionsCompletedAt  respjson.Field
-		Description              respjson.Field
 		HasSubmissionTransaction respjson.Field
 		HelpKeywords             respjson.Field
 		HelpMessage              respjson.Field
 		KYCSubmissionFormID      respjson.Field
 		MessageFlow              respjson.Field
-		Name                     respjson.Field
 		OptinKeywords            respjson.Field
 		OptinMessage             respjson.Field
 		OptoutKeywords           respjson.Field
@@ -314,7 +315,6 @@ type TcrCampaignWithUseCases struct {
 		TcrSyncError             respjson.Field
 		TelnyxCampaignID         respjson.Field
 		TermsAndConditionsLink   respjson.Field
-		Type                     respjson.Field
 		UpstreamCnpID            respjson.Field
 		UseCases                 respjson.Field
 		ExtraFields              map[string]respjson.Field
@@ -330,20 +330,20 @@ func (r *TcrCampaignWithUseCases) UnmarshalJSON(data []byte) error {
 }
 
 type TcrCampaignWithUseCasesUseCase struct {
-	CampaignID string `json:"campaignId" format:"uuid"`
-	CustomerID string `json:"customerId" format:"uuid"`
+	SampleMessages []string `json:"sampleMessages" api:"required"`
+	CampaignID     string   `json:"campaignId" format:"uuid"`
+	CustomerID     string   `json:"customerId" format:"uuid"`
 	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
 	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
 	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
 	// "LOW_VOLUME".
 	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs"`
-	SampleMessages     []string           `json:"sampleMessages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		SampleMessages     respjson.Field
 		CampaignID         respjson.Field
 		CustomerID         respjson.Field
 		MessagingUseCaseUs respjson.Field
-		SampleMessages     respjson.Field
 		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
