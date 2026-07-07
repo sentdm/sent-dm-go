@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.29.0](https://github.com/sentdm/sent-dm-go/compare/v0.28.0...v0.29.0) (2026-07-07)
+
+
+### Features
+
+* enable release-please releases and back-sync trigger ([80b99f1](https://github.com/sentdm/sent-dm-go/commit/80b99f161e1db4edcf5bfe1560806dc6d887ceb2))
+* initial stlc build ([7ece6f0](https://github.com/sentdm/sent-dm-go/commit/7ece6f0ebc4f0d8cc6bd847dcecf5b496d3df3aa))
+
+
+### Chores
+
+* add promote, back-sync, and trunk-lock workflows ([67a9fef](https://github.com/sentdm/sent-dm-go/commit/67a9fef051a09f96433d2a0be0a3f92701d20524))
+* add release back-sync trigger workflow ([3acc2f7](https://github.com/sentdm/sent-dm-go/commit/3acc2f7ee0bf99c217448a7d639d51aaf288f5ff))
+
 ## 0.28.0 (2026-07-02)
 
 Full Changelog: [v0.27.0...v0.28.0](https://github.com/sentdm/sent-dm-go/compare/v0.27.0...v0.28.0)
