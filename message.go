@@ -353,8 +353,7 @@ func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 type MessageSendResponseData struct {
 	// Per-recipient message results
 	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
-	// Overall request status: "QUEUED" when the batch has been accepted and published
-	// to Kafka.
+	// Overall request status: "QUEUED" when the batch has been accepted for delivery.
 	Status string `json:"status"`
 	// Template ID that was used
 	TemplateID string `json:"template_id" format:"uuid"`

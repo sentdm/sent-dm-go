@@ -148,6 +148,9 @@ type CampaignDataParam struct {
 	PrivacyPolicyLink param.Opt[string] `json:"privacyPolicyLink,omitzero" format:"uri"`
 	// URL to terms and conditions
 	TermsAndConditionsLink param.Opt[string] `json:"termsAndConditionsLink,omitzero" format:"uri"`
+	// Expected messaging volume for this campaign. Numeric string (e.g. "1999",
+	// "5000"); values below 2000 bill at the low-volume tier.
+	Volume param.Opt[string] `json:"volume,omitzero"`
 	paramObj
 }
 
@@ -201,15 +204,7 @@ func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignU
 
 // Standard API response envelope for all v3 endpoints
 type ProfileCampaignNewResponse struct {
-	// Customer-facing campaign representation for the public v3 API. Deliberately does
-	// not inherit TcrCampaign. The service-layer type TcrCampaignWithUseCasesResponse
-	// extends the database entity, so returning it directly from a public endpoint
-	// serialized every column, including supplier-specific and internal provisioning
-	// identifiers. This DTO is an explicit allowlist: a new column on the entity is
-	// invisible to customers until it is added here on purpose. Intentionally omitted:
-	// telnyxCampaignId (supplier-specific), plus cspId, resellerId, upstreamCnpId,
-	// kycSubmissionFormId and sharingStatus (internal provisioning and CSP-to-DCA
-	// plumbing). All six remain available on the admin API.
+	// A 10DLC campaign registered for a brand.
 	Data ProfileCampaignNewResponseData `json:"data" api:"nullable"`
 	// Error information
 	Error ErrorDetail `json:"error" api:"nullable"`
@@ -234,15 +229,7 @@ func (r *ProfileCampaignNewResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Customer-facing campaign representation for the public v3 API. Deliberately does
-// not inherit TcrCampaign. The service-layer type TcrCampaignWithUseCasesResponse
-// extends the database entity, so returning it directly from a public endpoint
-// serialized every column, including supplier-specific and internal provisioning
-// identifiers. This DTO is an explicit allowlist: a new column on the entity is
-// invisible to customers until it is added here on purpose. Intentionally omitted:
-// telnyxCampaignId (supplier-specific), plus cspId, resellerId, upstreamCnpId,
-// kycSubmissionFormId and sharingStatus (internal provisioning and CSP-to-DCA
-// plumbing). All six remain available on the admin API.
+// A 10DLC campaign registered for a brand.
 type ProfileCampaignNewResponseData struct {
 	ID         string    `json:"id" format:"uuid"`
 	BilledDate time.Time `json:"billedDate" api:"nullable" format:"date-time"`
@@ -279,6 +266,11 @@ type ProfileCampaignNewResponseData struct {
 	Type      string                                  `json:"type"`
 	UpdatedAt time.Time                               `json:"updatedAt" api:"nullable" format:"date-time"`
 	UseCases  []ProfileCampaignNewResponseDataUseCase `json:"useCases"`
+	// Expected messaging volume for this campaign — customer-supplied on
+	// create/update, and the input to both the TCR usecase classification (LOW_VOLUME
+	// vs MIXED/specific) and the campaign fee tier. Surfaced so customers can read
+	// back the value they set.
+	Volume string `json:"volume" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
@@ -309,6 +301,7 @@ type ProfileCampaignNewResponseData struct {
 		Type                     respjson.Field
 		UpdatedAt                respjson.Field
 		UseCases                 respjson.Field
+		Volume                   respjson.Field
 		ExtraFields              map[string]respjson.Field
 		raw                      string
 	} `json:"-"`
@@ -363,15 +356,7 @@ func (r *ProfileCampaignNewResponseDataUseCase) UnmarshalJSON(data []byte) error
 
 // Standard API response envelope for all v3 endpoints
 type ProfileCampaignUpdateResponse struct {
-	// Customer-facing campaign representation for the public v3 API. Deliberately does
-	// not inherit TcrCampaign. The service-layer type TcrCampaignWithUseCasesResponse
-	// extends the database entity, so returning it directly from a public endpoint
-	// serialized every column, including supplier-specific and internal provisioning
-	// identifiers. This DTO is an explicit allowlist: a new column on the entity is
-	// invisible to customers until it is added here on purpose. Intentionally omitted:
-	// telnyxCampaignId (supplier-specific), plus cspId, resellerId, upstreamCnpId,
-	// kycSubmissionFormId and sharingStatus (internal provisioning and CSP-to-DCA
-	// plumbing). All six remain available on the admin API.
+	// A 10DLC campaign registered for a brand.
 	Data ProfileCampaignUpdateResponseData `json:"data" api:"nullable"`
 	// Error information
 	Error ErrorDetail `json:"error" api:"nullable"`
@@ -396,15 +381,7 @@ func (r *ProfileCampaignUpdateResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Customer-facing campaign representation for the public v3 API. Deliberately does
-// not inherit TcrCampaign. The service-layer type TcrCampaignWithUseCasesResponse
-// extends the database entity, so returning it directly from a public endpoint
-// serialized every column, including supplier-specific and internal provisioning
-// identifiers. This DTO is an explicit allowlist: a new column on the entity is
-// invisible to customers until it is added here on purpose. Intentionally omitted:
-// telnyxCampaignId (supplier-specific), plus cspId, resellerId, upstreamCnpId,
-// kycSubmissionFormId and sharingStatus (internal provisioning and CSP-to-DCA
-// plumbing). All six remain available on the admin API.
+// A 10DLC campaign registered for a brand.
 type ProfileCampaignUpdateResponseData struct {
 	ID         string    `json:"id" format:"uuid"`
 	BilledDate time.Time `json:"billedDate" api:"nullable" format:"date-time"`
@@ -441,6 +418,11 @@ type ProfileCampaignUpdateResponseData struct {
 	Type      string                                     `json:"type"`
 	UpdatedAt time.Time                                  `json:"updatedAt" api:"nullable" format:"date-time"`
 	UseCases  []ProfileCampaignUpdateResponseDataUseCase `json:"useCases"`
+	// Expected messaging volume for this campaign — customer-supplied on
+	// create/update, and the input to both the TCR usecase classification (LOW_VOLUME
+	// vs MIXED/specific) and the campaign fee tier. Surfaced so customers can read
+	// back the value they set.
+	Volume string `json:"volume" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
@@ -471,6 +453,7 @@ type ProfileCampaignUpdateResponseData struct {
 		Type                     respjson.Field
 		UpdatedAt                respjson.Field
 		UseCases                 respjson.Field
+		Volume                   respjson.Field
 		ExtraFields              map[string]respjson.Field
 		raw                      string
 	} `json:"-"`
@@ -550,15 +533,7 @@ func (r *ProfileCampaignListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Customer-facing campaign representation for the public v3 API. Deliberately does
-// not inherit TcrCampaign. The service-layer type TcrCampaignWithUseCasesResponse
-// extends the database entity, so returning it directly from a public endpoint
-// serialized every column, including supplier-specific and internal provisioning
-// identifiers. This DTO is an explicit allowlist: a new column on the entity is
-// invisible to customers until it is added here on purpose. Intentionally omitted:
-// telnyxCampaignId (supplier-specific), plus cspId, resellerId, upstreamCnpId,
-// kycSubmissionFormId and sharingStatus (internal provisioning and CSP-to-DCA
-// plumbing). All six remain available on the admin API.
+// A 10DLC campaign registered for a brand.
 type ProfileCampaignListResponseData struct {
 	ID         string    `json:"id" format:"uuid"`
 	BilledDate time.Time `json:"billedDate" api:"nullable" format:"date-time"`
@@ -595,6 +570,11 @@ type ProfileCampaignListResponseData struct {
 	Type      string                                   `json:"type"`
 	UpdatedAt time.Time                                `json:"updatedAt" api:"nullable" format:"date-time"`
 	UseCases  []ProfileCampaignListResponseDataUseCase `json:"useCases"`
+	// Expected messaging volume for this campaign — customer-supplied on
+	// create/update, and the input to both the TCR usecase classification (LOW_VOLUME
+	// vs MIXED/specific) and the campaign fee tier. Surfaced so customers can read
+	// back the value they set.
+	Volume string `json:"volume" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
@@ -625,6 +605,7 @@ type ProfileCampaignListResponseData struct {
 		Type                     respjson.Field
 		UpdatedAt                respjson.Field
 		UseCases                 respjson.Field
+		Volume                   respjson.Field
 		ExtraFields              map[string]respjson.Field
 		raw                      string
 	} `json:"-"`
