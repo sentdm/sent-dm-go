@@ -176,24 +176,36 @@ func (r *ProfileService) Delete(ctx context.Context, profileID string, params Pr
 	return err
 }
 
-// Final step in profile compliance workflow. Validates all prerequisites (general
-// data, brand, campaigns), connects profile to Telnyx/WhatsApp, and sets status
-// based on configuration. The process runs in the background and calls the
-// provided webhook URL when finished.
+// Final step in the profile compliance workflow. Validates all prerequisites (KYC,
+// brand, campaigns, required documents), connects the profile to the SMS and
+// WhatsApp channels, and sets its status based on configuration. Prerequisites are
+// always validated first: if any fail the call returns 400. If they pass and the
+// profile is already completed, the call returns 200 and does nothing. Otherwise
+// it returns 202 and calls the provided webhook URL when background processing
+// finishes.
 //
-//	Prerequisites:
-//	- Profile must be completed
-//	- If inheritTcrBrand=false: Profile must have existing brand
-//	- If inheritTcrBrand=true: Parent must have existing brand
-//	- If TCR application: Must have at least one campaign (own or inherited)
-//	- If inheritTcrCampaign=false: Profile should have campaigns
-//	- If inheritTcrCampaign=true: Parent must have campaigns
+// Prerequisites:
 //
-//	Status Logic:
-//	- If both SMS and WhatsApp channels are missing → SUBMITTED
-//	- If TCR application and not inheriting brand/campaigns → SUBMITTED
-//	- If non-TCR with destination country (IsMain=true) → SUBMITTED
-//	- Otherwise → COMPLETED
+//   - Profile must have a name, short name, and description (short name max 50
+//     characters, description max 5000)
+//   - webHookUrl must be supplied on the request
+//   - A KYC form submission is required
+//   - A brand is required, either on the profile or inherited from the parent
+//     organization
+//   - TCR applications must have at least one campaign, own or inherited
+//   - Destination countries marked as main must have their required compliance
+//     documents uploaded
+//
+// Resulting status:
+//
+//   - If either the SMS or WhatsApp channel is unconfigured, the profile is
+//     SUBMITTED
+//   - For a TCR application that inherits both its brand and its campaigns, the
+//     profile is COMPLETED
+//   - For a TCR application that owns either its brand or its campaigns, the profile
+//     is COMPLETED once both have been submitted to TCR, and SUBMITTED until then
+//   - For a non-TCR application, the profile is SUBMITTED when a main destination
+//     country is set, and COMPLETED otherwise
 func (r *ProfileService) Complete(ctx context.Context, profileID string, params ProfileCompleteParams, opts ...option.RequestOption) (res *ProfileCompleteResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -389,7 +401,7 @@ type ProfileDetail struct {
 	OrganizationID string `json:"organization_id" api:"nullable" format:"uuid"`
 	// Direct SMS phone number
 	SendingPhoneNumber string `json:"sending_phone_number" api:"nullable"`
-	// Reference to another profile for SMS/Telnyx configuration
+	// Reference to another profile whose SMS configuration this profile uses
 	SendingPhoneNumberProfileID string `json:"sending_phone_number_profile_id" api:"nullable" format:"uuid"`
 	// Reference to another profile for WhatsApp configuration
 	SendingWhatsappNumberProfileID string `json:"sending_whatsapp_number_profile_id" api:"nullable" format:"uuid"`
@@ -579,8 +591,6 @@ type ProfileDetailBrandCompliance struct {
 	BrandRelationship TcrBrandRelationship `json:"brand_relationship" api:"nullable"`
 	// List of destination countries for messaging
 	DestinationCountries []DestinationCountry `json:"destination_countries"`
-	// Expected daily messaging volume
-	ExpectedMessagingVolume string `json:"expected_messaging_volume" api:"nullable"`
 	// Whether this is a TCR (Campaign Registry) application
 	IsTcrApplication bool `json:"is_tcr_application"`
 	// Additional notes about the business or use case
@@ -597,16 +607,15 @@ type ProfileDetailBrandCompliance struct {
 	Vertical TcrVertical `json:"vertical" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		BrandRelationship       respjson.Field
-		DestinationCountries    respjson.Field
-		ExpectedMessagingVolume respjson.Field
-		IsTcrApplication        respjson.Field
-		Notes                   respjson.Field
-		PhoneNumberPrefix       respjson.Field
-		PrimaryUseCase          respjson.Field
-		Vertical                respjson.Field
-		ExtraFields             map[string]respjson.Field
-		raw                     string
+		BrandRelationship    respjson.Field
+		DestinationCountries respjson.Field
+		IsTcrApplication     respjson.Field
+		Notes                respjson.Field
+		PhoneNumberPrefix    respjson.Field
+		PrimaryUseCase       respjson.Field
+		Vertical             respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
 	} `json:"-"`
 }
 
@@ -708,8 +717,6 @@ type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceI
 	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
 	// "COMMUNICATION".
 	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
-	// Expected daily messaging volume
-	ExpectedMessagingVolume param.Opt[string] `json:"expectedMessagingVolume,omitzero"`
 	// Whether this is a TCR (Campaign Registry) application
 	IsTcrApplication param.Opt[bool] `json:"isTcrApplication,omitzero"`
 	// Additional notes about the business or use case
@@ -1021,7 +1028,7 @@ type ProfileUpdateParams struct {
 	Name param.Opt[string] `json:"name,omitzero"`
 	// Direct phone number for SMS sending (optional)
 	SendingPhoneNumber param.Opt[string] `json:"sending_phone_number,omitzero"`
-	// Reference to another profile to use for SMS/Telnyx configuration (optional)
+	// Reference to another profile to use for SMS configuration (optional)
 	SendingPhoneNumberProfileID param.Opt[string] `json:"sending_phone_number_profile_id,omitzero" format:"uuid"`
 	// Reference to another profile to use for WhatsApp configuration (optional)
 	SendingWhatsappNumberProfileID param.Opt[string] `json:"sending_whatsapp_number_profile_id,omitzero" format:"uuid"`

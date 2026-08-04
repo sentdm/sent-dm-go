@@ -74,7 +74,10 @@ func (r *MessageService) GetStatus(ctx context.Context, id string, query Message
 // multi-channel broadcast — when multiple channels are specified (e.g. ["sms",
 // "whatsapp"]), a separate message is created for each (recipient, channel) pair.
 // Returns immediately with per-recipient message IDs for async tracking via
-// webhooks or the GET /messages/{id} endpoint.
+// webhooks or the GET /messages/{id} endpoint. Account-level preconditions such as
+// insufficient balance do not reject the request: the send is accepted with 202
+// and the affected messages are reported as BLOCKED on GET /messages/{id} and the
+// message status webhook.
 func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -350,8 +353,7 @@ func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 type MessageSendResponseData struct {
 	// Per-recipient message results
 	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
-	// Overall request status: "QUEUED" when the batch has been accepted and published
-	// to Kafka.
+	// Overall request status: "QUEUED" when the batch has been accepted for delivery.
 	Status string `json:"status"`
 	// Template ID that was used
 	TemplateID string `json:"template_id" format:"uuid"`
