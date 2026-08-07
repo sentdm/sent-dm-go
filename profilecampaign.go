@@ -41,7 +41,7 @@ func NewProfileCampaignService(opts ...option.RequestOption) (r ProfileCampaignS
 
 // Creates a new campaign scoped under the brand of the specified profile. Each
 // campaign must include at least one use case with sample messages.
-func (r *ProfileCampaignService) New(ctx context.Context, profileID string, params ProfileCampaignNewParams, opts ...option.RequestOption) (res *APIResponseOfTcrCampaignWithUseCases, err error) {
+func (r *ProfileCampaignService) New(ctx context.Context, profileID string, params ProfileCampaignNewParams, opts ...option.RequestOption) (res *ProfileCampaignNewResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -60,7 +60,7 @@ func (r *ProfileCampaignService) New(ctx context.Context, profileID string, para
 
 // Updates an existing campaign under the brand of the specified profile. Cannot
 // update campaigns that have already been submitted to TCR.
-func (r *ProfileCampaignService) Update(ctx context.Context, campaignID string, params ProfileCampaignUpdateParams, opts ...option.RequestOption) (res *APIResponseOfTcrCampaignWithUseCases, err error) {
+func (r *ProfileCampaignService) Update(ctx context.Context, campaignID string, params ProfileCampaignUpdateParams, opts ...option.RequestOption) (res *ProfileCampaignUpdateResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -118,54 +118,6 @@ func (r *ProfileCampaignService) Delete(ctx context.Context, campaignID string, 
 	return err
 }
 
-// Standard API response envelope for all v3 endpoints
-type APIResponseOfTcrCampaignWithUseCases struct {
-	// The response data (null if error)
-	Data TcrCampaignWithUseCases `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r APIResponseOfTcrCampaignWithUseCases) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseOfTcrCampaignWithUseCases) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type BaseDto struct {
-	// Unique identifier
-	ID        string    `json:"id" format:"uuid"`
-	CreatedAt time.Time `json:"createdAt" format:"date-time"`
-	UpdatedAt time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		CreatedAt   respjson.Field
-		UpdatedAt   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r BaseDto) RawJSON() string { return r.JSON.raw }
-func (r *BaseDto) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Campaign data for create or update operation
 //
 // The properties Description, Name, Type, UseCases are required.
@@ -196,6 +148,9 @@ type CampaignDataParam struct {
 	PrivacyPolicyLink param.Opt[string] `json:"privacyPolicyLink,omitzero" format:"uri"`
 	// URL to terms and conditions
 	TermsAndConditionsLink param.Opt[string] `json:"termsAndConditionsLink,omitzero" format:"uri"`
+	// Expected messaging volume for this campaign. Numeric string (e.g. "1999",
+	// "5000"); values below 2000 bill at the low-volume tier.
+	Volume param.Opt[string] `json:"volume,omitzero"`
 	paramObj
 }
 
@@ -247,119 +202,314 @@ func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignU
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type TcrCampaignWithUseCases struct {
-	Description             string    `json:"description" api:"required"`
-	Name                    string    `json:"name" api:"required"`
-	Type                    string    `json:"type" api:"required"`
-	BilledDate              time.Time `json:"billedDate" api:"nullable" format:"date-time"`
-	BrandID                 string    `json:"brandId" api:"nullable" format:"uuid"`
-	Cost                    float64   `json:"cost" api:"nullable" format:"decimal"`
-	CspID                   string    `json:"cspId" api:"nullable"`
-	CustomerID              string    `json:"customerId" format:"uuid"`
+// Standard API response envelope for all v3 endpoints
+type ProfileCampaignNewResponse struct {
+	// A 10DLC campaign registered for a brand.
+	Data ProfileCampaignNewResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCampaignNewResponse) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignNewResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A 10DLC campaign registered for a brand.
+type ProfileCampaignNewResponseData struct {
+	ID         string    `json:"id" format:"uuid"`
+	BilledDate time.Time `json:"billedDate" api:"nullable" format:"date-time"`
+	BrandID    string    `json:"brandId" api:"nullable" format:"uuid"`
+	Cost       float64   `json:"cost" api:"nullable" format:"decimal"`
+	CreatedAt  time.Time `json:"createdAt" format:"date-time"`
+	CustomerID string    `json:"customerId" format:"uuid"`
+	// True once every carrier has completed its DCA election and the campaign is
+	// operationally ready for traffic.
 	DcaElectionsComplete    bool      `json:"dcaElectionsComplete" api:"nullable"`
 	DcaElectionsCompletedAt time.Time `json:"dcaElectionsCompletedAt" api:"nullable" format:"date-time"`
-	// True when this campaign already has a billing transaction of reference type
-	// TCR_CAMPAIGN_SUBMISSION (the one-time submission fee was charged). Populated
-	// only by the campaigns-list path; defaults false on other responses.
+	Description             string    `json:"description"`
+	// True when the one-time campaign submission fee has already been charged.
 	HasSubmissionTransaction bool   `json:"hasSubmissionTransaction"`
 	HelpKeywords             string `json:"helpKeywords" api:"nullable"`
 	HelpMessage              string `json:"helpMessage" api:"nullable"`
-	KYCSubmissionFormID      string `json:"kycSubmissionFormId" api:"nullable" format:"uuid"`
 	MessageFlow              string `json:"messageFlow" api:"nullable"`
+	Name                     string `json:"name"`
 	OptinKeywords            string `json:"optinKeywords" api:"nullable"`
 	OptinMessage             string `json:"optinMessage" api:"nullable"`
 	OptoutKeywords           string `json:"optoutKeywords" api:"nullable"`
 	OptoutMessage            string `json:"optoutMessage" api:"nullable"`
 	PrivacyPolicyLink        string `json:"privacyPolicyLink" api:"nullable"`
-	ResellerID               string `json:"resellerId" api:"nullable"`
-	// Any of "PENDING", "ACCEPTED", "DECLINED".
-	SharingStatus string `json:"sharingStatus" api:"nullable"`
 	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
-	Status                 string                           `json:"status" api:"nullable"`
-	SubmittedAt            time.Time                        `json:"submittedAt" api:"nullable" format:"date-time"`
-	SubmittedToTcr         bool                             `json:"submittedToTCR"`
-	TcrCampaignID          string                           `json:"tcrCampaignId" api:"nullable"`
-	TcrSyncError           string                           `json:"tcrSyncError" api:"nullable"`
-	TelnyxCampaignID       string                           `json:"telnyxCampaignId" api:"nullable"`
-	TermsAndConditionsLink string                           `json:"termsAndConditionsLink" api:"nullable"`
-	UpstreamCnpID          string                           `json:"upstreamCnpId" api:"nullable"`
-	UseCases               []TcrCampaignWithUseCasesUseCase `json:"useCases"`
+	Status         string    `json:"status" api:"nullable"`
+	SubmittedAt    time.Time `json:"submittedAt" api:"nullable" format:"date-time"`
+	SubmittedToTcr bool      `json:"submittedToTCR"`
+	// The Campaign Registry identifier, once the campaign has been accepted.
+	TcrCampaignID string `json:"tcrCampaignId" api:"nullable"`
+	// Surfaced so customers can see why a submission did not reach the registry.
+	TcrSyncError           string `json:"tcrSyncError" api:"nullable"`
+	TermsAndConditionsLink string `json:"termsAndConditionsLink" api:"nullable"`
+	// Campaign type (for example KYC or App).
+	Type      string                                  `json:"type"`
+	UpdatedAt time.Time                               `json:"updatedAt" api:"nullable" format:"date-time"`
+	UseCases  []ProfileCampaignNewResponseDataUseCase `json:"useCases"`
+	// Expected messaging volume for this campaign — customer-supplied on
+	// create/update, and the input to both the TCR usecase classification (LOW_VOLUME
+	// vs MIXED/specific) and the campaign fee tier. Surfaced so customers can read
+	// back the value they set.
+	Volume string `json:"volume" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Description              respjson.Field
-		Name                     respjson.Field
-		Type                     respjson.Field
+		ID                       respjson.Field
 		BilledDate               respjson.Field
 		BrandID                  respjson.Field
 		Cost                     respjson.Field
-		CspID                    respjson.Field
+		CreatedAt                respjson.Field
 		CustomerID               respjson.Field
 		DcaElectionsComplete     respjson.Field
 		DcaElectionsCompletedAt  respjson.Field
+		Description              respjson.Field
 		HasSubmissionTransaction respjson.Field
 		HelpKeywords             respjson.Field
 		HelpMessage              respjson.Field
-		KYCSubmissionFormID      respjson.Field
 		MessageFlow              respjson.Field
+		Name                     respjson.Field
 		OptinKeywords            respjson.Field
 		OptinMessage             respjson.Field
 		OptoutKeywords           respjson.Field
 		OptoutMessage            respjson.Field
 		PrivacyPolicyLink        respjson.Field
-		ResellerID               respjson.Field
-		SharingStatus            respjson.Field
 		Status                   respjson.Field
 		SubmittedAt              respjson.Field
 		SubmittedToTcr           respjson.Field
 		TcrCampaignID            respjson.Field
 		TcrSyncError             respjson.Field
-		TelnyxCampaignID         respjson.Field
 		TermsAndConditionsLink   respjson.Field
-		UpstreamCnpID            respjson.Field
+		Type                     respjson.Field
+		UpdatedAt                respjson.Field
 		UseCases                 respjson.Field
+		Volume                   respjson.Field
 		ExtraFields              map[string]respjson.Field
 		raw                      string
 	} `json:"-"`
-	BaseDto
 }
 
 // Returns the unmodified JSON received from the API
-func (r TcrCampaignWithUseCases) RawJSON() string { return r.JSON.raw }
-func (r *TcrCampaignWithUseCases) UnmarshalJSON(data []byte) error {
+func (r ProfileCampaignNewResponseData) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignNewResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type TcrCampaignWithUseCasesUseCase struct {
-	SampleMessages []string `json:"sampleMessages" api:"required"`
-	CampaignID     string   `json:"campaignId" format:"uuid"`
-	CustomerID     string   `json:"customerId" format:"uuid"`
+// Customer-facing use-case representation for the public v3 campaign contract.
+// Exists for the same reason as BrandCampaignV3Response: nesting the
+// TcrCampaignUseCase database entity in a public response means any column added
+// to that table silently becomes part of the customer-facing contract. This DTO is
+// an explicit allowlist, so a new column stays invisible until it is added here on
+// purpose. This mirrors exactly the fields the entity already serialized, so it
+// removes nothing from the current response shape. It only closes the future-leak
+// path.
+type ProfileCampaignNewResponseDataUseCase struct {
+	ID         string    `json:"id" format:"uuid"`
+	CampaignID string    `json:"campaignId" format:"uuid"`
+	CreatedAt  time.Time `json:"createdAt" format:"date-time"`
+	CustomerID string    `json:"customerId" format:"uuid"`
 	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
 	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
 	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
 	// "LOW_VOLUME".
 	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs"`
+	// Sample messages submitted to the registry for this use case.
+	SampleMessages []string  `json:"sampleMessages"`
+	UpdatedAt      time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SampleMessages     respjson.Field
+		ID                 respjson.Field
 		CampaignID         respjson.Field
+		CreatedAt          respjson.Field
 		CustomerID         respjson.Field
 		MessagingUseCaseUs respjson.Field
+		SampleMessages     respjson.Field
+		UpdatedAt          respjson.Field
 		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
-	BaseDto
 }
 
 // Returns the unmodified JSON received from the API
-func (r TcrCampaignWithUseCasesUseCase) RawJSON() string { return r.JSON.raw }
-func (r *TcrCampaignWithUseCasesUseCase) UnmarshalJSON(data []byte) error {
+func (r ProfileCampaignNewResponseDataUseCase) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignNewResponseDataUseCase) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type ProfileCampaignUpdateResponse struct {
+	// A 10DLC campaign registered for a brand.
+	Data ProfileCampaignUpdateResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCampaignUpdateResponse) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignUpdateResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A 10DLC campaign registered for a brand.
+type ProfileCampaignUpdateResponseData struct {
+	ID         string    `json:"id" format:"uuid"`
+	BilledDate time.Time `json:"billedDate" api:"nullable" format:"date-time"`
+	BrandID    string    `json:"brandId" api:"nullable" format:"uuid"`
+	Cost       float64   `json:"cost" api:"nullable" format:"decimal"`
+	CreatedAt  time.Time `json:"createdAt" format:"date-time"`
+	CustomerID string    `json:"customerId" format:"uuid"`
+	// True once every carrier has completed its DCA election and the campaign is
+	// operationally ready for traffic.
+	DcaElectionsComplete    bool      `json:"dcaElectionsComplete" api:"nullable"`
+	DcaElectionsCompletedAt time.Time `json:"dcaElectionsCompletedAt" api:"nullable" format:"date-time"`
+	Description             string    `json:"description"`
+	// True when the one-time campaign submission fee has already been charged.
+	HasSubmissionTransaction bool   `json:"hasSubmissionTransaction"`
+	HelpKeywords             string `json:"helpKeywords" api:"nullable"`
+	HelpMessage              string `json:"helpMessage" api:"nullable"`
+	MessageFlow              string `json:"messageFlow" api:"nullable"`
+	Name                     string `json:"name"`
+	OptinKeywords            string `json:"optinKeywords" api:"nullable"`
+	OptinMessage             string `json:"optinMessage" api:"nullable"`
+	OptoutKeywords           string `json:"optoutKeywords" api:"nullable"`
+	OptoutMessage            string `json:"optoutMessage" api:"nullable"`
+	PrivacyPolicyLink        string `json:"privacyPolicyLink" api:"nullable"`
+	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
+	Status         string    `json:"status" api:"nullable"`
+	SubmittedAt    time.Time `json:"submittedAt" api:"nullable" format:"date-time"`
+	SubmittedToTcr bool      `json:"submittedToTCR"`
+	// The Campaign Registry identifier, once the campaign has been accepted.
+	TcrCampaignID string `json:"tcrCampaignId" api:"nullable"`
+	// Surfaced so customers can see why a submission did not reach the registry.
+	TcrSyncError           string `json:"tcrSyncError" api:"nullable"`
+	TermsAndConditionsLink string `json:"termsAndConditionsLink" api:"nullable"`
+	// Campaign type (for example KYC or App).
+	Type      string                                     `json:"type"`
+	UpdatedAt time.Time                                  `json:"updatedAt" api:"nullable" format:"date-time"`
+	UseCases  []ProfileCampaignUpdateResponseDataUseCase `json:"useCases"`
+	// Expected messaging volume for this campaign — customer-supplied on
+	// create/update, and the input to both the TCR usecase classification (LOW_VOLUME
+	// vs MIXED/specific) and the campaign fee tier. Surfaced so customers can read
+	// back the value they set.
+	Volume string `json:"volume" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                       respjson.Field
+		BilledDate               respjson.Field
+		BrandID                  respjson.Field
+		Cost                     respjson.Field
+		CreatedAt                respjson.Field
+		CustomerID               respjson.Field
+		DcaElectionsComplete     respjson.Field
+		DcaElectionsCompletedAt  respjson.Field
+		Description              respjson.Field
+		HasSubmissionTransaction respjson.Field
+		HelpKeywords             respjson.Field
+		HelpMessage              respjson.Field
+		MessageFlow              respjson.Field
+		Name                     respjson.Field
+		OptinKeywords            respjson.Field
+		OptinMessage             respjson.Field
+		OptoutKeywords           respjson.Field
+		OptoutMessage            respjson.Field
+		PrivacyPolicyLink        respjson.Field
+		Status                   respjson.Field
+		SubmittedAt              respjson.Field
+		SubmittedToTcr           respjson.Field
+		TcrCampaignID            respjson.Field
+		TcrSyncError             respjson.Field
+		TermsAndConditionsLink   respjson.Field
+		Type                     respjson.Field
+		UpdatedAt                respjson.Field
+		UseCases                 respjson.Field
+		Volume                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCampaignUpdateResponseData) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignUpdateResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Customer-facing use-case representation for the public v3 campaign contract.
+// Exists for the same reason as BrandCampaignV3Response: nesting the
+// TcrCampaignUseCase database entity in a public response means any column added
+// to that table silently becomes part of the customer-facing contract. This DTO is
+// an explicit allowlist, so a new column stays invisible until it is added here on
+// purpose. This mirrors exactly the fields the entity already serialized, so it
+// removes nothing from the current response shape. It only closes the future-leak
+// path.
+type ProfileCampaignUpdateResponseDataUseCase struct {
+	ID         string    `json:"id" format:"uuid"`
+	CampaignID string    `json:"campaignId" format:"uuid"`
+	CreatedAt  time.Time `json:"createdAt" format:"date-time"`
+	CustomerID string    `json:"customerId" format:"uuid"`
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
+	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	// "LOW_VOLUME".
+	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs"`
+	// Sample messages submitted to the registry for this use case.
+	SampleMessages []string  `json:"sampleMessages"`
+	UpdatedAt      time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		CampaignID         respjson.Field
+		CreatedAt          respjson.Field
+		CustomerID         respjson.Field
+		MessagingUseCaseUs respjson.Field
+		SampleMessages     respjson.Field
+		UpdatedAt          respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCampaignUpdateResponseDataUseCase) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignUpdateResponseDataUseCase) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Standard API response envelope for all v3 endpoints
 type ProfileCampaignListResponse struct {
 	// The response data (null if error)
-	Data []TcrCampaignWithUseCases `json:"data" api:"nullable"`
+	Data []ProfileCampaignListResponseData `json:"data" api:"nullable"`
 	// Error information
 	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
@@ -380,6 +530,131 @@ type ProfileCampaignListResponse struct {
 // Returns the unmodified JSON received from the API
 func (r ProfileCampaignListResponse) RawJSON() string { return r.JSON.raw }
 func (r *ProfileCampaignListResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A 10DLC campaign registered for a brand.
+type ProfileCampaignListResponseData struct {
+	ID         string    `json:"id" format:"uuid"`
+	BilledDate time.Time `json:"billedDate" api:"nullable" format:"date-time"`
+	BrandID    string    `json:"brandId" api:"nullable" format:"uuid"`
+	Cost       float64   `json:"cost" api:"nullable" format:"decimal"`
+	CreatedAt  time.Time `json:"createdAt" format:"date-time"`
+	CustomerID string    `json:"customerId" format:"uuid"`
+	// True once every carrier has completed its DCA election and the campaign is
+	// operationally ready for traffic.
+	DcaElectionsComplete    bool      `json:"dcaElectionsComplete" api:"nullable"`
+	DcaElectionsCompletedAt time.Time `json:"dcaElectionsCompletedAt" api:"nullable" format:"date-time"`
+	Description             string    `json:"description"`
+	// True when the one-time campaign submission fee has already been charged.
+	HasSubmissionTransaction bool   `json:"hasSubmissionTransaction"`
+	HelpKeywords             string `json:"helpKeywords" api:"nullable"`
+	HelpMessage              string `json:"helpMessage" api:"nullable"`
+	MessageFlow              string `json:"messageFlow" api:"nullable"`
+	Name                     string `json:"name"`
+	OptinKeywords            string `json:"optinKeywords" api:"nullable"`
+	OptinMessage             string `json:"optinMessage" api:"nullable"`
+	OptoutKeywords           string `json:"optoutKeywords" api:"nullable"`
+	OptoutMessage            string `json:"optoutMessage" api:"nullable"`
+	PrivacyPolicyLink        string `json:"privacyPolicyLink" api:"nullable"`
+	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
+	Status         string    `json:"status" api:"nullable"`
+	SubmittedAt    time.Time `json:"submittedAt" api:"nullable" format:"date-time"`
+	SubmittedToTcr bool      `json:"submittedToTCR"`
+	// The Campaign Registry identifier, once the campaign has been accepted.
+	TcrCampaignID string `json:"tcrCampaignId" api:"nullable"`
+	// Surfaced so customers can see why a submission did not reach the registry.
+	TcrSyncError           string `json:"tcrSyncError" api:"nullable"`
+	TermsAndConditionsLink string `json:"termsAndConditionsLink" api:"nullable"`
+	// Campaign type (for example KYC or App).
+	Type      string                                   `json:"type"`
+	UpdatedAt time.Time                                `json:"updatedAt" api:"nullable" format:"date-time"`
+	UseCases  []ProfileCampaignListResponseDataUseCase `json:"useCases"`
+	// Expected messaging volume for this campaign — customer-supplied on
+	// create/update, and the input to both the TCR usecase classification (LOW_VOLUME
+	// vs MIXED/specific) and the campaign fee tier. Surfaced so customers can read
+	// back the value they set.
+	Volume string `json:"volume" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                       respjson.Field
+		BilledDate               respjson.Field
+		BrandID                  respjson.Field
+		Cost                     respjson.Field
+		CreatedAt                respjson.Field
+		CustomerID               respjson.Field
+		DcaElectionsComplete     respjson.Field
+		DcaElectionsCompletedAt  respjson.Field
+		Description              respjson.Field
+		HasSubmissionTransaction respjson.Field
+		HelpKeywords             respjson.Field
+		HelpMessage              respjson.Field
+		MessageFlow              respjson.Field
+		Name                     respjson.Field
+		OptinKeywords            respjson.Field
+		OptinMessage             respjson.Field
+		OptoutKeywords           respjson.Field
+		OptoutMessage            respjson.Field
+		PrivacyPolicyLink        respjson.Field
+		Status                   respjson.Field
+		SubmittedAt              respjson.Field
+		SubmittedToTcr           respjson.Field
+		TcrCampaignID            respjson.Field
+		TcrSyncError             respjson.Field
+		TermsAndConditionsLink   respjson.Field
+		Type                     respjson.Field
+		UpdatedAt                respjson.Field
+		UseCases                 respjson.Field
+		Volume                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCampaignListResponseData) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignListResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Customer-facing use-case representation for the public v3 campaign contract.
+// Exists for the same reason as BrandCampaignV3Response: nesting the
+// TcrCampaignUseCase database entity in a public response means any column added
+// to that table silently becomes part of the customer-facing contract. This DTO is
+// an explicit allowlist, so a new column stays invisible until it is added here on
+// purpose. This mirrors exactly the fields the entity already serialized, so it
+// removes nothing from the current response shape. It only closes the future-leak
+// path.
+type ProfileCampaignListResponseDataUseCase struct {
+	ID         string    `json:"id" format:"uuid"`
+	CampaignID string    `json:"campaignId" format:"uuid"`
+	CreatedAt  time.Time `json:"createdAt" format:"date-time"`
+	CustomerID string    `json:"customerId" format:"uuid"`
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
+	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	// "LOW_VOLUME".
+	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs"`
+	// Sample messages submitted to the registry for this use case.
+	SampleMessages []string  `json:"sampleMessages"`
+	UpdatedAt      time.Time `json:"updatedAt" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		CampaignID         respjson.Field
+		CreatedAt          respjson.Field
+		CustomerID         respjson.Field
+		MessagingUseCaseUs respjson.Field
+		SampleMessages     respjson.Field
+		UpdatedAt          respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCampaignListResponseDataUseCase) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCampaignListResponseDataUseCase) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
