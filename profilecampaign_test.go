@@ -35,7 +35,7 @@ func TestProfileCampaignNewWithOptionalParams(t *testing.T) {
 				Description: "Appointment reminders and account notifications",
 				Name:        "Customer Notifications",
 				Type:        "App",
-				UseCases: []sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam{{
+				UseCases: []sentdm.CampaignUseCaseDataParam{{
 					MessagingUseCaseUs: sentdm.MessagingUseCaseUsAccountNotification,
 					SampleMessages:     []string{"Hi {name}, your appointment is confirmed for {date} at {time}.", "Your order #{order_id} has been shipped. Track at {url}"},
 				}},
@@ -86,7 +86,7 @@ func TestProfileCampaignUpdateWithOptionalParams(t *testing.T) {
 				Description: "Updated appointment reminders and account notifications",
 				Name:        "Customer Notifications Updated",
 				Type:        "App",
-				UseCases: []sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam{{
+				UseCases: []sentdm.CampaignUseCaseDataParam{{
 					MessagingUseCaseUs: sentdm.MessagingUseCaseUsAccountNotification,
 					SampleMessages:     []string{"Hi {name}, your appointment is confirmed for {date} at {time}.", "Your order #{order_id} has been shipped. Track at {url}"},
 				}},

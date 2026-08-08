@@ -31,7 +31,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		Category:       sentdm.String("MARKETING"),
 		CreationSource: param.Null[string](),
 		Definition: sentdm.TemplateDefinitionParam{
-			Body: sentdm.SentDmServicesCommonContractsPocOsTemplateBodyParam{
+			Body: sentdm.TemplateBodyParam{
 				MultiChannel: sentdm.TemplateBodyContentParam{
 					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}.",
 					Type:     param.Null[string](),
@@ -118,12 +118,12 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					}},
 				},
 			},
-			AuthenticationConfig: sentdm.SentDmServicesCommonContractsPocOsAuthenticationConfigParam{
+			AuthenticationConfig: sentdm.AuthenticationConfigParam{
 				AddSecurityRecommendation: sentdm.Bool(true),
 				CodeExpirationMinutes:     sentdm.Int(0),
 			},
-			Buttons: []sentdm.SentDmServicesCommonContractsPocOsTemplateButtonParam{{
-				Props: sentdm.SentDmServicesCommonContractsPocOsTemplateButtonPropsParam{
+			Buttons: []sentdm.TemplateButtonParam{{
+				Props: sentdm.TemplateButtonPropsParam{
 					ActiveFor:      1,
 					CountryCode:    "x",
 					OfferCode:      "x",
@@ -155,7 +155,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 				ID:   sentdm.Int(0),
 			}},
 			DefinitionVersion: sentdm.String("1.0"),
-			Footer: sentdm.SentDmServicesCommonContractsPocOsTemplateFooterParam{
+			Footer: sentdm.TemplateFooterParam{
 				Template: "template",
 				Type:     sentdm.String("type"),
 				Variables: []sentdm.TemplateVariableParam{{
@@ -173,7 +173,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 					ID:   sentdm.Int(0),
 				}},
 			},
-			Header: sentdm.SentDmServicesCommonContractsPocOsTemplateHeaderParam{
+			Header: sentdm.TemplateHeaderParam{
 				Template: "template",
 				Type:     sentdm.String("type"),
 				Variables: []sentdm.TemplateVariableParam{{
@@ -255,7 +255,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 		sentdm.TemplateUpdateParams{
 			Category: sentdm.String("MARKETING"),
 			Definition: sentdm.TemplateDefinitionParam{
-				Body: sentdm.SentDmServicesCommonContractsPocOsTemplateBodyParam{
+				Body: sentdm.TemplateBodyParam{
 					MultiChannel: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
@@ -329,12 +329,12 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						}},
 					},
 				},
-				AuthenticationConfig: sentdm.SentDmServicesCommonContractsPocOsAuthenticationConfigParam{
+				AuthenticationConfig: sentdm.AuthenticationConfigParam{
 					AddSecurityRecommendation: sentdm.Bool(true),
 					CodeExpirationMinutes:     sentdm.Int(0),
 				},
-				Buttons: []sentdm.SentDmServicesCommonContractsPocOsTemplateButtonParam{{
-					Props: sentdm.SentDmServicesCommonContractsPocOsTemplateButtonPropsParam{
+				Buttons: []sentdm.TemplateButtonParam{{
+					Props: sentdm.TemplateButtonPropsParam{
 						ActiveFor:      1,
 						CountryCode:    "x",
 						OfferCode:      "x",
@@ -366,7 +366,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 					ID:   sentdm.Int(0),
 				}},
 				DefinitionVersion: sentdm.String("definitionVersion"),
-				Footer: sentdm.SentDmServicesCommonContractsPocOsTemplateFooterParam{
+				Footer: sentdm.TemplateFooterParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
 					Variables: []sentdm.TemplateVariableParam{{
@@ -384,7 +384,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 						ID:   sentdm.Int(0),
 					}},
 				},
-				Header: sentdm.SentDmServicesCommonContractsPocOsTemplateHeaderParam{
+				Header: sentdm.TemplateHeaderParam{
 					Template: "template",
 					Type:     sentdm.String("type"),
 					Variables: []sentdm.TemplateVariableParam{{

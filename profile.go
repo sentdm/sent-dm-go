@@ -275,16 +275,123 @@ func (r *BillingContactInfoParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Business details and address for brand KYC
+type BrandBusinessInfoParam struct {
+	// City
+	City param.Opt[string] `json:"city,omitzero"`
+	// Country code (e.g., US, CA)
+	Country param.Opt[string] `json:"country,omitzero"`
+	// Country where the business is registered
+	CountryOfRegistration param.Opt[string] `json:"countryOfRegistration,omitzero"`
+	// Legal business name
+	LegalName param.Opt[string] `json:"legalName,omitzero"`
+	// Postal/ZIP code
+	PostalCode param.Opt[string] `json:"postalCode,omitzero"`
+	// State/province code
+	State param.Opt[string] `json:"state,omitzero"`
+	// Street address
+	Street param.Opt[string] `json:"street,omitzero"`
+	// Tax ID/EIN number
+	TaxID param.Opt[string] `json:"taxId,omitzero"`
+	// Type of tax ID (e.g., us_ein, ca_bn)
+	TaxIDType param.Opt[string] `json:"taxIdType,omitzero"`
+	// Business website URL
+	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
+	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
+	// "GOVERNMENT".
+	EntityType BrandBusinessInfoEntityType `json:"entityType,omitzero"`
+	paramObj
+}
+
+func (r BrandBusinessInfoParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandBusinessInfoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandBusinessInfoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BrandBusinessInfoEntityType string
+
+const (
+	BrandBusinessInfoEntityTypePrivateProfit  BrandBusinessInfoEntityType = "PRIVATE_PROFIT"
+	BrandBusinessInfoEntityTypePublicProfit   BrandBusinessInfoEntityType = "PUBLIC_PROFIT"
+	BrandBusinessInfoEntityTypeNonProfit      BrandBusinessInfoEntityType = "NON_PROFIT"
+	BrandBusinessInfoEntityTypeSoleProprietor BrandBusinessInfoEntityType = "SOLE_PROPRIETOR"
+	BrandBusinessInfoEntityTypeGovernment     BrandBusinessInfoEntityType = "GOVERNMENT"
+)
+
+// Compliance and TCR information for brand registration
+//
+// The properties BrandRelationship, Vertical are required.
+type BrandComplianceInfoParam struct {
+	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
+	// "KEY_ACCOUNT".
+	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
+	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
+	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
+	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
+	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
+	// "COMMUNICATION".
+	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
+	// Whether this is a TCR (Campaign Registry) application
+	IsTcrApplication param.Opt[bool] `json:"isTcrApplication,omitzero"`
+	// Additional notes about the business or use case
+	Notes param.Opt[string] `json:"notes,omitzero"`
+	// Phone number prefix for messaging (e.g., "+1")
+	PhoneNumberPrefix param.Opt[string] `json:"phoneNumberPrefix,omitzero"`
+	// Primary messaging use case description
+	PrimaryUseCase param.Opt[string] `json:"primaryUseCase,omitzero"`
+	// List of destination countries for messaging
+	DestinationCountries []DestinationCountryParam `json:"destinationCountries,omitzero"`
+	paramObj
+}
+
+func (r BrandComplianceInfoParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandComplianceInfoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandComplianceInfoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Contact information for brand KYC
+//
+// The property Name is required.
+type BrandContactInfoParam struct {
+	// Primary contact name (required)
+	Name string `json:"name" api:"required"`
+	// Business/brand name
+	BusinessName param.Opt[string] `json:"businessName,omitzero"`
+	// Contact email address
+	Email param.Opt[string] `json:"email,omitzero" format:"email"`
+	// Contact phone number in E.164 format
+	Phone param.Opt[string] `json:"phone,omitzero"`
+	// Contact phone country code (e.g., "1" for US)
+	PhoneCountryCode param.Opt[string] `json:"phoneCountryCode,omitzero"`
+	// Contact's role in the business
+	Role param.Opt[string] `json:"role,omitzero"`
+	paramObj
+}
+
+func (r BrandContactInfoParam) MarshalJSON() (data []byte, err error) {
+	type shadow BrandContactInfoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BrandContactInfoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Brand and KYC data grouped into contact, business, and compliance sections
 //
 // The properties Compliance, Contact are required.
 type BrandsBrandDataParam struct {
 	// Compliance and TCR information for brand registration
-	Compliance SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam `json:"compliance,omitzero" api:"required"`
+	Compliance BrandComplianceInfoParam `json:"compliance,omitzero" api:"required"`
 	// Contact information for brand KYC
-	Contact SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam `json:"contact,omitzero" api:"required"`
+	Contact BrandContactInfoParam `json:"contact,omitzero" api:"required"`
 	// Business details and address for brand KYC
-	Business SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam `json:"business,omitzero"`
+	Business BrandBusinessInfoParam `json:"business,omitzero"`
 	paramObj
 }
 
@@ -655,113 +762,6 @@ type ProfileDetailBrandContact struct {
 // Returns the unmodified JSON received from the API
 func (r ProfileDetailBrandContact) RawJSON() string { return r.JSON.raw }
 func (r *ProfileDetailBrandContact) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Business details and address for brand KYC
-type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam struct {
-	// City
-	City param.Opt[string] `json:"city,omitzero"`
-	// Country code (e.g., US, CA)
-	Country param.Opt[string] `json:"country,omitzero"`
-	// Country where the business is registered
-	CountryOfRegistration param.Opt[string] `json:"countryOfRegistration,omitzero"`
-	// Legal business name
-	LegalName param.Opt[string] `json:"legalName,omitzero"`
-	// Postal/ZIP code
-	PostalCode param.Opt[string] `json:"postalCode,omitzero"`
-	// State/province code
-	State param.Opt[string] `json:"state,omitzero"`
-	// Street address
-	Street param.Opt[string] `json:"street,omitzero"`
-	// Tax ID/EIN number
-	TaxID param.Opt[string] `json:"taxId,omitzero"`
-	// Type of tax ID (e.g., us_ein, ca_bn)
-	TaxIDType param.Opt[string] `json:"taxIdType,omitzero"`
-	// Business website URL
-	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
-	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
-	// "GOVERNMENT".
-	EntityType SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType `json:"entityType,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType string
-
-const (
-	SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypePrivateProfit  SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType = "PRIVATE_PROFIT"
-	SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypePublicProfit   SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType = "PUBLIC_PROFIT"
-	SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypeNonProfit      SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType = "NON_PROFIT"
-	SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypeSoleProprietor SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType = "SOLE_PROPRIETOR"
-	SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypeGovernment     SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityType = "GOVERNMENT"
-)
-
-// Compliance and TCR information for brand registration
-//
-// The properties BrandRelationship, Vertical are required.
-type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam struct {
-	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
-	// "KEY_ACCOUNT".
-	BrandRelationship TcrBrandRelationship `json:"brandRelationship,omitzero" api:"required"`
-	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
-	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
-	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
-	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
-	// "COMMUNICATION".
-	Vertical TcrVertical `json:"vertical,omitzero" api:"required"`
-	// Whether this is a TCR (Campaign Registry) application
-	IsTcrApplication param.Opt[bool] `json:"isTcrApplication,omitzero"`
-	// Additional notes about the business or use case
-	Notes param.Opt[string] `json:"notes,omitzero"`
-	// Phone number prefix for messaging (e.g., "+1")
-	PhoneNumberPrefix param.Opt[string] `json:"phoneNumberPrefix,omitzero"`
-	// Primary messaging use case description
-	PrimaryUseCase param.Opt[string] `json:"primaryUseCase,omitzero"`
-	// List of destination countries for messaging
-	DestinationCountries []DestinationCountryParam `json:"destinationCountries,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Contact information for brand KYC
-//
-// The property Name is required.
-type SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam struct {
-	// Primary contact name (required)
-	Name string `json:"name" api:"required"`
-	// Business/brand name
-	BusinessName param.Opt[string] `json:"businessName,omitzero"`
-	// Contact email address
-	Email param.Opt[string] `json:"email,omitzero" format:"email"`
-	// Contact phone number in E.164 format
-	Phone param.Opt[string] `json:"phone,omitzero"`
-	// Contact phone country code (e.g., "1" for US)
-	PhoneCountryCode param.Opt[string] `json:"phoneCountryCode,omitzero"`
-	// Contact's role in the business
-	Role param.Opt[string] `json:"role,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

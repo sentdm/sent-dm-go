@@ -129,7 +129,7 @@ type CampaignDataParam struct {
 	// Campaign type (e.g., "KYC", "App")
 	Type string `json:"type" api:"required"`
 	// List of use cases with sample messages
-	UseCases []SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam `json:"useCases,omitzero" api:"required"`
+	UseCases []CampaignUseCaseDataParam `json:"useCases,omitzero" api:"required"`
 	// Comma-separated keywords that trigger help message (e.g., "HELP, INFO, SUPPORT")
 	HelpKeywords param.Opt[string] `json:"helpKeywords,omitzero"`
 	// Message sent when user requests help
@@ -162,6 +162,28 @@ func (r *CampaignDataParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Campaign use case with sample messages
+//
+// The properties MessagingUseCaseUs, SampleMessages are required.
+type CampaignUseCaseDataParam struct {
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
+	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	// "LOW_VOLUME".
+	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs,omitzero" api:"required"`
+	// Sample messages for this use case (1-5 messages, max 1024 characters each)
+	SampleMessages []string `json:"sampleMessages,omitzero" api:"required"`
+	paramObj
+}
+
+func (r CampaignUseCaseDataParam) MarshalJSON() (data []byte, err error) {
+	type shadow CampaignUseCaseDataParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CampaignUseCaseDataParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type MessagingUseCaseUs string
 
 const (
@@ -179,28 +201,6 @@ const (
 	MessagingUseCaseUsPublicServiceAnnouncement MessagingUseCaseUs = "PUBLIC_SERVICE_ANNOUNCEMENT"
 	MessagingUseCaseUsLowVolume                 MessagingUseCaseUs = "LOW_VOLUME"
 )
-
-// Campaign use case with sample messages
-//
-// The properties MessagingUseCaseUs, SampleMessages are required.
-type SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam struct {
-	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
-	// "TWO_FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "MIXED",
-	// "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
-	// "LOW_VOLUME".
-	MessagingUseCaseUs MessagingUseCaseUs `json:"messagingUseCaseUs,omitzero" api:"required"`
-	// Sample messages for this use case (1-5 messages, max 1024 characters each)
-	SampleMessages []string `json:"sampleMessages,omitzero" api:"required"`
-	paramObj
-}
-
-func (r SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesEndpointsCustomerApIv3ContractsRequestsCampaignsCampaignUseCaseDataParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
 
 // Standard API response envelope for all v3 endpoints
 type ProfileCampaignNewResponse struct {

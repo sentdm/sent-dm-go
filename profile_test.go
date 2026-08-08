@@ -38,7 +38,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 		},
 		BillingModel: sentdm.String("profile"),
 		Brand: sentdm.BrandsBrandDataParam{
-			Compliance: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam{
+			Compliance: sentdm.BrandComplianceInfoParam{
 				BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 				Vertical:          sentdm.TcrVerticalProfessional,
 				DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -50,7 +50,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				PhoneNumberPrefix: sentdm.String("+1"),
 				PrimaryUseCase:    sentdm.String("Customer notifications and appointment reminders"),
 			},
-			Contact: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam{
+			Contact: sentdm.BrandContactInfoParam{
 				Name:             "John Smith",
 				BusinessName:     sentdm.String("Acme Corp"),
 				Email:            sentdm.String("john@acmecorp.com"),
@@ -58,11 +58,11 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				PhoneCountryCode: sentdm.String("1"),
 				Role:             sentdm.String("CEO"),
 			},
-			Business: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam{
+			Business: sentdm.BrandBusinessInfoParam{
 				City:                  sentdm.String("New York"),
 				Country:               sentdm.String("US"),
 				CountryOfRegistration: sentdm.String("US"),
-				EntityType:            sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypePrivateProfit,
+				EntityType:            sentdm.BrandBusinessInfoEntityTypePrivateProfit,
 				LegalName:             sentdm.String("Acme Corporation LLC"),
 				PostalCode:            sentdm.String("10001"),
 				State:                 sentdm.String("NY"),
@@ -161,7 +161,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 			},
 			BillingModel: sentdm.String("organization"),
 			Brand: sentdm.BrandsBrandDataParam{
-				Compliance: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandComplianceInfoParam{
+				Compliance: sentdm.BrandComplianceInfoParam{
 					BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 					Vertical:          sentdm.TcrVerticalProfessional,
 					DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -173,7 +173,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					PhoneNumberPrefix: sentdm.String("+1"),
 					PrimaryUseCase:    sentdm.String("Customer notifications and appointment reminders"),
 				},
-				Contact: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandContactInfoParam{
+				Contact: sentdm.BrandContactInfoParam{
 					Name:             "John Smith",
 					BusinessName:     sentdm.String("Acme Corp"),
 					Email:            sentdm.String("john@acmecorp.com"),
@@ -181,11 +181,11 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					PhoneCountryCode: sentdm.String("1"),
 					Role:             sentdm.String("CEO"),
 				},
-				Business: sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoParam{
+				Business: sentdm.BrandBusinessInfoParam{
 					City:                  sentdm.String("New York"),
 					Country:               sentdm.String("US"),
 					CountryOfRegistration: sentdm.String("US"),
-					EntityType:            sentdm.SentDmServicesEndpointsCustomerApIv3ContractsRequestsBrandsBrandBusinessInfoEntityTypePrivateProfit,
+					EntityType:            sentdm.BrandBusinessInfoEntityTypePrivateProfit,
 					LegalName:             sentdm.String("Acme Corporation LLC"),
 					PostalCode:            sentdm.String("10001"),
 					State:                 sentdm.String("NY"),
