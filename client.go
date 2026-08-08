@@ -31,7 +31,8 @@ type Client struct {
 	// Send and track SMS and WhatsApp messages
 	Messages MessageService
 	// Create, update, and manage customer contact lists
-	Contacts ContactService
+	Contacts      ContactService
+	Conversations ConversationService
 	// Retrieve account details
 	Me MeService
 }
@@ -73,6 +74,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Numbers = NewNumberService(opts...)
 	r.Messages = NewMessageService(opts...)
 	r.Contacts = NewContactService(opts...)
+	r.Conversations = NewConversationService(opts...)
 	r.Me = NewMeService(opts...)
 
 	return
