@@ -148,7 +148,7 @@ func (r *APIResponseTemplate) UnmarshalJSON(data []byte) error {
 }
 
 // Configuration for AUTHENTICATION category templates
-type SentDmServicesCommonContractsPocOsAuthenticationConfigParam struct {
+type AuthenticationConfigParam struct {
 	// Code expiration time in minutes (1-90). If set, adds footer: "This code expires
 	// in X minutes."
 	CodeExpirationMinutes param.Opt[int64] `json:"codeExpirationMinutes,omitzero"`
@@ -158,128 +158,11 @@ type SentDmServicesCommonContractsPocOsAuthenticationConfigParam struct {
 	paramObj
 }
 
-func (r SentDmServicesCommonContractsPocOsAuthenticationConfigParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesCommonContractsPocOsAuthenticationConfigParam
+func (r AuthenticationConfigParam) MarshalJSON() (data []byte, err error) {
+	type shadow AuthenticationConfigParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *SentDmServicesCommonContractsPocOsAuthenticationConfigParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Body section of a message template with channel-specific content
-type SentDmServicesCommonContractsPocOsTemplateBodyParam struct {
-	// Content that will be used for all channels (SMS and WhatsApp) unless
-	// channel-specific content is provided
-	MultiChannel TemplateBodyContentParam `json:"multiChannel,omitzero"`
-	// RCS-specific content that overrides multi-channel content for RCS messages
-	Rcs TemplateBodyContentParam `json:"rcs,omitzero"`
-	// SMS-specific content that overrides multi-channel content for SMS messages
-	SMS TemplateBodyContentParam `json:"sms,omitzero"`
-	// WhatsApp-specific content that overrides multi-channel content for WhatsApp
-	// messages
-	Whatsapp TemplateBodyContentParam `json:"whatsapp,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesCommonContractsPocOsTemplateBodyParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesCommonContractsPocOsTemplateBodyParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesCommonContractsPocOsTemplateBodyParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Interactive button in a message template
-//
-// The properties Props, Type are required.
-type SentDmServicesCommonContractsPocOsTemplateButtonParam struct {
-	// Properties specific to the button type
-	Props SentDmServicesCommonContractsPocOsTemplateButtonPropsParam `json:"props,omitzero" api:"required"`
-	// The type of button (e.g., QUICK_REPLY, URL, PHONE_NUMBER, VOICE_CALL, COPY_CODE)
-	Type string `json:"type" api:"required"`
-	// The unique identifier of the button (1-based index)
-	ID param.Opt[int64] `json:"id,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesCommonContractsPocOsTemplateButtonParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesCommonContractsPocOsTemplateButtonParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesCommonContractsPocOsTemplateButtonParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties ActiveFor, CountryCode, OfferCode, PhoneNumber, QuickReplyType,
-// Text, URL, URLType, Variables are required.
-type SentDmServicesCommonContractsPocOsTemplateButtonPropsParam struct {
-	ActiveFor      int64  `json:"activeFor" api:"required"`
-	CountryCode    string `json:"countryCode" api:"required"`
-	OfferCode      string `json:"offerCode" api:"required"`
-	PhoneNumber    string `json:"phoneNumber" api:"required"`
-	QuickReplyType string `json:"quickReplyType" api:"required"`
-	Text           string `json:"text" api:"required"`
-	URL            string `json:"url" api:"required"`
-	URLType        string `json:"urlType" api:"required"`
-	// Variables embedded in a dynamic URL button (only when UrlType = dynamic). Count
-	// is capped by TemplateContentLimits.MaxUrlButtonVariables; the placeholder must
-	// appear at the end of Url (validated in TemplateDefinitionValidator).
-	Variables     []TemplateVariableParam `json:"variables,omitzero" api:"required"`
-	AutofillText  param.Opt[string]       `json:"autofillText,omitzero"`
-	OtpType       param.Opt[string]       `json:"otpType,omitzero"`
-	PackageName   param.Opt[string]       `json:"packageName,omitzero"`
-	SignatureHash param.Opt[string]       `json:"signatureHash,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesCommonContractsPocOsTemplateButtonPropsParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesCommonContractsPocOsTemplateButtonPropsParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesCommonContractsPocOsTemplateButtonPropsParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Footer section of a message template
-//
-// The property Template is required.
-type SentDmServicesCommonContractsPocOsTemplateFooterParam struct {
-	// The footer template text with optional variable placeholders
-	Template string `json:"template" api:"required"`
-	// The type of footer (typically "text")
-	Type param.Opt[string] `json:"type,omitzero"`
-	// List of variables used in the footer template
-	Variables []TemplateVariableParam `json:"variables,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesCommonContractsPocOsTemplateFooterParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesCommonContractsPocOsTemplateFooterParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesCommonContractsPocOsTemplateFooterParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Header section of a message template
-//
-// The property Template is required.
-type SentDmServicesCommonContractsPocOsTemplateHeaderParam struct {
-	// The header template text with optional variable placeholders (e.g., "Welcome to
-	// {{0:variable}}")
-	Template string `json:"template" api:"required"`
-	// The type of header (e.g., "text", "image", "video", "document")
-	Type param.Opt[string] `json:"type,omitzero"`
-	// List of variables used in the header template
-	Variables []TemplateVariableParam `json:"variables,omitzero"`
-	paramObj
-}
-
-func (r SentDmServicesCommonContractsPocOsTemplateHeaderParam) MarshalJSON() (data []byte, err error) {
-	type shadow SentDmServicesCommonContractsPocOsTemplateHeaderParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *SentDmServicesCommonContractsPocOsTemplateHeaderParam) UnmarshalJSON(data []byte) error {
+func (r *AuthenticationConfigParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -328,6 +211,29 @@ func (r *Template) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Body section of a message template with channel-specific content
+type TemplateBodyParam struct {
+	// Content that will be used for all channels (SMS and WhatsApp) unless
+	// channel-specific content is provided
+	MultiChannel TemplateBodyContentParam `json:"multiChannel,omitzero"`
+	// RCS-specific content that overrides multi-channel content for RCS messages
+	Rcs TemplateBodyContentParam `json:"rcs,omitzero"`
+	// SMS-specific content that overrides multi-channel content for SMS messages
+	SMS TemplateBodyContentParam `json:"sms,omitzero"`
+	// WhatsApp-specific content that overrides multi-channel content for WhatsApp
+	// messages
+	Whatsapp TemplateBodyContentParam `json:"whatsapp,omitzero"`
+	paramObj
+}
+
+func (r TemplateBodyParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateBodyParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateBodyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The property Template is required.
 type TemplateBodyContentParam struct {
 	Template  string                  `json:"template" api:"required"`
@@ -344,23 +250,74 @@ func (r *TemplateBodyContentParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Interactive button in a message template
+//
+// The properties Props, Type are required.
+type TemplateButtonParam struct {
+	// Properties specific to the button type
+	Props TemplateButtonPropsParam `json:"props,omitzero" api:"required"`
+	// The type of button (e.g., QUICK_REPLY, URL, PHONE_NUMBER, VOICE_CALL, COPY_CODE)
+	Type string `json:"type" api:"required"`
+	// The unique identifier of the button (1-based index)
+	ID param.Opt[int64] `json:"id,omitzero"`
+	paramObj
+}
+
+func (r TemplateButtonParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateButtonParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateButtonParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ActiveFor, CountryCode, OfferCode, PhoneNumber, QuickReplyType,
+// Text, URL, URLType, Variables are required.
+type TemplateButtonPropsParam struct {
+	ActiveFor      int64  `json:"activeFor" api:"required"`
+	CountryCode    string `json:"countryCode" api:"required"`
+	OfferCode      string `json:"offerCode" api:"required"`
+	PhoneNumber    string `json:"phoneNumber" api:"required"`
+	QuickReplyType string `json:"quickReplyType" api:"required"`
+	Text           string `json:"text" api:"required"`
+	URL            string `json:"url" api:"required"`
+	URLType        string `json:"urlType" api:"required"`
+	// Variables embedded in a dynamic URL button (only when UrlType = dynamic). Count
+	// is capped by TemplateContentLimits.MaxUrlButtonVariables; the placeholder must
+	// appear at the end of Url (validated in TemplateDefinitionValidator).
+	Variables     []TemplateVariableParam `json:"variables,omitzero" api:"required"`
+	AutofillText  param.Opt[string]       `json:"autofillText,omitzero"`
+	OtpType       param.Opt[string]       `json:"otpType,omitzero"`
+	PackageName   param.Opt[string]       `json:"packageName,omitzero"`
+	SignatureHash param.Opt[string]       `json:"signatureHash,omitzero"`
+	paramObj
+}
+
+func (r TemplateButtonPropsParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateButtonPropsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateButtonPropsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Complete definition of a message template including header, body, footer, and
 // buttons
 //
 // The property Body is required.
 type TemplateDefinitionParam struct {
 	// Body section of a message template with channel-specific content
-	Body SentDmServicesCommonContractsPocOsTemplateBodyParam `json:"body,omitzero" api:"required"`
+	Body TemplateBodyParam `json:"body,omitzero" api:"required"`
 	// The version of the template definition format
 	DefinitionVersion param.Opt[string] `json:"definitionVersion,omitzero"`
 	// Optional list of interactive buttons (e.g., quick replies, URLs, phone numbers)
-	Buttons []SentDmServicesCommonContractsPocOsTemplateButtonParam `json:"buttons,omitzero"`
+	Buttons []TemplateButtonParam `json:"buttons,omitzero"`
 	// Configuration for AUTHENTICATION category templates
-	AuthenticationConfig SentDmServicesCommonContractsPocOsAuthenticationConfigParam `json:"authenticationConfig,omitzero"`
+	AuthenticationConfig AuthenticationConfigParam `json:"authenticationConfig,omitzero"`
 	// Footer section of a message template
-	Footer SentDmServicesCommonContractsPocOsTemplateFooterParam `json:"footer,omitzero"`
+	Footer TemplateFooterParam `json:"footer,omitzero"`
 	// Header section of a message template
-	Header SentDmServicesCommonContractsPocOsTemplateHeaderParam `json:"header,omitzero"`
+	Header TemplateHeaderParam `json:"header,omitzero"`
 	paramObj
 }
 
@@ -369,6 +326,49 @@ func (r TemplateDefinitionParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateDefinitionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Footer section of a message template
+//
+// The property Template is required.
+type TemplateFooterParam struct {
+	// The footer template text with optional variable placeholders
+	Template string `json:"template" api:"required"`
+	// The type of footer (typically "text")
+	Type param.Opt[string] `json:"type,omitzero"`
+	// List of variables used in the footer template
+	Variables []TemplateVariableParam `json:"variables,omitzero"`
+	paramObj
+}
+
+func (r TemplateFooterParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateFooterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateFooterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Header section of a message template
+//
+// The property Template is required.
+type TemplateHeaderParam struct {
+	// The header template text with optional variable placeholders (e.g., "Welcome to
+	// {{0:variable}}")
+	Template string `json:"template" api:"required"`
+	// The type of header (e.g., "text", "image", "video", "document")
+	Type param.Opt[string] `json:"type,omitzero"`
+	// List of variables used in the header template
+	Variables []TemplateVariableParam `json:"variables,omitzero"`
+	paramObj
+}
+
+func (r TemplateHeaderParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateHeaderParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateHeaderParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
