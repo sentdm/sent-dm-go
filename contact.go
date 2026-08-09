@@ -121,6 +121,24 @@ func (r *ContactService) Delete(ctx context.Context, id string, params ContactDe
 	return err
 }
 
+// Returns aggregate message counts, time bounds, channels used, and per-channel
+// success/fail scores (each as a percentage 0-100 of messages on that channel) for
+// one of your contacts. Successful terminal states: SENT/DELIVERED/READ for
+// outbound, RECEIVED for inbound. Fail: FAILED.
+func (r *ContactService) GetMessageSummary(ctx context.Context, contactID string, query ContactGetMessageSummaryParams, opts ...option.RequestOption) (res *APIResponseOfContactMessageSummary, err error) {
+	if !param.IsOmitted(query.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
+	}
+	opts = slices.Concat(r.Options, opts)
+	if contactID == "" {
+		err = errors.New("missing required contactId parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("v3/contacts/%s/message-summary", contactID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Standard API response envelope for all v3 endpoints
 type APIResponseOfContact struct {
 	// Contact response for v3 API Uses snake_case for JSON property names
@@ -145,6 +163,82 @@ type APIResponseOfContact struct {
 // Returns the unmodified JSON received from the API
 func (r APIResponseOfContact) RawJSON() string { return r.JSON.raw }
 func (r *APIResponseOfContact) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type APIResponseOfContactMessageSummary struct {
+	// The response data (null if error)
+	Data ContactMessageSummary `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseOfContactMessageSummary) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfContactMessageSummary) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ContactMessageSummary struct {
+	ChannelScores  []ContactMessageSummaryChannelScore `json:"channel_scores"`
+	ChannelsUsed   []string                            `json:"channels_used"`
+	ContactID      string                              `json:"contact_id" format:"uuid"`
+	FirstMessageAt time.Time                           `json:"first_message_at" api:"nullable" format:"date-time"`
+	LastMessageAt  time.Time                           `json:"last_message_at" api:"nullable" format:"date-time"`
+	MessageCount   int64                               `json:"message_count"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ChannelScores  respjson.Field
+		ChannelsUsed   respjson.Field
+		ContactID      respjson.Field
+		FirstMessageAt respjson.Field
+		LastMessageAt  respjson.Field
+		MessageCount   respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContactMessageSummary) RawJSON() string { return r.JSON.raw }
+func (r *ContactMessageSummary) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ContactMessageSummaryChannelScore struct {
+	Channel string `json:"channel"`
+	// Percentage (0-100) of messages on this channel that ended in FAILED.
+	FailScore int64 `json:"fail_score"`
+	// Percentage (0-100) of messages on this channel that reached a successful
+	// terminal state: SENT/DELIVERED/READ for outbound, RECEIVED for inbound.
+	SuccessScore int64 `json:"success_score"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Channel      respjson.Field
+		FailScore    respjson.Field
+		SuccessScore respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContactMessageSummaryChannelScore) RawJSON() string { return r.JSON.raw }
+func (r *ContactMessageSummaryChannelScore) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -334,4 +428,9 @@ func (r ContactDeleteParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *ContactDeleteParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type ContactGetMessageSummaryParams struct {
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
 }
