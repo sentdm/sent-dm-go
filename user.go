@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 	"time"
 
@@ -51,7 +50,7 @@ func (r *UserService) Get(ctx context.Context, userID string, query UserGetParam
 		err = errors.New("missing required userId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/users/%s", url.PathEscape(userID))
+	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -97,7 +96,7 @@ func (r *UserService) Remove(ctx context.Context, userID string, params UserRemo
 		err = errors.New("missing required userId parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/users/%s", url.PathEscape(userID))
+	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
@@ -116,7 +115,7 @@ func (r *UserService) UpdateRole(ctx context.Context, userID string, params User
 		err = errors.New("missing required userId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/users/%s", url.PathEscape(userID))
+	path := fmt.Sprintf("v3/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
 	return res, err
 }
