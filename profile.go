@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 	"time"
 
@@ -105,7 +104,7 @@ func (r *ProfileService) Get(ctx context.Context, profileID string, query Profil
 		err = errors.New("missing required profileId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/profiles/%s", url.PathEscape(profileID))
+	path := fmt.Sprintf("v3/profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -140,7 +139,7 @@ func (r *ProfileService) Update(ctx context.Context, profileID string, params Pr
 		err = errors.New("missing required profileId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/profiles/%s", url.PathEscape(profileID))
+	path := fmt.Sprintf("v3/profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
 	return res, err
 }
@@ -171,7 +170,7 @@ func (r *ProfileService) Delete(ctx context.Context, profileID string, params Pr
 		err = errors.New("missing required profileId parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/profiles/%s", url.PathEscape(profileID))
+	path := fmt.Sprintf("v3/profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }

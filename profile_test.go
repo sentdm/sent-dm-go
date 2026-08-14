@@ -119,7 +119,7 @@ func TestProfileGetWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Profiles.Get(
 		context.TODO(),
-		"profileId",
+		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileGetParams{
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
@@ -148,7 +148,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Profiles.Update(
 		context.TODO(),
-		"profileId",
+		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileUpdateParams{
 			AllowContactSharing:               sentdm.Bool(true),
 			AllowNumberChangeDuringOnboarding: param.Null[bool](),
@@ -267,7 +267,7 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 	)
 	err := client.Profiles.Delete(
 		context.TODO(),
-		"profileId",
+		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileDeleteParams{
 			MutationRequest: sentdm.MutationRequestParam{
 				Sandbox: sentdm.Bool(false),
