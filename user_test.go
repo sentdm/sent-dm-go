@@ -28,7 +28,7 @@ func TestUserGetWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Users.Get(
 		context.TODO(),
-		"userId",
+		"880e8400-e29b-41d4-a716-446655440003",
 		sentdm.UserGetParams{
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
@@ -112,7 +112,7 @@ func TestUserRemoveWithOptionalParams(t *testing.T) {
 	)
 	err := client.Users.Remove(
 		context.TODO(),
-		"userId",
+		"aa0e8400-e29b-41d4-a716-446655440005",
 		sentdm.UserRemoveParams{
 			MutationRequest: sentdm.MutationRequestParam{
 				Sandbox: sentdm.Bool(false),
@@ -144,7 +144,7 @@ func TestUserUpdateRoleWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Users.UpdateRole(
 		context.TODO(),
-		"userId",
+		"aa0e8400-e29b-41d4-a716-446655440005",
 		sentdm.UserUpdateRoleParams{
 			Role:           sentdm.String("billing"),
 			Sandbox:        sentdm.Bool(false),

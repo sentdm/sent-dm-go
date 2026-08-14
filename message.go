@@ -74,10 +74,12 @@ func (r *MessageService) GetStatus(ctx context.Context, id string, query Message
 // multi-channel broadcast — when multiple channels are specified (e.g. ["sms",
 // "whatsapp"]), a separate message is created for each (recipient, channel) pair.
 // Returns immediately with per-recipient message IDs for async tracking via
-// webhooks or the GET /messages/{id} endpoint. Account-level preconditions such as
-// insufficient balance do not reject the request: the send is accepted with 202
-// and the affected messages are reported as BLOCKED on GET /messages/{id} and the
-// message status webhook.
+// webhooks or the GET /messages/{id} endpoint. Sends gated before any delivery
+// attempt do not reject the request — an account-level precondition such as
+// insufficient balance, a template not approved for sending, or free-form content
+// with no open conversation with the contact. The send is accepted with 202 and
+// the affected messages are reported as BLOCKED on GET /messages/{id} and the
+// message.blocked webhook.
 func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
