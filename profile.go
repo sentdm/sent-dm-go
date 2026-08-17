@@ -597,7 +597,12 @@ type ProfileDetailBrand struct {
 	Contact ProfileDetailBrandContact `json:"contact" api:"nullable"`
 	// When the brand was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// CSP (Campaign Service Provider) ID
+	// Deprecated and scheduled for removal. Identifies the Campaign Service Provider
+	// that registered the brand, which is Sent, so the value is the same for every
+	// brand and every account. Nothing on your side can act on it and there is no
+	// replacement. Stop reading it.
+	//
+	// Deprecated: deprecated
 	CspID string `json:"csp_id" api:"nullable"`
 	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
 	IdentityStatus string `json:"identity_status" api:"nullable"`
