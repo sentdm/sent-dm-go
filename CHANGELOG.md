@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.31.0](https://github.com/sentdm/sent-dm-go/compare/v0.30.0...v0.31.0) (2026-08-17)
+
+
+### Highlights
+
+Webhook payloads are now typed. The events Sent POSTs to your endpoint — `MessageEvent`, `InboundMessageEvent` and `TemplateEvent`, each with its own payload type — are generated types you can deserialize into, instead of a shape you had to hand-write from the docs.
+
+The webhook delivery log is typed too. `event_data` on `GET /v3/webhooks/{id}/events` returns the exact envelope that was delivered, and now describes itself as one of those three rather than an opaque object.
+
+Also in this release:
+
+- `csp_id` on the brand object is deprecated and will be removed in a later release. It identifies the Campaign Service Provider that registered the brand, which is Sent, so the value is the same for every account. There is no replacement. Your own TCR identifiers, `tcr_brand_id` and `universal_ein`, are unaffected.
+- Corrected descriptions for blocked sends, which now name the cases that gate a send before any delivery attempt: insufficient balance, a template not approved for sending, and free-form content with no open conversation.
+- `campaign.volume` documents what an omitted value does. Leave it out and the campaign registers as standard, the higher-fee tier, with no error.
+
+### Features
+
+* **api:** sync OpenAPI spec from production ([8984ed2](https://github.com/sentdm/sent-dm-go/commit/8984ed242dbe2bf5f4b69d79b27b7a1922d424f7))
+* **api:** sync OpenAPI spec from production ([c6ea4a7](https://github.com/sentdm/sent-dm-go/commit/c6ea4a7d760911a5cf7ea155036d2f0301350a8e))
+* **api:** sync OpenAPI spec from production ([1277e78](https://github.com/sentdm/sent-dm-go/commit/1277e789a770bf4f302765d33edd24f943744c0d))
+
+
+### Chores
+
+* add eager seal-dispatch workflow ([4b9a291](https://github.com/sentdm/sent-dm-go/commit/4b9a29111504023c050963bb225c449f090e7232))
+
 ## [0.30.0](https://github.com/sentdm/sent-dm-go/compare/v0.29.0...v0.30.0) (2026-08-08)
 
 
