@@ -295,7 +295,7 @@ type CampaignDataParam struct {
 	// URL to terms and conditions
 	TermsAndConditionsLink param.Opt[string] `json:"termsAndConditionsLink,omitzero" format:"uri"`
 	// Expected messaging volume for this campaign. Numeric string (e.g. "1999",
-	// "5000"); values below 2000 bill at the low-volume tier.
+	// "5000"). Values below 2000 bill at the low-volume tier.
 	Volume param.Opt[string] `json:"volume,omitzero"`
 	paramObj
 }
