@@ -4,6 +4,7 @@ package sentdm
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -274,6 +275,167 @@ func (r *ErrorDetail) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type InboundMessageEvent struct {
+	// The specific event within the family, for example message.delivered or
+	// message.received. Absent on events that have no subtype, so treat it as
+	// optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message or templates. Route on this first, then on
+	// event for the specific change.
+	Field string `json:"field"`
+	// Body of a message.received event. Delivered when a contact messages one of your
+	// numbers.
+	Payload InboundMessageEventPayload `json:"payload" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r InboundMessageEvent) RawJSON() string { return r.JSON.raw }
+func (r *InboundMessageEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of a message.received event. Delivered when a contact messages one of your
+// numbers.
+type InboundMessageEventPayload struct {
+	// The account the message belongs to.
+	AccountID string `json:"account_id" format:"uuid"`
+	// The channel the message arrived on, for example sms or whatsapp.
+	Channel string `json:"channel"`
+	// The contact's number in E.164 format, meaning the number the message came from.
+	InboundNumber string `json:"inbound_number"`
+	// The inbound message.
+	MessageID string `json:"message_id" format:"uuid"`
+	// Your number in E.164 format, meaning the number the message was addressed to.
+	OutboundNumber string `json:"outbound_number"`
+	// When the message was received, in UTC (yyyy-MM-ddTHH:mm:ssZ).
+	ReceivedAt string `json:"received_at"`
+	// The message body. Sent as null when the inbound message carried no text, for
+	// example a media-only message. The field is always present, so read it and check
+	// for null rather than checking whether the key exists.
+	Text string `json:"text" api:"nullable"`
+	// When the message was received, in UTC (yyyy-MM-ddTHH:mm:ssZ). Same value as
+	// ReceivedAt, kept for envelope consistency with outbound events.
+	UpdatedAt string `json:"updated_at"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AccountID      respjson.Field
+		Channel        respjson.Field
+		InboundNumber  respjson.Field
+		MessageID      respjson.Field
+		OutboundNumber respjson.Field
+		ReceivedAt     respjson.Field
+		Text           respjson.Field
+		UpdatedAt      respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r InboundMessageEventPayload) RawJSON() string { return r.JSON.raw }
+func (r *InboundMessageEventPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type MessageEvent struct {
+	// The specific event within the family, for example message.delivered or
+	// message.received. Absent on events that have no subtype, so treat it as
+	// optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message or templates. Route on this first, then on
+	// event for the specific change.
+	Field string `json:"field"`
+	// Body of an outbound message lifecycle event. Delivered once per status change,
+	// so a single message produces several of these as it moves toward a terminal
+	// status.
+	Payload MessageEventPayload `json:"payload" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageEvent) RawJSON() string { return r.JSON.raw }
+func (r *MessageEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of an outbound message lifecycle event. Delivered once per status change,
+// so a single message produces several of these as it moves toward a terminal
+// status.
+type MessageEventPayload struct {
+	// The account the message belongs to.
+	AccountID string `json:"account_id" format:"uuid"`
+	// The agent attributed to the send, when the send was attributed to one.
+	AgentID string `json:"agent_id" api:"nullable"`
+	// The channel the message went out on, for example sms or whatsapp. A message that
+	// falls back to another channel reports the channel actually used.
+	Channel string `json:"channel"`
+	// The message this event describes. Stable across every event in the message's
+	// lifecycle, so use it to correlate them.
+	MessageID string `json:"message_id" format:"uuid"`
+	// The status the message just reached, for example SENT, DELIVERED, or FAILED.
+	// Sent means dispatched and delivered means confirmed, so treat them as distinct
+	// outcomes.
+	MessageStatus string `json:"message_status"`
+	// The recipient's number in E.164 format.
+	OutboundNumber string `json:"outbound_number"`
+	// The template the message was sent from, when it was sent from one.
+	TemplateID string `json:"template_id" api:"nullable" format:"uuid"`
+	// Name of the template the message was sent from. Omitted when the message wasn't
+	// template-based.
+	TemplateName string `json:"template_name" api:"nullable"`
+	// When the message reached MessageStatus, in UTC (yyyy-MM-ddTHH:mm:ssZ).
+	UpdatedAt string `json:"updated_at"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AccountID      respjson.Field
+		AgentID        respjson.Field
+		Channel        respjson.Field
+		MessageID      respjson.Field
+		MessageStatus  respjson.Field
+		OutboundNumber respjson.Field
+		TemplateID     respjson.Field
+		TemplateName   respjson.Field
+		UpdatedAt      respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageEventPayload) RawJSON() string { return r.JSON.raw }
+func (r *MessageEventPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type MutationRequestParam struct {
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
@@ -340,6 +502,85 @@ type PaginationMetaCursors struct {
 // Returns the unmodified JSON received from the API
 func (r PaginationMetaCursors) RawJSON() string { return r.JSON.raw }
 func (r *PaginationMetaCursors) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type TemplateEvent struct {
+	// The specific event within the family, for example message.delivered or
+	// message.received. Absent on events that have no subtype, so treat it as
+	// optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message or templates. Route on this first, then on
+	// event for the specific change.
+	Field string `json:"field"`
+	// Body of a template status event. Delivered when a template's review outcome
+	// changes, so you can react without polling.
+	Payload TemplateEventPayload `json:"payload" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateEvent) RawJSON() string { return r.JSON.raw }
+func (r *TemplateEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of a template status event. Delivered when a template's review outcome
+// changes, so you can react without polling.
+type TemplateEventPayload struct {
+	// The account the template belongs to.
+	AccountID string `json:"account_id" format:"uuid"`
+	// The template's category, for example UTILITY, MARKETING, or AUTHENTICATION.
+	Category string `json:"category"`
+	// The channel the template applies to.
+	Channel string `json:"channel"`
+	// The template's language code, for example en_US.
+	Language string `json:"language"`
+	// Why the template reached Status, when a reason was given. Populated on a
+	// rejection.
+	Reason string `json:"reason" api:"nullable"`
+	// The review status the template just reached, for example APPROVED or REJECTED.
+	Status string `json:"status"`
+	// The template in Sent.
+	TemplateID string `json:"template_id" format:"uuid"`
+	// The template's display name.
+	TemplateName string `json:"template_name"`
+	// The template's identifier with Meta, assigned when the template is submitted for
+	// review.
+	WhatsappTemplateID string `json:"whatsapp_template_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AccountID          respjson.Field
+		Category           respjson.Field
+		Channel            respjson.Field
+		Language           respjson.Field
+		Reason             respjson.Field
+		Status             respjson.Field
+		TemplateID         respjson.Field
+		TemplateName       respjson.Field
+		WhatsappTemplateID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateEventPayload) RawJSON() string { return r.JSON.raw }
+func (r *TemplateEventPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -550,17 +791,21 @@ func (r *WebhookListEventsResponseData) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListEventsResponseDataEvent struct {
-	ID                    string    `json:"id" format:"uuid"`
-	CreatedAt             time.Time `json:"created_at" format:"date-time"`
-	DeliveryAttempts      int64     `json:"delivery_attempts"`
-	DeliveryStatus        string    `json:"delivery_status"`
-	ErrorMessage          string    `json:"error_message" api:"nullable"`
-	EventData             any       `json:"event_data"`
-	EventType             string    `json:"event_type"`
-	HTTPStatusCode        int64     `json:"http_status_code" api:"nullable"`
-	ProcessingCompletedAt time.Time `json:"processing_completed_at" api:"nullable" format:"date-time"`
-	ProcessingStartedAt   time.Time `json:"processing_started_at" api:"nullable" format:"date-time"`
-	ResponseBody          string    `json:"response_body" api:"nullable"`
+	ID               string    `json:"id" format:"uuid"`
+	CreatedAt        time.Time `json:"created_at" format:"date-time"`
+	DeliveryAttempts int64     `json:"delivery_attempts"`
+	DeliveryStatus   string    `json:"delivery_status"`
+	ErrorMessage     string    `json:"error_message" api:"nullable"`
+	// The exact event body that was delivered, or attempted, for this record. One of
+	// the three webhook envelopes: a message status change, an inbound message, or a
+	// template status change. Read field and event to tell which, the same way your
+	// endpoint does.
+	EventData             WebhookListEventsResponseDataEventEventDataUnion `json:"event_data"`
+	EventType             string                                           `json:"event_type"`
+	HTTPStatusCode        int64                                            `json:"http_status_code" api:"nullable"`
+	ProcessingCompletedAt time.Time                                        `json:"processing_completed_at" api:"nullable" format:"date-time"`
+	ProcessingStartedAt   time.Time                                        `json:"processing_started_at" api:"nullable" format:"date-time"`
+	ResponseBody          string                                           `json:"response_body" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                    respjson.Field
@@ -582,6 +827,110 @@ type WebhookListEventsResponseDataEvent struct {
 // Returns the unmodified JSON received from the API
 func (r WebhookListEventsResponseDataEvent) RawJSON() string { return r.JSON.raw }
 func (r *WebhookListEventsResponseDataEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// WebhookListEventsResponseDataEventEventDataUnion contains all possible
+// properties and values from [MessageEvent], [InboundMessageEvent],
+// [TemplateEvent].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type WebhookListEventsResponseDataEventEventDataUnion struct {
+	Event string `json:"event"`
+	Field string `json:"field"`
+	// This field is a union of [MessageEventPayload], [InboundMessageEventPayload],
+	// [TemplateEventPayload]
+	Payload   WebhookListEventsResponseDataEventEventDataUnionPayload `json:"payload"`
+	Timestamp string                                                  `json:"timestamp"`
+	JSON      struct {
+		Event     respjson.Field
+		Field     respjson.Field
+		Payload   respjson.Field
+		Timestamp respjson.Field
+		raw       string
+	} `json:"-"`
+}
+
+func (u WebhookListEventsResponseDataEventEventDataUnion) AsMessageEvent() (v MessageEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u WebhookListEventsResponseDataEventEventDataUnion) AsInboundMessageEvent() (v InboundMessageEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u WebhookListEventsResponseDataEventEventDataUnion) AsTemplateEvent() (v TemplateEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u WebhookListEventsResponseDataEventEventDataUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *WebhookListEventsResponseDataEventEventDataUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// WebhookListEventsResponseDataEventEventDataUnionPayload is an implicit subunion
+// of [WebhookListEventsResponseDataEventEventDataUnion].
+// WebhookListEventsResponseDataEventEventDataUnionPayload provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [WebhookListEventsResponseDataEventEventDataUnion].
+type WebhookListEventsResponseDataEventEventDataUnionPayload struct {
+	AccountID string `json:"account_id"`
+	// This field is from variant [MessageEventPayload].
+	AgentID   string `json:"agent_id"`
+	Channel   string `json:"channel"`
+	MessageID string `json:"message_id"`
+	// This field is from variant [MessageEventPayload].
+	MessageStatus  string `json:"message_status"`
+	OutboundNumber string `json:"outbound_number"`
+	TemplateID     string `json:"template_id"`
+	TemplateName   string `json:"template_name"`
+	UpdatedAt      string `json:"updated_at"`
+	// This field is from variant [InboundMessageEventPayload].
+	InboundNumber string `json:"inbound_number"`
+	// This field is from variant [InboundMessageEventPayload].
+	ReceivedAt string `json:"received_at"`
+	// This field is from variant [InboundMessageEventPayload].
+	Text string `json:"text"`
+	// This field is from variant [TemplateEventPayload].
+	Category string `json:"category"`
+	// This field is from variant [TemplateEventPayload].
+	Language string `json:"language"`
+	// This field is from variant [TemplateEventPayload].
+	Reason string `json:"reason"`
+	// This field is from variant [TemplateEventPayload].
+	Status string `json:"status"`
+	// This field is from variant [TemplateEventPayload].
+	WhatsappTemplateID string `json:"whatsapp_template_id"`
+	JSON               struct {
+		AccountID          respjson.Field
+		AgentID            respjson.Field
+		Channel            respjson.Field
+		MessageID          respjson.Field
+		MessageStatus      respjson.Field
+		OutboundNumber     respjson.Field
+		TemplateID         respjson.Field
+		TemplateName       respjson.Field
+		UpdatedAt          respjson.Field
+		InboundNumber      respjson.Field
+		ReceivedAt         respjson.Field
+		Text               respjson.Field
+		Category           respjson.Field
+		Language           respjson.Field
+		Reason             respjson.Field
+		Status             respjson.Field
+		WhatsappTemplateID respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+func (r *WebhookListEventsResponseDataEventEventDataUnionPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
