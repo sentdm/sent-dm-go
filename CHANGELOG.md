@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.31.0](https://github.com/sentdm/sent-dm-go/compare/v0.30.0...v0.31.0) (2026-08-17)
+
+
+### Features
+
+* **api:** sync OpenAPI spec from production ([8984ed2](https://github.com/sentdm/sent-dm-go/commit/8984ed242dbe2bf5f4b69d79b27b7a1922d424f7))
+* **api:** sync OpenAPI spec from production ([c6ea4a7](https://github.com/sentdm/sent-dm-go/commit/c6ea4a7d760911a5cf7ea155036d2f0301350a8e))
+* **api:** sync OpenAPI spec from production ([1277e78](https://github.com/sentdm/sent-dm-go/commit/1277e789a770bf4f302765d33edd24f943744c0d))
+
+
+### Chores
+
+* add eager seal-dispatch workflow ([4b9a291](https://github.com/sentdm/sent-dm-go/commit/4b9a29111504023c050963bb225c449f090e7232))
+
 ## [0.30.0](https://github.com/sentdm/sent-dm-go/compare/v0.29.0...v0.30.0) (2026-08-08)
 
 
