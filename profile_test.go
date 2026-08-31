@@ -28,17 +28,17 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Profiles.New(context.TODO(), sentdm.ProfileNewParams{
-		AllowContactSharing:  sentdm.Bool(true),
-		AllowTemplateSharing: sentdm.Bool(false),
-		BillingContact: sentdm.BillingContactInfoParam{
+		AllowContactSharing:  param.Null[bool](),
+		AllowTemplateSharing: param.Null[bool](),
+		BillingContact: sentdm.ProfileNewParamsBillingContact{
 			Email:   "billing@acmecorp.com",
 			Name:    "Acme Corp",
 			Address: sentdm.String("123 Main Street, New York, NY 10001, US"),
 			Phone:   sentdm.String("+12025551234"),
 		},
 		BillingModel: sentdm.String("profile"),
-		Brand: sentdm.BrandsBrandDataParam{
-			Compliance: sentdm.BrandComplianceInfoParam{
+		Brand: sentdm.ProfileNewParamsBrand{
+			Compliance: sentdm.ProfileNewParamsBrandCompliance{
 				BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 				Vertical:          sentdm.TcrVerticalProfessional,
 				DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -48,9 +48,8 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				IsTcrApplication:  sentdm.Bool(true),
 				Notes:             param.Null[string](),
 				PhoneNumberPrefix: sentdm.String("+1"),
-				PrimaryUseCase:    sentdm.String("Customer notifications and appointment reminders"),
 			},
-			Contact: sentdm.BrandContactInfoParam{
+			Contact: sentdm.ProfileNewParamsBrandContact{
 				Name:             "John Smith",
 				BusinessName:     sentdm.String("Acme Corp"),
 				Email:            sentdm.String("john@acmecorp.com"),
@@ -58,11 +57,11 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				PhoneCountryCode: sentdm.String("1"),
 				Role:             sentdm.String("CEO"),
 			},
-			Business: sentdm.BrandBusinessInfoParam{
+			Business: sentdm.ProfileNewParamsBrandBusiness{
 				City:                  sentdm.String("New York"),
 				Country:               sentdm.String("US"),
 				CountryOfRegistration: sentdm.String("US"),
-				EntityType:            sentdm.BrandBusinessInfoEntityTypePrivateProfit,
+				EntityType:            "PRIVATE_PROFIT",
 				LegalName:             sentdm.String("Acme Corporation LLC"),
 				PostalCode:            sentdm.String("10001"),
 				State:                 sentdm.String("NY"),
@@ -74,12 +73,12 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 		},
 		Description:        sentdm.String("Sales department sender profile"),
 		Icon:               sentdm.String("https://example.com/sales-icon.png"),
-		InheritContacts:    sentdm.Bool(true),
+		InheritContacts:    param.Null[bool](),
 		InheritTcrBrand:    sentdm.Bool(false),
 		InheritTcrCampaign: sentdm.Bool(false),
-		InheritTemplates:   sentdm.Bool(true),
+		InheritTemplates:   param.Null[bool](),
 		Name:               sentdm.String("Sales Team"),
-		PaymentDetails: sentdm.PaymentDetailsParam{
+		PaymentDetails: sentdm.ProfileNewParamsPaymentDetails{
 			CardNumber: "4111111111111111",
 			Cvc:        "123",
 			Expiry:     "09/27",
@@ -150,18 +149,18 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileUpdateParams{
-			AllowContactSharing:               sentdm.Bool(true),
+			AllowContactSharing:               param.Null[bool](),
 			AllowNumberChangeDuringOnboarding: param.Null[bool](),
 			AllowTemplateSharing:              param.Null[bool](),
-			BillingContact: sentdm.BillingContactInfoParam{
+			BillingContact: sentdm.ProfileUpdateParamsBillingContact{
 				Email:   "dev@stainless.com",
 				Name:    "x",
 				Address: sentdm.String("address"),
 				Phone:   sentdm.String("phone"),
 			},
 			BillingModel: sentdm.String("organization"),
-			Brand: sentdm.BrandsBrandDataParam{
-				Compliance: sentdm.BrandComplianceInfoParam{
+			Brand: sentdm.ProfileUpdateParamsBrand{
+				Compliance: sentdm.ProfileUpdateParamsBrandCompliance{
 					BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 					Vertical:          sentdm.TcrVerticalProfessional,
 					DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -171,9 +170,8 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					IsTcrApplication:  sentdm.Bool(true),
 					Notes:             param.Null[string](),
 					PhoneNumberPrefix: sentdm.String("+1"),
-					PrimaryUseCase:    sentdm.String("Customer notifications and appointment reminders"),
 				},
-				Contact: sentdm.BrandContactInfoParam{
+				Contact: sentdm.ProfileUpdateParamsBrandContact{
 					Name:             "John Smith",
 					BusinessName:     sentdm.String("Acme Corp"),
 					Email:            sentdm.String("john@acmecorp.com"),
@@ -181,11 +179,11 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					PhoneCountryCode: sentdm.String("1"),
 					Role:             sentdm.String("CEO"),
 				},
-				Business: sentdm.BrandBusinessInfoParam{
+				Business: sentdm.ProfileUpdateParamsBrandBusiness{
 					City:                  sentdm.String("New York"),
 					Country:               sentdm.String("US"),
 					CountryOfRegistration: sentdm.String("US"),
-					EntityType:            sentdm.BrandBusinessInfoEntityTypePrivateProfit,
+					EntityType:            "PRIVATE_PROFIT",
 					LegalName:             sentdm.String("Acme Corporation LLC"),
 					PostalCode:            sentdm.String("10001"),
 					State:                 sentdm.String("NY"),
@@ -202,7 +200,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 			InheritTcrCampaign: param.Null[bool](),
 			InheritTemplates:   param.Null[bool](),
 			Name:               sentdm.String("Sales Team - Updated"),
-			PaymentDetails: sentdm.PaymentDetailsParam{
+			PaymentDetails: sentdm.ProfileUpdateParamsPaymentDetails{
 				CardNumber: "3216699102256101",
 				Cvc:        "3216",
 				Expiry:     "11/66",
@@ -269,9 +267,7 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileDeleteParams{
-			MutationRequest: sentdm.MutationRequestParam{
-				Sandbox: sentdm.Bool(false),
-			},
+			Sandbox:    sentdm.Bool(false),
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
