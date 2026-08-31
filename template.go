@@ -19,7 +19,13 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
 
-// Manage message templates with variable substitution
+// Reusable message bodies with named variables.
+//
+// A template is substituted at send time from the values you pass, so the copy
+// lives here rather than in your application. WhatsApp templates additionally need
+// Meta's approval before they can be sent, and a template's channel status reports
+// where that stands — an approved SMS template and an unapproved WhatsApp one are
+// the same template in two states.
 //
 // TemplateService contains methods and other services that help with interacting
 // with the Sent API.
@@ -43,7 +49,7 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 // Creates a new message template with header, body, footer, and buttons. The
 // template can be submitted for review immediately or saved as draft for later
 // submission.
-func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *TemplateNewResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -58,7 +64,7 @@ func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opt
 
 // Retrieves a specific template by its ID. Returns template details including
 // name, category, language, status, and definition.
-func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetParams, opts ...option.RequestOption) (res *TemplateGetResponse, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -74,7 +80,7 @@ func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetP
 
 // Updates an existing template's name, category, language, definition, or submits
 // it for review.
-func (r *TemplateService) Update(ctx context.Context, id string, params TemplateUpdateParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
+func (r *TemplateService) Update(ctx context.Context, id string, params TemplateUpdateParams, opts ...option.RequestOption) (res *TemplateUpdateResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -120,33 +126,6 @@ func (r *TemplateService) Delete(ctx context.Context, id string, params Template
 	return err
 }
 
-// Standard API response envelope for all v3 endpoints
-type APIResponseTemplate struct {
-	// Template response for v3 API
-	Data Template `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r APIResponseTemplate) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseTemplate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Configuration for AUTHENTICATION category templates
 type AuthenticationConfigParam struct {
 	// Code expiration time in minutes (1-90). If set, adds footer: "This code expires
@@ -163,51 +142,6 @@ func (r AuthenticationConfigParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *AuthenticationConfigParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Template response for v3 API
-type Template struct {
-	// Unique template identifier
-	ID string `json:"id" format:"uuid"`
-	// Template category: MARKETING, UTILITY, AUTHENTICATION
-	Category string `json:"category"`
-	// Supported channels: sms, whatsapp
-	Channels []string `json:"channels" api:"nullable"`
-	// When the template was created
-	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// Whether the template is published and active
-	IsPublished bool `json:"is_published"`
-	// Template language code (e.g., en_US)
-	Language string `json:"language"`
-	// Template display name
-	Name string `json:"name"`
-	// Template status: APPROVED, PENDING, REJECTED
-	Status string `json:"status"`
-	// When the template was last updated
-	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
-	// Template variables for personalization
-	Variables []string `json:"variables" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Category    respjson.Field
-		Channels    respjson.Field
-		CreatedAt   respjson.Field
-		IsPublished respjson.Field
-		Language    respjson.Field
-		Name        respjson.Field
-		Status      respjson.Field
-		UpdatedAt   respjson.Field
-		Variables   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r Template) RawJSON() string { return r.JSON.raw }
-func (r *Template) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -410,13 +344,394 @@ func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
 }
 
 // Standard API response envelope for all v3 endpoints
+type TemplateNewResponse struct {
+	// Template response for v3 API
+	Data TemplateNewResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error TemplateNewResponseError `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta TemplateNewResponseMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateNewResponse) RawJSON() string { return r.JSON.raw }
+func (r *TemplateNewResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Template response for v3 API
+type TemplateNewResponseData struct {
+	// Which customer owns this — the key's own, or the profile named in x-profile-id.
+	// Says whose resource this is, which the resource's own id does not.
+	CustomerID string `json:"customer_id" api:"required" format:"uuid"`
+	// Unique template identifier
+	ID string `json:"id" format:"uuid"`
+	// Template category: MARKETING, UTILITY, AUTHENTICATION
+	Category string `json:"category"`
+	// Supported channels: sms, whatsapp
+	Channels []string `json:"channels" api:"nullable"`
+	// When the template was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Whether the template is published and active
+	IsPublished bool `json:"is_published"`
+	// Template language code (e.g., en_US)
+	Language string `json:"language"`
+	// Template display name
+	Name string `json:"name"`
+	// Template status: APPROVED, PENDING, REJECTED
+	Status string `json:"status"`
+	// When the template was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// Template variables for personalization
+	Variables []string `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CustomerID  respjson.Field
+		ID          respjson.Field
+		Category    respjson.Field
+		Channels    respjson.Field
+		CreatedAt   respjson.Field
+		IsPublished respjson.Field
+		Language    respjson.Field
+		Name        respjson.Field
+		Status      respjson.Field
+		UpdatedAt   respjson.Field
+		Variables   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateNewResponseData) RawJSON() string { return r.JSON.raw }
+func (r *TemplateNewResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type TemplateNewResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateNewResponseError) RawJSON() string { return r.JSON.raw }
+func (r *TemplateNewResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type TemplateNewResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateNewResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *TemplateNewResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type TemplateGetResponse struct {
+	// Template response for v3 API
+	Data TemplateGetResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error TemplateGetResponseError `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta TemplateGetResponseMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *TemplateGetResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Template response for v3 API
+type TemplateGetResponseData struct {
+	// Which customer owns this — the key's own, or the profile named in x-profile-id.
+	// Says whose resource this is, which the resource's own id does not.
+	CustomerID string `json:"customer_id" api:"required" format:"uuid"`
+	// Unique template identifier
+	ID string `json:"id" format:"uuid"`
+	// Template category: MARKETING, UTILITY, AUTHENTICATION
+	Category string `json:"category"`
+	// Supported channels: sms, whatsapp
+	Channels []string `json:"channels" api:"nullable"`
+	// When the template was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Whether the template is published and active
+	IsPublished bool `json:"is_published"`
+	// Template language code (e.g., en_US)
+	Language string `json:"language"`
+	// Template display name
+	Name string `json:"name"`
+	// Template status: APPROVED, PENDING, REJECTED
+	Status string `json:"status"`
+	// When the template was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// Template variables for personalization
+	Variables []string `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CustomerID  respjson.Field
+		ID          respjson.Field
+		Category    respjson.Field
+		Channels    respjson.Field
+		CreatedAt   respjson.Field
+		IsPublished respjson.Field
+		Language    respjson.Field
+		Name        respjson.Field
+		Status      respjson.Field
+		UpdatedAt   respjson.Field
+		Variables   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateGetResponseData) RawJSON() string { return r.JSON.raw }
+func (r *TemplateGetResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type TemplateGetResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateGetResponseError) RawJSON() string { return r.JSON.raw }
+func (r *TemplateGetResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type TemplateGetResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateGetResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *TemplateGetResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type TemplateUpdateResponse struct {
+	// Template response for v3 API
+	Data TemplateUpdateResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error TemplateUpdateResponseError `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta TemplateUpdateResponseMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateUpdateResponse) RawJSON() string { return r.JSON.raw }
+func (r *TemplateUpdateResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Template response for v3 API
+type TemplateUpdateResponseData struct {
+	// Which customer owns this — the key's own, or the profile named in x-profile-id.
+	// Says whose resource this is, which the resource's own id does not.
+	CustomerID string `json:"customer_id" api:"required" format:"uuid"`
+	// Unique template identifier
+	ID string `json:"id" format:"uuid"`
+	// Template category: MARKETING, UTILITY, AUTHENTICATION
+	Category string `json:"category"`
+	// Supported channels: sms, whatsapp
+	Channels []string `json:"channels" api:"nullable"`
+	// When the template was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Whether the template is published and active
+	IsPublished bool `json:"is_published"`
+	// Template language code (e.g., en_US)
+	Language string `json:"language"`
+	// Template display name
+	Name string `json:"name"`
+	// Template status: APPROVED, PENDING, REJECTED
+	Status string `json:"status"`
+	// When the template was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// Template variables for personalization
+	Variables []string `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CustomerID  respjson.Field
+		ID          respjson.Field
+		Category    respjson.Field
+		Channels    respjson.Field
+		CreatedAt   respjson.Field
+		IsPublished respjson.Field
+		Language    respjson.Field
+		Name        respjson.Field
+		Status      respjson.Field
+		UpdatedAt   respjson.Field
+		Variables   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateUpdateResponseData) RawJSON() string { return r.JSON.raw }
+func (r *TemplateUpdateResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type TemplateUpdateResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateUpdateResponseError) RawJSON() string { return r.JSON.raw }
+func (r *TemplateUpdateResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type TemplateUpdateResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateUpdateResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *TemplateUpdateResponseMeta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
 type TemplateListResponse struct {
-	// Paginated list of templates
+	// A paginated list of templates.
 	Data TemplateListResponseData `json:"data" api:"nullable"`
 	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
+	Error TemplateListResponseError `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta APIMeta `json:"meta"`
+	Meta TemplateListResponseMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -436,12 +751,12 @@ func (r *TemplateListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Paginated list of templates
+// A paginated list of templates.
 type TemplateListResponseData struct {
 	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
-	// List of templates
-	Templates []Template `json:"templates"`
+	Pagination TemplateListResponseDataPagination `json:"pagination"`
+	// The templates on this page.
+	Templates []TemplateListResponseDataTemplate `json:"templates"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Pagination  respjson.Field
@@ -454,6 +769,164 @@ type TemplateListResponseData struct {
 // Returns the unmodified JSON received from the API
 func (r TemplateListResponseData) RawJSON() string { return r.JSON.raw }
 func (r *TemplateListResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Pagination metadata for list responses
+type TemplateListResponseDataPagination struct {
+	// Cursor-based pagination. Never populated — see Cursors.
+	//
+	// Deprecated: deprecated
+	Cursors TemplateListResponseDataPaginationCursors `json:"cursors" api:"nullable"`
+	// Whether there are more pages after this one
+	HasMore bool `json:"has_more"`
+	// Current page number (1-indexed)
+	Page int64 `json:"page"`
+	// Number of items per page
+	PageSize int64 `json:"page_size"`
+	// Total number of items across all pages
+	TotalCount int64 `json:"total_count"`
+	// Total number of pages
+	TotalPages int64 `json:"total_pages"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cursors     respjson.Field
+		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateListResponseDataPagination) RawJSON() string { return r.JSON.raw }
+func (r *TemplateListResponseDataPagination) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Cursor-based pagination. Never populated — see Cursors.
+//
+// Deprecated: deprecated
+type TemplateListResponseDataPaginationCursors struct {
+	// Cursor to fetch the next page.
+	After string `json:"after" api:"nullable"`
+	// Cursor to fetch the previous page.
+	Before string `json:"before" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		After       respjson.Field
+		Before      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateListResponseDataPaginationCursors) RawJSON() string { return r.JSON.raw }
+func (r *TemplateListResponseDataPaginationCursors) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Template response for v3 API
+type TemplateListResponseDataTemplate struct {
+	// Which customer owns this — the key's own, or the profile named in x-profile-id.
+	// Says whose resource this is, which the resource's own id does not.
+	CustomerID string `json:"customer_id" api:"required" format:"uuid"`
+	// Unique template identifier
+	ID string `json:"id" format:"uuid"`
+	// Template category: MARKETING, UTILITY, AUTHENTICATION
+	Category string `json:"category"`
+	// Supported channels: sms, whatsapp
+	Channels []string `json:"channels" api:"nullable"`
+	// When the template was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Whether the template is published and active
+	IsPublished bool `json:"is_published"`
+	// Template language code (e.g., en_US)
+	Language string `json:"language"`
+	// Template display name
+	Name string `json:"name"`
+	// Template status: APPROVED, PENDING, REJECTED
+	Status string `json:"status"`
+	// When the template was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// Template variables for personalization
+	Variables []string `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CustomerID  respjson.Field
+		ID          respjson.Field
+		Category    respjson.Field
+		Channels    respjson.Field
+		CreatedAt   respjson.Field
+		IsPublished respjson.Field
+		Language    respjson.Field
+		Name        respjson.Field
+		Status      respjson.Field
+		UpdatedAt   respjson.Field
+		Variables   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateListResponseDataTemplate) RawJSON() string { return r.JSON.raw }
+func (r *TemplateListResponseDataTemplate) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Error information
+type TemplateListResponseError struct {
+	// Machine-readable error code (e.g., "RESOURCE_001")
+	Code string `json:"code"`
+	// Additional validation error details (field-level errors)
+	Details map[string][]string `json:"details" api:"nullable"`
+	// URL to documentation about this error
+	DocURL string `json:"doc_url" api:"nullable"`
+	// Human-readable error message
+	Message string `json:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Details     respjson.Field
+		DocURL      respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateListResponseError) RawJSON() string { return r.JSON.raw }
+func (r *TemplateListResponseError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request and response metadata
+type TemplateListResponseMeta struct {
+	// Unique identifier for this request (for tracing and support)
+	RequestID string `json:"request_id"`
+	// Server timestamp when the response was generated
+	Timestamp time.Time `json:"timestamp" format:"date-time"`
+	// API version used for this request
+	Version string `json:"version"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateListResponseMeta) RawJSON() string { return r.JSON.raw }
+func (r *TemplateListResponseMeta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -526,7 +999,11 @@ type TemplateListParams struct {
 	PageSize int64 `query:"page_size" api:"required" json:"-"`
 	// Optional category filter: MARKETING, UTILITY, AUTHENTICATION
 	Category param.Opt[string] `query:"category,omitzero" json:"-"`
-	// Optional filter by welcome playground flag
+	// Accepted and ignored. It used to filter on the welcome-playground marker inside
+	// a template's LOB details; that filter is gone and nothing reads this value, so
+	// sending it neither narrows nor widens the result. Retained only so a client
+	// still passing is_welcome_playground keeps binding instead of the request shape
+	// changing under it.
 	IsWelcomePlayground param.Opt[bool] `query:"is_welcome_playground,omitzero" json:"-"`
 	// Optional search term for filtering templates
 	Search param.Opt[string] `query:"search,omitzero" json:"-"`

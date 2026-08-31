@@ -31,11 +31,11 @@ func TestProfileCampaignNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileCampaignNewParams{
-			Campaign: sentdm.CampaignDataParam{
+			Campaign: sentdm.ProfileCampaignNewParamsCampaign{
 				Description: "Appointment reminders and account notifications",
 				Name:        "Customer Notifications",
 				Type:        "App",
-				UseCases: []sentdm.CampaignUseCaseDataParam{{
+				UseCases: []sentdm.ProfileCampaignNewParamsCampaignUseCase{{
 					MessagingUseCaseUs: sentdm.MessagingUseCaseUsAccountNotification,
 					SampleMessages:     []string{"Hi {name}, your appointment is confirmed for {date} at {time}.", "Your order #{order_id} has been shipped. Track at {url}"},
 				}},
@@ -82,11 +82,11 @@ func TestProfileCampaignUpdateWithOptionalParams(t *testing.T) {
 		"b2c3d4e5-f6a7-8901-bcde-f12345678901",
 		sentdm.ProfileCampaignUpdateParams{
 			ProfileID: "770e8400-e29b-41d4-a716-446655440002",
-			Campaign: sentdm.CampaignDataParam{
+			Campaign: sentdm.ProfileCampaignUpdateParamsCampaign{
 				Description: "Updated appointment reminders and account notifications",
 				Name:        "Customer Notifications Updated",
 				Type:        "App",
-				UseCases: []sentdm.CampaignUseCaseDataParam{{
+				UseCases: []sentdm.ProfileCampaignUpdateParamsCampaignUseCase{{
 					MessagingUseCaseUs: sentdm.MessagingUseCaseUsAccountNotification,
 					SampleMessages:     []string{"Hi {name}, your appointment is confirmed for {date} at {time}.", "Your order #{order_id} has been shipped. Track at {url}"},
 				}},
@@ -161,10 +161,8 @@ func TestProfileCampaignDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"b2c3d4e5-f6a7-8901-bcde-f12345678901",
 		sentdm.ProfileCampaignDeleteParams{
-			ProfileID: "770e8400-e29b-41d4-a716-446655440002",
-			MutationRequest: sentdm.MutationRequestParam{
-				Sandbox: sentdm.Bool(false),
-			},
+			ProfileID:  "770e8400-e29b-41d4-a716-446655440002",
+			Sandbox:    sentdm.Bool(false),
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
