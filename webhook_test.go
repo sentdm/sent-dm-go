@@ -248,9 +248,7 @@ func TestWebhookRotateSecretWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookRotateSecretParams{
-			MutationRequest: sentdm.MutationRequestParam{
-				Sandbox: sentdm.Bool(false),
-			},
+			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
