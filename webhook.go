@@ -243,18 +243,18 @@ func (r *InboundMessageEvent) UnmarshalJSON(data []byte) error {
 // Body of a message.received event. Delivered when a contact messages one of your
 // numbers.
 type InboundMessageEventPayload struct {
+	// The contact's number in E.164 format, meaning the number the message came from.
+	InboundNumber string `json:"inbound_number" api:"required"`
+	// When the message was received, in UTC (yyyy-MM-ddTHH:mm:ssZ).
+	ReceivedAt string `json:"received_at" api:"required"`
 	// The account the message belongs to.
 	AccountID string `json:"account_id" format:"uuid"`
 	// The channel the message arrived on, for example sms or whatsapp.
 	Channel string `json:"channel"`
-	// The contact's number in E.164 format, meaning the number the message came from.
-	InboundNumber string `json:"inbound_number"`
 	// The inbound message.
 	MessageID string `json:"message_id" format:"uuid"`
 	// Your number in E.164 format, meaning the number the message was addressed to.
 	OutboundNumber string `json:"outbound_number"`
-	// When the message was received, in UTC (yyyy-MM-ddTHH:mm:ssZ).
-	ReceivedAt string `json:"received_at"`
 	// The message body. Sent as null when the inbound message carried no text, for
 	// example a media-only message. The field is always present, so read it and check
 	// for null rather than checking whether the key exists.
@@ -264,12 +264,12 @@ type InboundMessageEventPayload struct {
 	UpdatedAt string `json:"updated_at"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		InboundNumber  respjson.Field
+		ReceivedAt     respjson.Field
 		AccountID      respjson.Field
 		Channel        respjson.Field
-		InboundNumber  respjson.Field
 		MessageID      respjson.Field
 		OutboundNumber respjson.Field
-		ReceivedAt     respjson.Field
 		Text           respjson.Field
 		UpdatedAt      respjson.Field
 		ExtraFields    map[string]respjson.Field
@@ -322,6 +322,10 @@ func (r *MessageEvent) UnmarshalJSON(data []byte) error {
 // so a single message produces several of these as it moves toward a terminal
 // status.
 type MessageEventPayload struct {
+	// The status the message just reached, for example SENT, DELIVERED, or FAILED.
+	// Sent means dispatched and delivered means confirmed, so treat them as distinct
+	// outcomes.
+	MessageStatus string `json:"message_status" api:"required"`
 	// The account the message belongs to.
 	AccountID string `json:"account_id" format:"uuid"`
 	// The agent attributed to the send, when the send was attributed to one.
@@ -332,10 +336,6 @@ type MessageEventPayload struct {
 	// The message this event describes. Stable across every event in the message's
 	// lifecycle, so use it to correlate them.
 	MessageID string `json:"message_id" format:"uuid"`
-	// The status the message just reached, for example SENT, DELIVERED, or FAILED.
-	// Sent means dispatched and delivered means confirmed, so treat them as distinct
-	// outcomes.
-	MessageStatus string `json:"message_status"`
 	// The recipient's number in E.164 format.
 	OutboundNumber string `json:"outbound_number"`
 	// The template the message was sent from, when it was sent from one.
@@ -347,11 +347,11 @@ type MessageEventPayload struct {
 	UpdatedAt string `json:"updated_at"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		MessageStatus  respjson.Field
 		AccountID      respjson.Field
 		AgentID        respjson.Field
 		Channel        respjson.Field
 		MessageID      respjson.Field
-		MessageStatus  respjson.Field
 		OutboundNumber respjson.Field
 		TemplateID     respjson.Field
 		TemplateName   respjson.Field
@@ -404,6 +404,11 @@ func (r *TemplateEvent) UnmarshalJSON(data []byte) error {
 // Body of a template status event. Delivered when a template's review outcome
 // changes, so you can react without polling.
 type TemplateEventPayload struct {
+	// The review status the template just reached, for example APPROVED or REJECTED.
+	Status string `json:"status" api:"required"`
+	// The template's identifier with Meta, assigned when the template is submitted for
+	// review.
+	WhatsappTemplateID string `json:"whatsapp_template_id" api:"required"`
 	// The account the template belongs to.
 	AccountID string `json:"account_id" format:"uuid"`
 	// The template's category, for example UTILITY, MARKETING, or AUTHENTICATION.
@@ -415,26 +420,21 @@ type TemplateEventPayload struct {
 	// Why the template reached Status, when a reason was given. Populated on a
 	// rejection.
 	Reason string `json:"reason" api:"nullable"`
-	// The review status the template just reached, for example APPROVED or REJECTED.
-	Status string `json:"status"`
 	// The template in Sent.
 	TemplateID string `json:"template_id" format:"uuid"`
 	// The template's display name.
 	TemplateName string `json:"template_name"`
-	// The template's identifier with Meta, assigned when the template is submitted for
-	// review.
-	WhatsappTemplateID string `json:"whatsapp_template_id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Status             respjson.Field
+		WhatsappTemplateID respjson.Field
 		AccountID          respjson.Field
 		Category           respjson.Field
 		Channel            respjson.Field
 		Language           respjson.Field
 		Reason             respjson.Field
-		Status             respjson.Field
 		TemplateID         respjson.Field
 		TemplateName       respjson.Field
-		WhatsappTemplateID respjson.Field
 		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
@@ -1346,13 +1346,13 @@ func (r *WebhookListEventsResponseDataEventEventDataUnion) UnmarshalJSON(data []
 // For type safety it is recommended to directly use a variant of the
 // [WebhookListEventsResponseDataEventEventDataUnion].
 type WebhookListEventsResponseDataEventEventDataUnionPayload struct {
-	AccountID string `json:"account_id"`
 	// This field is from variant [MessageEventPayload].
-	AgentID   string `json:"agent_id"`
-	Channel   string `json:"channel"`
-	MessageID string `json:"message_id"`
+	MessageStatus string `json:"message_status"`
+	AccountID     string `json:"account_id"`
 	// This field is from variant [MessageEventPayload].
-	MessageStatus  string `json:"message_status"`
+	AgentID        string `json:"agent_id"`
+	Channel        string `json:"channel"`
+	MessageID      string `json:"message_id"`
 	OutboundNumber string `json:"outbound_number"`
 	TemplateID     string `json:"template_id"`
 	TemplateName   string `json:"template_name"`
@@ -1364,21 +1364,21 @@ type WebhookListEventsResponseDataEventEventDataUnionPayload struct {
 	// This field is from variant [InboundMessageEventPayload].
 	Text string `json:"text"`
 	// This field is from variant [TemplateEventPayload].
+	Status string `json:"status"`
+	// This field is from variant [TemplateEventPayload].
+	WhatsappTemplateID string `json:"whatsapp_template_id"`
+	// This field is from variant [TemplateEventPayload].
 	Category string `json:"category"`
 	// This field is from variant [TemplateEventPayload].
 	Language string `json:"language"`
 	// This field is from variant [TemplateEventPayload].
 	Reason string `json:"reason"`
-	// This field is from variant [TemplateEventPayload].
-	Status string `json:"status"`
-	// This field is from variant [TemplateEventPayload].
-	WhatsappTemplateID string `json:"whatsapp_template_id"`
-	JSON               struct {
+	JSON   struct {
+		MessageStatus      respjson.Field
 		AccountID          respjson.Field
 		AgentID            respjson.Field
 		Channel            respjson.Field
 		MessageID          respjson.Field
-		MessageStatus      respjson.Field
 		OutboundNumber     respjson.Field
 		TemplateID         respjson.Field
 		TemplateName       respjson.Field
@@ -1386,11 +1386,11 @@ type WebhookListEventsResponseDataEventEventDataUnionPayload struct {
 		InboundNumber      respjson.Field
 		ReceivedAt         respjson.Field
 		Text               respjson.Field
+		Status             respjson.Field
+		WhatsappTemplateID respjson.Field
 		Category           respjson.Field
 		Language           respjson.Field
 		Reason             respjson.Field
-		Status             respjson.Field
-		WhatsappTemplateID respjson.Field
 		raw                string
 	} `json:"-"`
 }
