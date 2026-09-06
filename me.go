@@ -57,6 +57,17 @@ func NewMeService(opts ...option.RequestOption) (r MeService) {
 // **Channels:** The `channels` object always includes `sms`, `whatsapp`, and
 // `rcs`. Each channel has a `configured` boolean. Configured channels expose
 // additional details such as `phone_number`.
+//
+// **Sending number:** `sending_phone_number` is the account's US SMS sender. It is
+// intentionally the same value as `channels.sms.phone_number` — the two are kept
+// in step, and it is published under both names because `sending_phone_number` is
+// what this value is called on `GET /v3/profiles`. Read either. One difference:
+// `sending_phone_number` is always present, including as `null`, while
+// `channels.sms.phone_number` is omitted when there is no sender.
+//
+// `sending_phone_number_profile_id` names the account that holds that number in
+// inventory — normally this account, and a different one where a number is shared.
+// Both are `null` when the account has no US SMS sender.
 func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.RequestOption) (res *MeGetResponse, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
@@ -120,6 +131,24 @@ type MeGetResponseData struct {
 	// List of profiles (populated for organization type, empty for user and profile
 	// types)
 	Profiles []MeGetResponseDataProfile `json:"profiles"`
+	// The SMS sender this account sends from in the United States, in E.164 form. Null
+	// when the account has no US SMS sender.
+	//
+	// The same value as channels.sms.phone_number, published under both names on
+	// purpose: sending_phone_number is what this value is already called on GET
+	// /v3/profiles, so the same key answers the same question whichever of the two
+	// endpoints you ask. Neither name is preferred over the other and neither is
+	// deprecated.
+	//
+	// The same value, not the same presence: this key is always written, including as
+	// null, whereas channels.sms.phone_number is left out entirely when there is no
+	// sender.
+	SendingPhoneNumber string `json:"sending_phone_number" api:"nullable"`
+	// The account that holds sending_phone_number in number inventory: normally this
+	// account itself, and a different account when the number is held elsewhere. Null
+	// when there is no US sender, or when the sender is not a number drawn from
+	// inventory — an alphanumeric sender ID or a short code.
+	SendingPhoneNumberProfileID string `json:"sending_phone_number_profile_id" api:"nullable" format:"uuid"`
 	// Profile configuration settings
 	Settings MeGetResponseDataSettings `json:"settings" api:"nullable"`
 	// Short name / abbreviation (only for profile type)
@@ -132,21 +161,23 @@ type MeGetResponseData struct {
 	Type string `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID             respjson.Field
-		Channels       respjson.Field
-		CreatedAt      respjson.Field
-		Description    respjson.Field
-		Email          respjson.Field
-		Icon           respjson.Field
-		Name           respjson.Field
-		OrganizationID respjson.Field
-		Profiles       respjson.Field
-		Settings       respjson.Field
-		ShortName      respjson.Field
-		Status         respjson.Field
-		Type           respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
+		ID                          respjson.Field
+		Channels                    respjson.Field
+		CreatedAt                   respjson.Field
+		Description                 respjson.Field
+		Email                       respjson.Field
+		Icon                        respjson.Field
+		Name                        respjson.Field
+		OrganizationID              respjson.Field
+		Profiles                    respjson.Field
+		SendingPhoneNumber          respjson.Field
+		SendingPhoneNumberProfileID respjson.Field
+		Settings                    respjson.Field
+		ShortName                   respjson.Field
+		Status                      respjson.Field
+		Type                        respjson.Field
+		ExtraFields                 map[string]respjson.Field
+		raw                         string
 	} `json:"-"`
 }
 
