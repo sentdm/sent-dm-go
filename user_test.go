@@ -114,7 +114,9 @@ func TestUserRemoveWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"aa0e8400-e29b-41d4-a716-446655440005",
 		sentdm.UserRemoveParams{
-			Sandbox:    sentdm.Bool(false),
+			MutationRequest: sentdm.MutationRequestParam{
+				Sandbox: sentdm.Bool(false),
+			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
