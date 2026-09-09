@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.34.0](https://github.com/sentdm/sent-dm-go/compare/v0.33.0...v0.34.0) (2026-09-09)
+
+
+### Features
+
+* **api:** repoint dangling model refs at current v3 schema names ([275860c](https://github.com/sentdm/sent-dm-go/commit/275860c4ae6a38eb00a430110895c018172a5217))
+
 ## [0.33.0](https://github.com/sentdm/sent-dm-go/compare/v0.32.0...v0.33.0) (2026-09-06)
 
 
