@@ -130,9 +130,9 @@ func TestWebhookListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{
-		Page:       0,
-		PageSize:   0,
 		IsActive:   sentdm.Bool(true),
+		Page:       sentdm.Int(0),
+		PageSize:   sentdm.Int(0),
 		Search:     sentdm.String("search"),
 		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
@@ -216,8 +216,8 @@ func TestWebhookListEventsWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"d4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
 		sentdm.WebhookListEventsParams{
-			Page:       0,
-			PageSize:   0,
+			Page:       sentdm.Int(0),
+			PageSize:   sentdm.Int(0),
 			Search:     sentdm.String("search"),
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
