@@ -15,6 +15,7 @@ import (
 	"github.com/sentdm/sent-dm-go/internal/apiquery"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/pagination"
 	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
@@ -99,14 +100,30 @@ func (r *TemplateService) Update(ctx context.Context, id string, params Template
 
 // Retrieves a paginated list of message templates for the authenticated customer.
 // Supports filtering by status, category, and search term.
-func (r *TemplateService) List(ctx context.Context, params TemplateListParams, opts ...option.RequestOption) (res *TemplateListResponse, err error) {
+func (r *TemplateService) List(ctx context.Context, params TemplateListParams, opts ...option.RequestOption) (res *pagination.TemplatesPage[Template], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "v3/templates"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of message templates for the authenticated customer.
+// Supports filtering by status, category, and search term.
+func (r *TemplateService) ListAutoPaging(ctx context.Context, params TemplateListParams, opts ...option.RequestOption) *pagination.TemplatesPageAutoPager[Template] {
+	return pagination.NewTemplatesPageAutoPager(r.List(ctx, params, opts...))
 }
 
 // Deletes a template by ID. Optionally, you can also delete the template from
@@ -416,54 +433,6 @@ func (r TemplateVariablePropsParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type TemplateListResponse struct {
-	// A paginated list of templates.
-	Data TemplateListResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateListResponse) RawJSON() string { return r.JSON.raw }
-func (r *TemplateListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A paginated list of templates.
-type TemplateListResponseData struct {
-	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
-	// The templates on this page.
-	Templates []Template `json:"templates"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Pagination  respjson.Field
-		Templates   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TemplateListResponseData) RawJSON() string { return r.JSON.raw }
-func (r *TemplateListResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
