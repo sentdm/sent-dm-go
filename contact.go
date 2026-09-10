@@ -16,6 +16,7 @@ import (
 	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/pagination"
 	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
@@ -101,14 +102,30 @@ func (r *ContactService) Update(ctx context.Context, id string, params ContactUp
 
 // Retrieves a paginated list of contacts for the authenticated customer. Supports
 // filtering by search term, channel, or phone number.
-func (r *ContactService) List(ctx context.Context, params ContactListParams, opts ...option.RequestOption) (res *ContactListResponse, err error) {
+func (r *ContactService) List(ctx context.Context, params ContactListParams, opts ...option.RequestOption) (res *pagination.ContactsPage[ContactResponse], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "v3/contacts"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of contacts for the authenticated customer. Supports
+// filtering by search term, channel, or phone number.
+func (r *ContactService) ListAutoPaging(ctx context.Context, params ContactListParams, opts ...option.RequestOption) *pagination.ContactsPageAutoPager[ContactResponse] {
+	return pagination.NewContactsPageAutoPager(r.List(ctx, params, opts...))
 }
 
 // **Deprecated.** Use `PATCH /v3/contacts/{id}` with `{"opt_out": true}` instead,
@@ -322,54 +339,6 @@ type ContactResponse struct {
 // Returns the unmodified JSON received from the API
 func (r ContactResponse) RawJSON() string { return r.JSON.raw }
 func (r *ContactResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type ContactListResponse struct {
-	// A paginated list of contacts.
-	Data ContactListResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponse) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A paginated list of contacts.
-type ContactListResponseData struct {
-	// The contacts on this page.
-	Contacts []ContactResponse `json:"contacts"`
-	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Contacts    respjson.Field
-		Pagination  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
