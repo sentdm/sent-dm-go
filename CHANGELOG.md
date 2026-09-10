@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.35.1](https://github.com/sentdm/sent-dm-go/compare/v0.35.0...v0.35.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **api:** encode float32 query values at float32 precision ([f350d2a](https://github.com/sentdm/sent-dm-go/commit/f350d2a72fc824ec6b2687e7c9b668f0dab3cf61))
+
 ## [0.35.0](https://github.com/sentdm/sent-dm-go/compare/v0.34.0...v0.35.0) (2026-09-10)
 
 
