@@ -3,329 +3,329 @@
 package sentdm_test
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"reflect"
-	"testing"
-	"time"
+  "context"
+  "fmt"
+  "net/http"
+  "reflect"
+  "testing"
+  "time"
 
-	"github.com/sentdm/sent-dm-go"
-	"github.com/sentdm/sent-dm-go/internal"
-	"github.com/sentdm/sent-dm-go/option"
+  "github.com/sentdm/sent-dm-go"
+  "github.com/sentdm/sent-dm-go/internal"
+  "github.com/sentdm/sent-dm-go/option"
 )
 
 type closureTransport struct {
-	fn func(req *http.Request) (*http.Response, error)
+  fn func(req *http.Request) (*http.Response, error)
 }
 
 func (t *closureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return t.fn(req)
+  return t.fn(req)
 }
 
 func TestUserAgentHeader(t *testing.T) {
-	var userAgent string
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					userAgent = req.Header.Get("User-Agent")
-					return &http.Response{
-						StatusCode: http.StatusOK,
-					}, nil
-				},
-			},
-		}),
-	)
-	_, _ = client.Messages.Send(context.Background(), sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if userAgent != fmt.Sprintf("Sent/Go %s", internal.PackageVersion) {
-		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
-	}
+  var userAgent string
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+                  Transport: &closureTransport{
+                    fn: func(req *http.Request) (*http.Response, error) {
+                      userAgent = req.Header.Get("User-Agent")
+                      return &http.Response{
+                        StatusCode: http.StatusOK,
+                      }, nil
+                    },
+                  },
+                }),
+  )
+  _, _ = client.Messages.Send(context.Background(), sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if userAgent != fmt.Sprintf("Sent/Go %s", internal.PackageVersion) {
+    t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
+  }
 }
 
 func TestRetryAfter(t *testing.T) {
-	retryCountHeaders := make([]string, 0)
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
-						},
-					}, nil
-				},
-			},
-		}),
-	)
-	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
+  retryCountHeaders := make([]string, 0)
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+      Transport: &closureTransport {
+        fn: func(req *http.Request) (*http.Response, error) {
+          retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
+          return &http.Response{
+            StatusCode: http.StatusTooManyRequests,
+            Header: http.Header{
+              http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
+            },
+          }, nil
+        },
+      },
+    }),
+  )
+  _, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if err == nil  {
+    t.Error("Expected there to be a cancel error")
+  }
 
-	attempts := len(retryCountHeaders)
-	if attempts != 3 {
-		t.Errorf("Expected %d attempts, got %d", 3, attempts)
-	}
+  attempts := len(retryCountHeaders)
+  if attempts != 3 {
+    t.Errorf("Expected %d attempts, got %d", 3, attempts)
+  }
 
-	expectedRetryCountHeaders := []string{"0", "1", "2"}
-	if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
-		t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
-	}
+  expectedRetryCountHeaders := []string{"0", "1", "2"}
+  if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
+    t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
+  }
 }
 
 func TestDeleteRetryCountHeader(t *testing.T) {
-	retryCountHeaders := make([]string, 0)
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
-						},
-					}, nil
-				},
-			},
-		}),
-		option.WithHeaderDel("X-Stainless-Retry-Count"),
-	)
-	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
+  retryCountHeaders := make([]string, 0)
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+      Transport: &closureTransport {
+        fn: func(req *http.Request) (*http.Response, error) {
+          retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
+          return &http.Response{
+            StatusCode: http.StatusTooManyRequests,
+            Header: http.Header{
+              http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
+            },
+          }, nil
+        },
+      },
+    }),
+    option.WithHeaderDel("X-Stainless-Retry-Count"),
+  )
+  _, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if err == nil {
+    t.Error("Expected there to be a cancel error")
+  }
 
-	expectedRetryCountHeaders := []string{"", "", ""}
-	if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
-		t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
-	}
+  expectedRetryCountHeaders := []string{"", "", ""}
+  if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
+    t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
+  }
 }
 
 func TestOverwriteRetryCountHeader(t *testing.T) {
-	retryCountHeaders := make([]string, 0)
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
-						},
-					}, nil
-				},
-			},
-		}),
-		option.WithHeader("X-Stainless-Retry-Count", "42"),
-	)
-	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
+  retryCountHeaders := make([]string, 0)
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+      Transport: &closureTransport {
+        fn: func(req *http.Request) (*http.Response, error) {
+          retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
+          return &http.Response{
+            StatusCode: http.StatusTooManyRequests,
+            Header: http.Header{
+              http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
+            },
+          }, nil
+        },
+      },
+    }),
+    option.WithHeader("X-Stainless-Retry-Count", "42"),
+  )
+  _, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if err == nil {
+    t.Error("Expected there to be a cancel error")
+  }
 
-	expectedRetryCountHeaders := []string{"42", "42", "42"}
-	if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
-		t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
-	}
+  expectedRetryCountHeaders := []string{"42", "42", "42"}
+  if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
+    t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
+  }
 }
 
 func TestRetryAfterMs(t *testing.T) {
-	attempts := 0
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					attempts++
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After-Ms"): []string{"100"},
-						},
-					}, nil
-				},
-			},
-		}),
-	)
-	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
-	if want := 3; attempts != want {
-		t.Errorf("Expected %d attempts, got %d", want, attempts)
-	}
+  attempts := 0
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+                  Transport: &closureTransport {
+                    fn: func(req *http.Request) (*http.Response, error) {
+                      attempts++
+                      return &http.Response{
+                        StatusCode: http.StatusTooManyRequests,
+                        Header: http.Header{
+                          http.CanonicalHeaderKey("Retry-After-Ms"): []string{"100"},
+                        },
+                      }, nil
+                    },
+                  },
+                }),
+  )
+  _, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if err == nil {
+    t.Error("Expected there to be a cancel error")
+  }
+  if want := 3; attempts != want {
+    t.Errorf("Expected %d attempts, got %d", want, attempts)
+  }
 }
 
 func TestContextCancel(t *testing.T) {
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					<-req.Context().Done()
-					return nil, req.Context().Err()
-				},
-			},
-		}),
-	)
-	cancelCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err := client.Messages.Send(cancelCtx, sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+                  Transport: &closureTransport {
+                    fn: func(req *http.Request) (*http.Response, error) {
+                      <-req.Context().Done()
+                      return nil, req.Context().Err()
+                    },
+                  },
+                }),
+  )
+  cancelCtx, cancel := context.WithCancel(context.Background())
+  cancel()
+  _, err := client.Messages.Send(cancelCtx, sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if err == nil {
+    t.Error("Expected there to be a cancel error")
+  }
 }
 
 func TestContextCancelDelay(t *testing.T) {
-	client := sentdm.NewClient(
-		option.WithAPIKey("My API Key"),
-		option.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					<-req.Context().Done()
-					return nil, req.Context().Err()
-				},
-			},
-		}),
-	)
-	cancelCtx, cancel := context.WithTimeout(context.Background(), 2*time.Millisecond)
-	defer cancel()
-	_, err := client.Messages.Send(cancelCtx, sentdm.MessageSendParams{
-		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
-			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-			Name: sentdm.String("order_confirmation"),
-			Parameters: map[string]string{
-				"name":     "John Doe",
-				"order_id": "12345",
-			},
-		},
-		To: []string{"+14155551234"},
-	})
-	if err == nil {
-		t.Error("expected there to be a cancel error")
-	}
+  client := sentdm.NewClient(
+    option.WithAPIKey("My API Key"),
+    option.WithHTTPClient(&http.Client{
+                  Transport: &closureTransport {
+                    fn: func(req *http.Request) (*http.Response, error) {
+                      <-req.Context().Done()
+                      return nil, req.Context().Err()
+                    },
+                  },
+                }),
+  )
+  cancelCtx, cancel := context.WithTimeout(context.Background(), 2 * time.Millisecond)
+  defer cancel()
+  _, err := client.Messages.Send(cancelCtx, sentdm.MessageSendParams{
+    Channel: []string{"sms"},
+    Template: sentdm.MessageSendParamsTemplate{
+      ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+      Name: sentdm.String("order_confirmation"),
+      Parameters: map[string]string{
+      "name": "John Doe",
+      "order_id": "12345",
+      },
+    },
+    To: []string{"+14155551234"},
+  })
+  if err == nil {
+    t.Error("expected there to be a cancel error")
+  }
 }
 
 func TestContextDeadline(t *testing.T) {
-	testTimeout := time.After(3 * time.Second)
-	testDone := make(chan struct{})
+  testTimeout := time.After(3 * time.Second)
+  testDone := make(chan struct{})
 
-	deadline := time.Now().Add(100 * time.Millisecond)
-	deadlineCtx, cancel := context.WithDeadline(context.Background(), deadline)
-	defer cancel()
+  deadline := time.Now().Add(100 * time.Millisecond)
+  deadlineCtx, cancel := context.WithDeadline(context.Background(), deadline)
+  defer cancel()
 
-	go func() {
-		client := sentdm.NewClient(
-			option.WithAPIKey("My API Key"),
-			option.WithHTTPClient(&http.Client{
-				Transport: &closureTransport{
-					fn: func(req *http.Request) (*http.Response, error) {
-						<-req.Context().Done()
-						return nil, req.Context().Err()
-					},
-				},
-			}),
-		)
-		_, err := client.Messages.Send(deadlineCtx, sentdm.MessageSendParams{
-			Channel: []string{"sms"},
-			Template: sentdm.MessageSendParamsTemplate{
-				ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
-				Name: sentdm.String("order_confirmation"),
-				Parameters: map[string]string{
-					"name":     "John Doe",
-					"order_id": "12345",
-				},
-			},
-			To: []string{"+14155551234"},
-		})
-		if err == nil {
-			t.Error("expected there to be a deadline error")
-		}
-		close(testDone)
-	}()
+  go func() {
+    client := sentdm.NewClient(
+      option.WithAPIKey("My API Key"),
+      option.WithHTTPClient(&http.Client{
+                    Transport: &closureTransport {
+                      fn: func(req *http.Request) (*http.Response, error) {
+                        <-req.Context().Done()
+                        return nil, req.Context().Err()
+                      },
+                    },
+                  }),
+    )
+    _, err := client.Messages.Send(deadlineCtx, sentdm.MessageSendParams{
+      Channel: []string{"sms"},
+      Template: sentdm.MessageSendParamsTemplate{
+        ID: sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
+        Name: sentdm.String("order_confirmation"),
+        Parameters: map[string]string{
+        "name": "John Doe",
+        "order_id": "12345",
+        },
+      },
+      To: []string{"+14155551234"},
+    })
+    if err == nil {
+      t.Error("expected there to be a deadline error")
+    }
+    close(testDone)
+  }()
 
-	select {
-	case <-testTimeout:
-		t.Fatal("client didn't finish in time")
-	case <-testDone:
-		if diff := time.Since(deadline); diff < -30*time.Millisecond || 30*time.Millisecond < diff {
-			t.Fatalf("client did not return within 30ms of context deadline, got %s", diff)
-		}
-	}
+  select {
+  case <-testTimeout:
+    t.Fatal("client didn't finish in time")
+  case <-testDone:
+    if diff := time.Since(deadline); diff < -30*time.Millisecond || 30*time.Millisecond < diff {
+      t.Fatalf("client did not return within 30ms of context deadline, got %s", diff)
+    }
+  }
 }

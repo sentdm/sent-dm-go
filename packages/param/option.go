@@ -1,9 +1,9 @@
 package param
 
 import (
+	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"encoding/json"
 	"fmt"
-	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"time"
 )
 
