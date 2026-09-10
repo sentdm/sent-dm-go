@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.35.0](https://github.com/sentdm/sent-dm-go/compare/v0.34.0...v0.35.0) (2026-09-10)
+
+
+### Features
+
+* **api:** configure page_number pagination for the v3 list endpoints ([9aa8fba](https://github.com/sentdm/sent-dm-go/commit/9aa8fbae2e044b4e9e07efbf96907be24ef7ad45))
+
 ## [0.34.0](https://github.com/sentdm/sent-dm-go/compare/v0.33.0...v0.34.0) (2026-09-09)
 
 
