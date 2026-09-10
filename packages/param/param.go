@@ -1,8 +1,8 @@
 package param
 
 import (
-	"encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/encoding/json/sentinel"
+	"encoding/json"
 	"reflect"
 )
 

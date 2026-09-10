@@ -11,10 +11,10 @@
 package json
 
 import (
+	"github.com/sentdm/sent-dm-go/internal/encoding/json/shims"
 	"encoding"
 	"encoding/base64"
 	"fmt"
-	"github.com/sentdm/sent-dm-go/internal/encoding/json/shims"
 	"reflect"
 	"strconv"
 	"strings"

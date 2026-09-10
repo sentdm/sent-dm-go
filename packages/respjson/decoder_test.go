@@ -1,10 +1,10 @@
 package respjson_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	rj "github.com/sentdm/sent-dm-go/packages/respjson"
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 )
