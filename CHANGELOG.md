@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.35.0](https://github.com/sentdm/sent-dm-go/compare/v0.34.0...v0.35.0) (2026-09-10)
+
+
+### Highlights
+
+The contacts, templates, webhooks, webhook events, conversations, and conversation messages list methods now return a page you can iterate instead of a single response body. Iterate the result and the SDK fetches each page as it goes. This changes those methods' return type, so code that read the response body directly needs to iterate the page, or read its items, instead.
+
+`page` and `page_size` are now optional on those calls. You don't have to pass them to list anything.
+
+### Features
+
+* **api:** configure page_number pagination for the v3 list endpoints ([9aa8fba](https://github.com/sentdm/sent-dm-go/commit/9aa8fbae2e044b4e9e07efbf96907be24ef7ad45))
+
 ## [0.34.0](https://github.com/sentdm/sent-dm-go/compare/v0.33.0...v0.34.0) (2026-09-09)
 
 
