@@ -1,10 +1,10 @@
 package apijson_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	"github.com/sentdm/sent-dm-go/packages/param"
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 )
