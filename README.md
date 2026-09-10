@@ -296,10 +296,7 @@ This library provides some conveniences for working with paginated list endpoint
 You can use `.ListAutoPaging()` methods to iterate through items across all pages:
 
 ```go
-iter := client.Webhooks.ListAutoPaging(context.TODO(), sentdm.WebhookListParams{
-	Page:     0,
-	PageSize: 0,
-})
+iter := client.Webhooks.ListAutoPaging(context.TODO(), sentdm.WebhookListParams{})
 // Automatically fetches more pages as needed.
 for iter.Next() {
 	webhookResponse := iter.Current()
@@ -314,10 +311,7 @@ Or you can use simple `.List()` methods to fetch a single page and receive a sta
 with additional helper methods like `.GetNextPage()`, e.g.:
 
 ```go
-page, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{
-	Page:     0,
-	PageSize: 0,
-})
+page, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{})
 for page != nil {
 	for _, webhook := range page.Data.Webhooks {
 		fmt.Printf("%+v\n", webhook)

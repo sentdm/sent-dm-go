@@ -499,10 +499,6 @@ func (r *TemplateUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type TemplateListParams struct {
-	// Page number (1-indexed)
-	Page int64 `query:"page" api:"required" json:"-"`
-	// Number of items per page
-	PageSize int64 `query:"page_size" api:"required" json:"-"`
 	// Optional category filter: MARKETING, UTILITY, AUTHENTICATION
 	Category param.Opt[string] `query:"category,omitzero" json:"-"`
 	// Accepted and ignored. It used to filter on the welcome-playground marker inside
@@ -514,7 +510,11 @@ type TemplateListParams struct {
 	// Optional search term for filtering templates
 	Search param.Opt[string] `query:"search,omitzero" json:"-"`
 	// Optional status filter: APPROVED, PENDING, REJECTED
-	Status     param.Opt[string] `query:"status,omitzero" json:"-"`
+	Status param.Opt[string] `query:"status,omitzero" json:"-"`
+	// Page number (1-indexed)
+	Page param.Opt[int64] `query:"page,omitzero" json:"-"`
+	// Number of items per page
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }

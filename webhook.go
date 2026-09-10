@@ -1034,10 +1034,10 @@ func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
 	IsActive   param.Opt[bool]   `query:"is_active,omitzero" json:"-"`
 	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
@@ -1061,9 +1061,9 @@ type WebhookListEventTypesParams struct {
 }
 
 type WebhookListEventsParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
 	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }

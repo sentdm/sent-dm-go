@@ -275,8 +275,8 @@ func (r *ConversationMessagesListMessageMessageBodyButton) UnmarshalJSON(data []
 }
 
 type ConversationListParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
@@ -290,8 +290,8 @@ func (r ConversationListParams) URLQuery() (v url.Values, err error) {
 }
 
 type ConversationListMessagesParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }

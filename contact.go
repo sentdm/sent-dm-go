@@ -389,16 +389,16 @@ func (r *ContactUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type ContactListParams struct {
-	// Page number (1-indexed)
-	Page int64 `query:"page" api:"required" json:"-"`
-	// Number of items per page
-	PageSize int64 `query:"page_size" api:"required" json:"-"`
 	// Optional channel filter (sms, whatsapp)
 	Channel param.Opt[string] `query:"channel,omitzero" json:"-"`
 	// Optional phone number filter (alternative to list view)
 	Phone param.Opt[string] `query:"phone,omitzero" json:"-"`
 	// Optional search term for filtering contacts
-	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	Search param.Opt[string] `query:"search,omitzero" json:"-"`
+	// Page number (1-indexed)
+	Page param.Opt[int64] `query:"page,omitzero" json:"-"`
+	// Number of items per page
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }

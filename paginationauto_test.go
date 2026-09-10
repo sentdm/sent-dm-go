@@ -25,10 +25,7 @@ func TestAutoPagination(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	iter := client.Webhooks.ListAutoPaging(context.TODO(), sentdm.WebhookListParams{
-		Page:     0,
-		PageSize: 0,
-	})
+	iter := client.Webhooks.ListAutoPaging(context.TODO(), sentdm.WebhookListParams{})
 	// The mock server isn't going to give us real pagination
 	for i := 0; i < 3 && iter.Next(); i++ {
 		webhook := iter.Current()

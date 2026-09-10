@@ -25,10 +25,7 @@ func TestManualPagination(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	page, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{
-		Page:     0,
-		PageSize: 0,
-	})
+	page, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{})
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
