@@ -1,8 +1,8 @@
 package apiform
 
 import (
-	"bytes"
 	"github.com/sentdm/sent-dm-go/packages/param"
+	"bytes"
 	"io"
 	"mime/multipart"
 	"strings"

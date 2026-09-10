@@ -1,8 +1,8 @@
 package param_test
 
 import (
-	"encoding/json"
 	"github.com/sentdm/sent-dm-go/packages/param"
+	"encoding/json"
 	"testing"
 )
 
