@@ -15,6 +15,7 @@ import (
 	"github.com/sentdm/sent-dm-go/internal/apiquery"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/pagination"
 	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
@@ -49,30 +50,62 @@ func NewConversationService(opts ...option.RequestOption) (r ConversationService
 
 // Retrieves a paginated list of the authenticated customer's messages across all
 // conversations, ordered by created date (most recent first).
-func (r *ConversationService) List(ctx context.Context, params ConversationListParams, opts ...option.RequestOption) (res *APIResponseOfConversationMessagesList, err error) {
+func (r *ConversationService) List(ctx context.Context, params ConversationListParams, opts ...option.RequestOption) (res *pagination.ConversationsPage[ConversationMessagesListMessage], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "v3/conversations"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of the authenticated customer's messages across all
+// conversations, ordered by created date (most recent first).
+func (r *ConversationService) ListAutoPaging(ctx context.Context, params ConversationListParams, opts ...option.RequestOption) *pagination.ConversationsPageAutoPager[ConversationMessagesListMessage] {
+	return pagination.NewConversationsPageAutoPager(r.List(ctx, params, opts...))
 }
 
 // Retrieves a paginated list of the messages in a single conversation (scoped to
 // the authenticated customer), ordered by created date (most recent first).
-func (r *ConversationService) ListMessages(ctx context.Context, id string, params ConversationListMessagesParams, opts ...option.RequestOption) (res *APIResponseOfConversationMessagesList, err error) {
+func (r *ConversationService) ListMessages(ctx context.Context, id string, params ConversationListMessagesParams, opts ...option.RequestOption) (res *pagination.ConversationsPage[ConversationMessagesListMessage], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
 	path := fmt.Sprintf("v3/conversations/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of the messages in a single conversation (scoped to
+// the authenticated customer), ordered by created date (most recent first).
+func (r *ConversationService) ListMessagesAutoPaging(ctx context.Context, id string, params ConversationListMessagesParams, opts ...option.RequestOption) *pagination.ConversationsPageAutoPager[ConversationMessagesListMessage] {
+	return pagination.NewConversationsPageAutoPager(r.ListMessages(ctx, id, params, opts...))
 }
 
 // Standard API response envelope for all v3 endpoints
@@ -242,8 +275,8 @@ func (r *ConversationMessagesListMessageMessageBodyButton) UnmarshalJSON(data []
 }
 
 type ConversationListParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
@@ -257,8 +290,8 @@ func (r ConversationListParams) URLQuery() (v url.Values, err error) {
 }
 
 type ConversationListMessagesParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
