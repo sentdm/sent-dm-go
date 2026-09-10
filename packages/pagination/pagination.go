@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
@@ -38,14 +39,10 @@ func (r *ContactsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type ContactsPageDataPagination struct {
-	HasMore    bool  `json:"has_more"`
-	Page       int64 `json:"page"`
-	TotalPages int64 `json:"total_pages"`
+	HasMore bool `json:"has_more"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
-		Page        respjson.Field
-		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -86,9 +83,10 @@ func (r *ContactsPage[T]) GetNextPage() (res *ContactsPage[T], err error) {
 	if r.Data.Pagination.JSON.HasMore.Valid() && r.Data.Pagination.HasMore == false {
 		return nil, nil
 	}
-	currentPage := r.Data.Pagination.Page
-	if r.Data.Pagination.TotalPages > 0 && currentPage >= r.Data.Pagination.TotalPages {
-		return nil, nil
+	u := r.cfg.Request.URL
+	currentPage, err := strconv.ParseInt(u.Query().Get("page"), 10, 64)
+	if err != nil {
+		currentPage = 1
 	}
 	cfg := r.cfg.Clone(context.Background())
 	query := cfg.Request.URL.Query()
@@ -177,14 +175,10 @@ func (r *ConversationsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type ConversationsPageDataPagination struct {
-	HasMore    bool  `json:"has_more"`
-	Page       int64 `json:"page"`
-	TotalPages int64 `json:"total_pages"`
+	HasMore bool `json:"has_more"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
-		Page        respjson.Field
-		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -225,9 +219,10 @@ func (r *ConversationsPage[T]) GetNextPage() (res *ConversationsPage[T], err err
 	if r.Data.Pagination.JSON.HasMore.Valid() && r.Data.Pagination.HasMore == false {
 		return nil, nil
 	}
-	currentPage := r.Data.Pagination.Page
-	if r.Data.Pagination.TotalPages > 0 && currentPage >= r.Data.Pagination.TotalPages {
-		return nil, nil
+	u := r.cfg.Request.URL
+	currentPage, err := strconv.ParseInt(u.Query().Get("page"), 10, 64)
+	if err != nil {
+		currentPage = 1
 	}
 	cfg := r.cfg.Clone(context.Background())
 	query := cfg.Request.URL.Query()
@@ -316,14 +311,10 @@ func (r *TemplatesPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type TemplatesPageDataPagination struct {
-	HasMore    bool  `json:"has_more"`
-	Page       int64 `json:"page"`
-	TotalPages int64 `json:"total_pages"`
+	HasMore bool `json:"has_more"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
-		Page        respjson.Field
-		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -364,9 +355,10 @@ func (r *TemplatesPage[T]) GetNextPage() (res *TemplatesPage[T], err error) {
 	if r.Data.Pagination.JSON.HasMore.Valid() && r.Data.Pagination.HasMore == false {
 		return nil, nil
 	}
-	currentPage := r.Data.Pagination.Page
-	if r.Data.Pagination.TotalPages > 0 && currentPage >= r.Data.Pagination.TotalPages {
-		return nil, nil
+	u := r.cfg.Request.URL
+	currentPage, err := strconv.ParseInt(u.Query().Get("page"), 10, 64)
+	if err != nil {
+		currentPage = 1
 	}
 	cfg := r.cfg.Clone(context.Background())
 	query := cfg.Request.URL.Query()
@@ -455,14 +447,10 @@ func (r *WebhooksPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type WebhooksPageDataPagination struct {
-	HasMore    bool  `json:"has_more"`
-	Page       int64 `json:"page"`
-	TotalPages int64 `json:"total_pages"`
+	HasMore bool `json:"has_more"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
-		Page        respjson.Field
-		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -503,9 +491,10 @@ func (r *WebhooksPage[T]) GetNextPage() (res *WebhooksPage[T], err error) {
 	if r.Data.Pagination.JSON.HasMore.Valid() && r.Data.Pagination.HasMore == false {
 		return nil, nil
 	}
-	currentPage := r.Data.Pagination.Page
-	if r.Data.Pagination.TotalPages > 0 && currentPage >= r.Data.Pagination.TotalPages {
-		return nil, nil
+	u := r.cfg.Request.URL
+	currentPage, err := strconv.ParseInt(u.Query().Get("page"), 10, 64)
+	if err != nil {
+		currentPage = 1
 	}
 	cfg := r.cfg.Clone(context.Background())
 	query := cfg.Request.URL.Query()
@@ -594,14 +583,10 @@ func (r *WebhookEventsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookEventsPageDataPagination struct {
-	HasMore    bool  `json:"has_more"`
-	Page       int64 `json:"page"`
-	TotalPages int64 `json:"total_pages"`
+	HasMore bool `json:"has_more"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
-		Page        respjson.Field
-		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -642,9 +627,10 @@ func (r *WebhookEventsPage[T]) GetNextPage() (res *WebhookEventsPage[T], err err
 	if r.Data.Pagination.JSON.HasMore.Valid() && r.Data.Pagination.HasMore == false {
 		return nil, nil
 	}
-	currentPage := r.Data.Pagination.Page
-	if r.Data.Pagination.TotalPages > 0 && currentPage >= r.Data.Pagination.TotalPages {
-		return nil, nil
+	u := r.cfg.Request.URL
+	currentPage, err := strconv.ParseInt(u.Query().Get("page"), 10, 64)
+	if err != nil {
+		currentPage = 1
 	}
 	cfg := r.cfg.Clone(context.Background())
 	query := cfg.Request.URL.Query()
