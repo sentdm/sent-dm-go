@@ -17,6 +17,7 @@ import (
 	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/pagination"
 	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
@@ -100,14 +101,29 @@ func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUp
 }
 
 // Retrieves a paginated list of webhooks for the authenticated customer.
-func (r *WebhookService) List(ctx context.Context, params WebhookListParams, opts ...option.RequestOption) (res *WebhookListResponse, err error) {
+func (r *WebhookService) List(ctx context.Context, params WebhookListParams, opts ...option.RequestOption) (res *pagination.WebhooksPage[WebhookResponse], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "v3/webhooks"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of webhooks for the authenticated customer.
+func (r *WebhookService) ListAutoPaging(ctx context.Context, params WebhookListParams, opts ...option.RequestOption) *pagination.WebhooksPageAutoPager[WebhookResponse] {
+	return pagination.NewWebhooksPageAutoPager(r.List(ctx, params, opts...))
 }
 
 // Deletes a webhook for the authenticated customer.
@@ -138,18 +154,33 @@ func (r *WebhookService) ListEventTypes(ctx context.Context, query WebhookListEv
 }
 
 // Retrieves a paginated list of delivery events for the specified webhook.
-func (r *WebhookService) ListEvents(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) (res *WebhookListEventsResponse, err error) {
+func (r *WebhookService) ListEvents(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) (res *pagination.WebhookEventsPage[WebhookListEventsResponse], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if id == "" {
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s/events", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of delivery events for the specified webhook.
+func (r *WebhookService) ListEventsAutoPaging(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) *pagination.WebhookEventsPageAutoPager[WebhookListEventsResponse] {
+	return pagination.NewWebhookEventsPageAutoPager(r.ListEvents(ctx, id, params, opts...))
 }
 
 // Generates a new signing secret for the specified webhook. The old secret is
@@ -671,54 +702,6 @@ func (r *WebhookResponse) UnmarshalJSON(data []byte) error {
 }
 
 // Standard API response envelope for all v3 endpoints
-type WebhookListResponse struct {
-	// A paginated list of webhooks.
-	Data WebhookListResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookListResponse) RawJSON() string { return r.JSON.raw }
-func (r *WebhookListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A paginated list of webhooks.
-type WebhookListResponseData struct {
-	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
-	// The webhooks on this page.
-	Webhooks []WebhookResponse `json:"webhooks"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Pagination  respjson.Field
-		Webhooks    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookListResponseData) RawJSON() string { return r.JSON.raw }
-func (r *WebhookListResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
 type WebhookListEventTypesResponse struct {
 	// The webhook event types a customer can subscribe to.
 	Data WebhookListEventTypesResponseData `json:"data" api:"nullable"`
@@ -766,55 +749,7 @@ func (r *WebhookListEventTypesResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Standard API response envelope for all v3 endpoints
 type WebhookListEventsResponse struct {
-	// A paginated list of webhook delivery records.
-	Data WebhookListEventsResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookListEventsResponse) RawJSON() string { return r.JSON.raw }
-func (r *WebhookListEventsResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A paginated list of webhook delivery records.
-type WebhookListEventsResponseData struct {
-	// The events on this page.
-	Events []WebhookListEventsResponseDataEvent `json:"events"`
-	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Events      respjson.Field
-		Pagination  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookListEventsResponseData) RawJSON() string { return r.JSON.raw }
-func (r *WebhookListEventsResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type WebhookListEventsResponseDataEvent struct {
 	ID               string    `json:"id" format:"uuid"`
 	CreatedAt        time.Time `json:"created_at" format:"date-time"`
 	DeliveryAttempts int64     `json:"delivery_attempts"`
@@ -824,12 +759,12 @@ type WebhookListEventsResponseDataEvent struct {
 	// the three webhook envelopes: a message status change, an inbound message, or a
 	// template status change. Read field and event to tell which, the same way your
 	// endpoint does.
-	EventData             WebhookListEventsResponseDataEventEventDataUnion `json:"event_data"`
-	EventType             string                                           `json:"event_type"`
-	HTTPStatusCode        int64                                            `json:"http_status_code" api:"nullable"`
-	ProcessingCompletedAt time.Time                                        `json:"processing_completed_at" api:"nullable" format:"date-time"`
-	ProcessingStartedAt   time.Time                                        `json:"processing_started_at" api:"nullable" format:"date-time"`
-	ResponseBody          string                                           `json:"response_body" api:"nullable"`
+	EventData             WebhookListEventsResponseEventDataUnion `json:"event_data"`
+	EventType             string                                  `json:"event_type"`
+	HTTPStatusCode        int64                                   `json:"http_status_code" api:"nullable"`
+	ProcessingCompletedAt time.Time                               `json:"processing_completed_at" api:"nullable" format:"date-time"`
+	ProcessingStartedAt   time.Time                               `json:"processing_started_at" api:"nullable" format:"date-time"`
+	ResponseBody          string                                  `json:"response_body" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                    respjson.Field
@@ -849,23 +784,22 @@ type WebhookListEventsResponseDataEvent struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r WebhookListEventsResponseDataEvent) RawJSON() string { return r.JSON.raw }
-func (r *WebhookListEventsResponseDataEvent) UnmarshalJSON(data []byte) error {
+func (r WebhookListEventsResponse) RawJSON() string { return r.JSON.raw }
+func (r *WebhookListEventsResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// WebhookListEventsResponseDataEventEventDataUnion contains all possible
-// properties and values from [MessageEvent], [InboundMessageEvent],
-// [TemplateEvent].
+// WebhookListEventsResponseEventDataUnion contains all possible properties and
+// values from [MessageEvent], [InboundMessageEvent], [TemplateEvent].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
-type WebhookListEventsResponseDataEventEventDataUnion struct {
+type WebhookListEventsResponseEventDataUnion struct {
 	Event string `json:"event"`
 	Field string `json:"field"`
 	// This field is a union of [MessageEventPayload], [InboundMessageEventPayload],
 	// [TemplateEventPayload]
-	Payload   WebhookListEventsResponseDataEventEventDataUnionPayload `json:"payload"`
-	Timestamp string                                                  `json:"timestamp"`
+	Payload   WebhookListEventsResponseEventDataUnionPayload `json:"payload"`
+	Timestamp string                                         `json:"timestamp"`
 	JSON      struct {
 		Event     respjson.Field
 		Field     respjson.Field
@@ -875,36 +809,36 @@ type WebhookListEventsResponseDataEventEventDataUnion struct {
 	} `json:"-"`
 }
 
-func (u WebhookListEventsResponseDataEventEventDataUnion) AsMessageEvent() (v MessageEvent) {
+func (u WebhookListEventsResponseEventDataUnion) AsMessageEvent() (v MessageEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u WebhookListEventsResponseDataEventEventDataUnion) AsInboundMessageEvent() (v InboundMessageEvent) {
+func (u WebhookListEventsResponseEventDataUnion) AsInboundMessageEvent() (v InboundMessageEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u WebhookListEventsResponseDataEventEventDataUnion) AsTemplateEvent() (v TemplateEvent) {
+func (u WebhookListEventsResponseEventDataUnion) AsTemplateEvent() (v TemplateEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u WebhookListEventsResponseDataEventEventDataUnion) RawJSON() string { return u.JSON.raw }
+func (u WebhookListEventsResponseEventDataUnion) RawJSON() string { return u.JSON.raw }
 
-func (r *WebhookListEventsResponseDataEventEventDataUnion) UnmarshalJSON(data []byte) error {
+func (r *WebhookListEventsResponseEventDataUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// WebhookListEventsResponseDataEventEventDataUnionPayload is an implicit subunion
-// of [WebhookListEventsResponseDataEventEventDataUnion].
-// WebhookListEventsResponseDataEventEventDataUnionPayload provides convenient
-// access to the sub-properties of the union.
+// WebhookListEventsResponseEventDataUnionPayload is an implicit subunion of
+// [WebhookListEventsResponseEventDataUnion].
+// WebhookListEventsResponseEventDataUnionPayload provides convenient access to the
+// sub-properties of the union.
 //
 // For type safety it is recommended to directly use a variant of the
-// [WebhookListEventsResponseDataEventEventDataUnion].
-type WebhookListEventsResponseDataEventEventDataUnionPayload struct {
+// [WebhookListEventsResponseEventDataUnion].
+type WebhookListEventsResponseEventDataUnionPayload struct {
 	// This field is from variant [MessageEventPayload].
 	MessageStatus string `json:"message_status"`
 	AccountID     string `json:"account_id"`
@@ -954,7 +888,7 @@ type WebhookListEventsResponseDataEventEventDataUnionPayload struct {
 	} `json:"-"`
 }
 
-func (r *WebhookListEventsResponseDataEventEventDataUnionPayload) UnmarshalJSON(data []byte) error {
+func (r *WebhookListEventsResponseEventDataUnionPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1100,10 +1034,10 @@ func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
 	IsActive   param.Opt[bool]   `query:"is_active,omitzero" json:"-"`
 	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
@@ -1127,9 +1061,9 @@ type WebhookListEventTypesParams struct {
 }
 
 type WebhookListEventsParams struct {
-	Page       int64             `query:"page" api:"required" json:"-"`
-	PageSize   int64             `query:"page_size" api:"required" json:"-"`
 	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }

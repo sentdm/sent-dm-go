@@ -27,8 +27,8 @@ func TestConversationListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Conversations.List(context.TODO(), sentdm.ConversationListParams{
-		Page:       0,
-		PageSize:   0,
+		Page:       sentdm.Int(0),
+		PageSize:   sentdm.Int(0),
 		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {
@@ -57,8 +57,8 @@ func TestConversationListMessagesWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"08fab313-c9e2-502c-975e-08b0356c432e",
 		sentdm.ConversationListMessagesParams{
-			Page:       0,
-			PageSize:   0,
+			Page:       sentdm.Int(0),
+			PageSize:   sentdm.Int(0),
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)

@@ -434,10 +434,10 @@ func TestTemplateListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Templates.List(context.TODO(), sentdm.TemplateListParams{
-		Page:                0,
-		PageSize:            0,
 		Category:            sentdm.String("category"),
 		IsWelcomePlayground: sentdm.Bool(true),
+		Page:                sentdm.Int(0),
+		PageSize:            sentdm.Int(0),
 		Search:              sentdm.String("search"),
 		Status:              sentdm.String("status"),
 		XProfileID:          sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
