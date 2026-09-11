@@ -13,8 +13,10 @@ import (
 
 	"github.com/sentdm/sent-dm-go/internal/apijson"
 	"github.com/sentdm/sent-dm-go/internal/apiquery"
+	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/pagination"
 	"github.com/sentdm/sent-dm-go/packages/param"
 	"github.com/sentdm/sent-dm-go/packages/respjson"
 )
@@ -50,7 +52,7 @@ func NewContactService(opts ...option.RequestOption) (r ContactService) {
 
 // Creates a new contact by phone number and associates it with the authenticated
 // customer.
-func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts ...option.RequestOption) (res *ContactNewResponse, err error) {
+func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts ...option.RequestOption) (res *APIResponseOfContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -66,7 +68,7 @@ func (r *ContactService) New(ctx context.Context, params ContactNewParams, opts 
 // Retrieves a specific contact by their unique identifier. Returns detailed
 // contact information including phone formats, available channels, and opt-out
 // status.
-func (r *ContactService) Get(ctx context.Context, id string, query ContactGetParams, opts ...option.RequestOption) (res *ContactGetResponse, err error) {
+func (r *ContactService) Get(ctx context.Context, id string, query ContactGetParams, opts ...option.RequestOption) (res *APIResponseOfContact, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -81,7 +83,7 @@ func (r *ContactService) Get(ctx context.Context, id string, query ContactGetPar
 }
 
 // Updates a contact's default channel and/or opt-out status.
-func (r *ContactService) Update(ctx context.Context, id string, params ContactUpdateParams, opts ...option.RequestOption) (res *ContactUpdateResponse, err error) {
+func (r *ContactService) Update(ctx context.Context, id string, params ContactUpdateParams, opts ...option.RequestOption) (res *APIResponseOfContact, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -100,14 +102,30 @@ func (r *ContactService) Update(ctx context.Context, id string, params ContactUp
 
 // Retrieves a paginated list of contacts for the authenticated customer. Supports
 // filtering by search term, channel, or phone number.
-func (r *ContactService) List(ctx context.Context, params ContactListParams, opts ...option.RequestOption) (res *ContactListResponse, err error) {
+func (r *ContactService) List(ctx context.Context, params ContactListParams, opts ...option.RequestOption) (res *pagination.ContactsPage[ContactResponse], err error) {
+	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "v3/contacts"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
-	return res, err
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Retrieves a paginated list of contacts for the authenticated customer. Supports
+// filtering by search term, channel, or phone number.
+func (r *ContactService) ListAutoPaging(ctx context.Context, params ContactListParams, opts ...option.RequestOption) *pagination.ContactsPageAutoPager[ContactResponse] {
+	return pagination.NewContactsPageAutoPager(r.List(ctx, params, opts...))
 }
 
 // **Deprecated.** Use `PATCH /v3/contacts/{id}` with `{"opt_out": true}` instead,
@@ -141,7 +159,7 @@ func (r *ContactService) Delete(ctx context.Context, id string, params ContactDe
 // success/fail scores (each as a percentage 0-100 of messages on that channel) for
 // one of your contacts. Successful terminal states: SENT/DELIVERED/READ for
 // outbound, RECEIVED for inbound. Fail: FAILED.
-func (r *ContactService) GetMessageSummary(ctx context.Context, contactID string, query ContactGetMessageSummaryParams, opts ...option.RequestOption) (res *ContactGetMessageSummaryResponse, err error) {
+func (r *ContactService) GetMessageSummary(ctx context.Context, contactID string, query ContactGetMessageSummaryParams, opts ...option.RequestOption) (res *APIResponseOfContactMessageSummary, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -156,13 +174,13 @@ func (r *ContactService) GetMessageSummary(ctx context.Context, contactID string
 }
 
 // Standard API response envelope for all v3 endpoints
-type ContactNewResponse struct {
+type APIResponseOfContact struct {
 	// Contact response for v3 API Uses snake_case for JSON property names
-	Data ContactNewResponseData `json:"data" api:"nullable"`
+	Data ContactResponse `json:"data" api:"nullable"`
 	// Error information
-	Error ContactNewResponseError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta ContactNewResponseMeta `json:"meta"`
+	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -177,647 +195,19 @@ type ContactNewResponse struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactNewResponse) RawJSON() string { return r.JSON.raw }
-func (r *ContactNewResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Contact response for v3 API Uses snake_case for JSON property names
-type ContactNewResponseData struct {
-	// Unique identifier for the contact
-	ID string `json:"id" format:"uuid"`
-	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
-	AvailableChannels string `json:"available_channels"`
-	// Country calling code (e.g., 1 for US/Canada)
-	CountryCode string `json:"country_code"`
-	// When the contact was created
-	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// Which customer owns this — the key's own, or the profile named in x-profile-id.
-	// Says whose resource this is, which the resource's own id does not.
-	CustomerID string `json:"customer_id" format:"uuid"`
-	// Default messaging channel to use (e.g., "sms" or "whatsapp")
-	DefaultChannel string `json:"default_channel"`
-	// Phone number in E.164 format (e.g., +1234567890)
-	FormatE164 string `json:"format_e164"`
-	// Phone number in international format (e.g., +1 234-567-890)
-	FormatInternational string `json:"format_international"`
-	// Phone number in national format (e.g., (234) 567-890)
-	FormatNational string `json:"format_national"`
-	// Phone number in RFC 3966 format (e.g., tel:+1-234-567-890)
-	FormatRfc string `json:"format_rfc"`
-	// Always false. Contacts are no longer shared or inherited between sender profiles
-	// — a profile sees only the contacts it owns. Retained so existing v3 clients
-	// reading is_inherited keep deserializing; it carries no information.
-	//
-	// Deprecated: deprecated
-	IsInherited bool `json:"is_inherited"`
-	// Whether the contact has opted out of messaging. Single source of truth — opt-out
-	// is per-contact, not per-channel.
-	OptOut bool `json:"opt_out"`
-	// Phone number in original format
-	PhoneNumber string `json:"phone_number"`
-	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
-	RegionCode string `json:"region_code"`
-	// When the contact was last updated
-	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID                  respjson.Field
-		AvailableChannels   respjson.Field
-		CountryCode         respjson.Field
-		CreatedAt           respjson.Field
-		CustomerID          respjson.Field
-		DefaultChannel      respjson.Field
-		FormatE164          respjson.Field
-		FormatInternational respjson.Field
-		FormatNational      respjson.Field
-		FormatRfc           respjson.Field
-		IsInherited         respjson.Field
-		OptOut              respjson.Field
-		PhoneNumber         respjson.Field
-		RegionCode          respjson.Field
-		UpdatedAt           respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactNewResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ContactNewResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Error information
-type ContactNewResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactNewResponseError) RawJSON() string { return r.JSON.raw }
-func (r *ContactNewResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type ContactNewResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactNewResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *ContactNewResponseMeta) UnmarshalJSON(data []byte) error {
+func (r APIResponseOfContact) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Standard API response envelope for all v3 endpoints
-type ContactGetResponse struct {
-	// Contact response for v3 API Uses snake_case for JSON property names
-	Data ContactGetResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ContactGetResponseError `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta ContactGetResponseMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactGetResponse) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Contact response for v3 API Uses snake_case for JSON property names
-type ContactGetResponseData struct {
-	// Unique identifier for the contact
-	ID string `json:"id" format:"uuid"`
-	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
-	AvailableChannels string `json:"available_channels"`
-	// Country calling code (e.g., 1 for US/Canada)
-	CountryCode string `json:"country_code"`
-	// When the contact was created
-	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// Which customer owns this — the key's own, or the profile named in x-profile-id.
-	// Says whose resource this is, which the resource's own id does not.
-	CustomerID string `json:"customer_id" format:"uuid"`
-	// Default messaging channel to use (e.g., "sms" or "whatsapp")
-	DefaultChannel string `json:"default_channel"`
-	// Phone number in E.164 format (e.g., +1234567890)
-	FormatE164 string `json:"format_e164"`
-	// Phone number in international format (e.g., +1 234-567-890)
-	FormatInternational string `json:"format_international"`
-	// Phone number in national format (e.g., (234) 567-890)
-	FormatNational string `json:"format_national"`
-	// Phone number in RFC 3966 format (e.g., tel:+1-234-567-890)
-	FormatRfc string `json:"format_rfc"`
-	// Always false. Contacts are no longer shared or inherited between sender profiles
-	// — a profile sees only the contacts it owns. Retained so existing v3 clients
-	// reading is_inherited keep deserializing; it carries no information.
-	//
-	// Deprecated: deprecated
-	IsInherited bool `json:"is_inherited"`
-	// Whether the contact has opted out of messaging. Single source of truth — opt-out
-	// is per-contact, not per-channel.
-	OptOut bool `json:"opt_out"`
-	// Phone number in original format
-	PhoneNumber string `json:"phone_number"`
-	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
-	RegionCode string `json:"region_code"`
-	// When the contact was last updated
-	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID                  respjson.Field
-		AvailableChannels   respjson.Field
-		CountryCode         respjson.Field
-		CreatedAt           respjson.Field
-		CustomerID          respjson.Field
-		DefaultChannel      respjson.Field
-		FormatE164          respjson.Field
-		FormatInternational respjson.Field
-		FormatNational      respjson.Field
-		FormatRfc           respjson.Field
-		IsInherited         respjson.Field
-		OptOut              respjson.Field
-		PhoneNumber         respjson.Field
-		RegionCode          respjson.Field
-		UpdatedAt           respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactGetResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Error information
-type ContactGetResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactGetResponseError) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type ContactGetResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactGetResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetResponseMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type ContactUpdateResponse struct {
-	// Contact response for v3 API Uses snake_case for JSON property names
-	Data ContactUpdateResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ContactUpdateResponseError `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta ContactUpdateResponseMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactUpdateResponse) RawJSON() string { return r.JSON.raw }
-func (r *ContactUpdateResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Contact response for v3 API Uses snake_case for JSON property names
-type ContactUpdateResponseData struct {
-	// Unique identifier for the contact
-	ID string `json:"id" format:"uuid"`
-	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
-	AvailableChannels string `json:"available_channels"`
-	// Country calling code (e.g., 1 for US/Canada)
-	CountryCode string `json:"country_code"`
-	// When the contact was created
-	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// Which customer owns this — the key's own, or the profile named in x-profile-id.
-	// Says whose resource this is, which the resource's own id does not.
-	CustomerID string `json:"customer_id" format:"uuid"`
-	// Default messaging channel to use (e.g., "sms" or "whatsapp")
-	DefaultChannel string `json:"default_channel"`
-	// Phone number in E.164 format (e.g., +1234567890)
-	FormatE164 string `json:"format_e164"`
-	// Phone number in international format (e.g., +1 234-567-890)
-	FormatInternational string `json:"format_international"`
-	// Phone number in national format (e.g., (234) 567-890)
-	FormatNational string `json:"format_national"`
-	// Phone number in RFC 3966 format (e.g., tel:+1-234-567-890)
-	FormatRfc string `json:"format_rfc"`
-	// Always false. Contacts are no longer shared or inherited between sender profiles
-	// — a profile sees only the contacts it owns. Retained so existing v3 clients
-	// reading is_inherited keep deserializing; it carries no information.
-	//
-	// Deprecated: deprecated
-	IsInherited bool `json:"is_inherited"`
-	// Whether the contact has opted out of messaging. Single source of truth — opt-out
-	// is per-contact, not per-channel.
-	OptOut bool `json:"opt_out"`
-	// Phone number in original format
-	PhoneNumber string `json:"phone_number"`
-	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
-	RegionCode string `json:"region_code"`
-	// When the contact was last updated
-	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID                  respjson.Field
-		AvailableChannels   respjson.Field
-		CountryCode         respjson.Field
-		CreatedAt           respjson.Field
-		CustomerID          respjson.Field
-		DefaultChannel      respjson.Field
-		FormatE164          respjson.Field
-		FormatInternational respjson.Field
-		FormatNational      respjson.Field
-		FormatRfc           respjson.Field
-		IsInherited         respjson.Field
-		OptOut              respjson.Field
-		PhoneNumber         respjson.Field
-		RegionCode          respjson.Field
-		UpdatedAt           respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactUpdateResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ContactUpdateResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Error information
-type ContactUpdateResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactUpdateResponseError) RawJSON() string { return r.JSON.raw }
-func (r *ContactUpdateResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type ContactUpdateResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactUpdateResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *ContactUpdateResponseMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type ContactListResponse struct {
-	// A paginated list of contacts.
-	Data ContactListResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ContactListResponseError `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta ContactListResponseMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponse) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A paginated list of contacts.
-type ContactListResponseData struct {
-	// The contacts on this page.
-	Contacts []ContactListResponseDataContact `json:"contacts"`
-	// Pagination metadata for list responses
-	Pagination ContactListResponseDataPagination `json:"pagination"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Contacts    respjson.Field
-		Pagination  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Contact response for v3 API Uses snake_case for JSON property names
-type ContactListResponseDataContact struct {
-	// Unique identifier for the contact
-	ID string `json:"id" format:"uuid"`
-	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
-	AvailableChannels string `json:"available_channels"`
-	// Country calling code (e.g., 1 for US/Canada)
-	CountryCode string `json:"country_code"`
-	// When the contact was created
-	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// Which customer owns this — the key's own, or the profile named in x-profile-id.
-	// Says whose resource this is, which the resource's own id does not.
-	CustomerID string `json:"customer_id" format:"uuid"`
-	// Default messaging channel to use (e.g., "sms" or "whatsapp")
-	DefaultChannel string `json:"default_channel"`
-	// Phone number in E.164 format (e.g., +1234567890)
-	FormatE164 string `json:"format_e164"`
-	// Phone number in international format (e.g., +1 234-567-890)
-	FormatInternational string `json:"format_international"`
-	// Phone number in national format (e.g., (234) 567-890)
-	FormatNational string `json:"format_national"`
-	// Phone number in RFC 3966 format (e.g., tel:+1-234-567-890)
-	FormatRfc string `json:"format_rfc"`
-	// Always false. Contacts are no longer shared or inherited between sender profiles
-	// — a profile sees only the contacts it owns. Retained so existing v3 clients
-	// reading is_inherited keep deserializing; it carries no information.
-	//
-	// Deprecated: deprecated
-	IsInherited bool `json:"is_inherited"`
-	// Whether the contact has opted out of messaging. Single source of truth — opt-out
-	// is per-contact, not per-channel.
-	OptOut bool `json:"opt_out"`
-	// Phone number in original format
-	PhoneNumber string `json:"phone_number"`
-	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
-	RegionCode string `json:"region_code"`
-	// When the contact was last updated
-	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID                  respjson.Field
-		AvailableChannels   respjson.Field
-		CountryCode         respjson.Field
-		CreatedAt           respjson.Field
-		CustomerID          respjson.Field
-		DefaultChannel      respjson.Field
-		FormatE164          respjson.Field
-		FormatInternational respjson.Field
-		FormatNational      respjson.Field
-		FormatRfc           respjson.Field
-		IsInherited         respjson.Field
-		OptOut              respjson.Field
-		PhoneNumber         respjson.Field
-		RegionCode          respjson.Field
-		UpdatedAt           respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseDataContact) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseDataContact) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Pagination metadata for list responses
-type ContactListResponseDataPagination struct {
-	// Cursor-based pagination. Never populated — see Cursors.
-	//
-	// Deprecated: deprecated
-	Cursors ContactListResponseDataPaginationCursors `json:"cursors" api:"nullable"`
-	// Whether there are more pages after this one
-	HasMore bool `json:"has_more"`
-	// Current page number (1-indexed)
-	Page int64 `json:"page"`
-	// Number of items per page
-	PageSize int64 `json:"page_size"`
-	// Total number of items across all pages
-	TotalCount int64 `json:"total_count"`
-	// Total number of pages
-	TotalPages int64 `json:"total_pages"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Cursors     respjson.Field
-		HasMore     respjson.Field
-		Page        respjson.Field
-		PageSize    respjson.Field
-		TotalCount  respjson.Field
-		TotalPages  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseDataPagination) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseDataPagination) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Cursor-based pagination. Never populated — see Cursors.
-//
-// Deprecated: deprecated
-type ContactListResponseDataPaginationCursors struct {
-	// Cursor to fetch the next page.
-	After string `json:"after" api:"nullable"`
-	// Cursor to fetch the previous page.
-	Before string `json:"before" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		After       respjson.Field
-		Before      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseDataPaginationCursors) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseDataPaginationCursors) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Error information
-type ContactListResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseError) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type ContactListResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactListResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *ContactListResponseMeta) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type ContactGetMessageSummaryResponse struct {
+type APIResponseOfContactMessageSummary struct {
 	// The response data (null if error)
-	Data ContactGetMessageSummaryResponseData `json:"data" api:"nullable"`
+	Data ContactMessageSummary `json:"data" api:"nullable"`
 	// Error information
-	Error ContactGetMessageSummaryResponseError `json:"error" api:"nullable"`
+	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
-	Meta ContactGetMessageSummaryResponseMeta `json:"meta"`
+	Meta APIMeta `json:"meta"`
 	// Indicates whether the request was successful
 	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -832,19 +222,18 @@ type ContactGetMessageSummaryResponse struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactGetMessageSummaryResponse) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetMessageSummaryResponse) UnmarshalJSON(data []byte) error {
+func (r APIResponseOfContactMessageSummary) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfContactMessageSummary) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
-type ContactGetMessageSummaryResponseData struct {
-	ChannelScores  []ContactGetMessageSummaryResponseDataChannelScore `json:"channel_scores"`
-	ChannelsUsed   []string                                           `json:"channels_used"`
-	ContactID      string                                             `json:"contact_id" format:"uuid"`
-	FirstMessageAt time.Time                                          `json:"first_message_at" api:"nullable" format:"date-time"`
-	LastMessageAt  time.Time                                          `json:"last_message_at" api:"nullable" format:"date-time"`
-	MessageCount   int64                                              `json:"message_count"`
+type ContactMessageSummary struct {
+	ChannelScores  []ContactMessageSummaryChannelScore `json:"channel_scores"`
+	ChannelsUsed   []string                            `json:"channels_used"`
+	ContactID      string                              `json:"contact_id" format:"uuid"`
+	FirstMessageAt time.Time                           `json:"first_message_at" api:"nullable" format:"date-time"`
+	LastMessageAt  time.Time                           `json:"last_message_at" api:"nullable" format:"date-time"`
+	MessageCount   int64                               `json:"message_count"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ChannelScores  respjson.Field
@@ -859,12 +248,12 @@ type ContactGetMessageSummaryResponseData struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactGetMessageSummaryResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetMessageSummaryResponseData) UnmarshalJSON(data []byte) error {
+func (r ContactMessageSummary) RawJSON() string { return r.JSON.raw }
+func (r *ContactMessageSummary) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ContactGetMessageSummaryResponseDataChannelScore struct {
+type ContactMessageSummaryChannelScore struct {
 	Channel string `json:"channel"`
 	// Percentage (0-100) of messages on this channel that ended in FAILED.
 	FailScore int64 `json:"fail_score"`
@@ -882,59 +271,74 @@ type ContactGetMessageSummaryResponseDataChannelScore struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactGetMessageSummaryResponseDataChannelScore) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetMessageSummaryResponseDataChannelScore) UnmarshalJSON(data []byte) error {
+func (r ContactMessageSummaryChannelScore) RawJSON() string { return r.JSON.raw }
+func (r *ContactMessageSummaryChannelScore) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Error information
-type ContactGetMessageSummaryResponseError struct {
-	// Machine-readable error code (e.g., "RESOURCE_001")
-	Code string `json:"code"`
-	// Additional validation error details (field-level errors)
-	Details map[string][]string `json:"details" api:"nullable"`
-	// URL to documentation about this error
-	DocURL string `json:"doc_url" api:"nullable"`
-	// Human-readable error message
-	Message string `json:"message"`
+// Contact response for v3 API Uses snake_case for JSON property names
+type ContactResponse struct {
+	// Unique identifier for the contact
+	ID string `json:"id" format:"uuid"`
+	// Comma-separated list of available messaging channels (e.g., "sms,whatsapp")
+	AvailableChannels string `json:"available_channels"`
+	// Country calling code (e.g., 1 for US/Canada)
+	CountryCode string `json:"country_code"`
+	// When the contact was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Which customer owns this — the key's own, or the profile named in x-profile-id.
+	// Says whose resource this is, which the resource's own id does not.
+	CustomerID string `json:"customer_id" format:"uuid"`
+	// Default messaging channel to use (e.g., "sms" or "whatsapp")
+	DefaultChannel string `json:"default_channel"`
+	// Phone number in E.164 format (e.g., +1234567890)
+	FormatE164 string `json:"format_e164"`
+	// Phone number in international format (e.g., +1 234-567-890)
+	FormatInternational string `json:"format_international"`
+	// Phone number in national format (e.g., (234) 567-890)
+	FormatNational string `json:"format_national"`
+	// Phone number in RFC 3966 format (e.g., tel:+1-234-567-890)
+	FormatRfc string `json:"format_rfc"`
+	// Always false. Contacts are no longer shared or inherited between sender profiles
+	// — a profile sees only the contacts it owns. Retained so existing v3 clients
+	// reading is_inherited keep deserializing; it carries no information.
+	//
+	// Deprecated: deprecated
+	IsInherited bool `json:"is_inherited"`
+	// Whether the contact has opted out of messaging. Single source of truth — opt-out
+	// is per-contact, not per-channel.
+	OptOut bool `json:"opt_out"`
+	// Phone number in original format
+	PhoneNumber string `json:"phone_number"`
+	// ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)
+	RegionCode string `json:"region_code"`
+	// When the contact was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Details     respjson.Field
-		DocURL      respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                  respjson.Field
+		AvailableChannels   respjson.Field
+		CountryCode         respjson.Field
+		CreatedAt           respjson.Field
+		CustomerID          respjson.Field
+		DefaultChannel      respjson.Field
+		FormatE164          respjson.Field
+		FormatInternational respjson.Field
+		FormatNational      respjson.Field
+		FormatRfc           respjson.Field
+		IsInherited         respjson.Field
+		OptOut              respjson.Field
+		PhoneNumber         respjson.Field
+		RegionCode          respjson.Field
+		UpdatedAt           respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactGetMessageSummaryResponseError) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetMessageSummaryResponseError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Request and response metadata
-type ContactGetMessageSummaryResponseMeta struct {
-	// Unique identifier for this request (for tracing and support)
-	RequestID string `json:"request_id"`
-	// Server timestamp when the response was generated
-	Timestamp time.Time `json:"timestamp" format:"date-time"`
-	// API version used for this request
-	Version string `json:"version"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		Version     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContactGetMessageSummaryResponseMeta) RawJSON() string { return r.JSON.raw }
-func (r *ContactGetMessageSummaryResponseMeta) UnmarshalJSON(data []byte) error {
+func (r ContactResponse) RawJSON() string { return r.JSON.raw }
+func (r *ContactResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -985,16 +389,16 @@ func (r *ContactUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type ContactListParams struct {
-	// Page number (1-indexed)
-	Page int64 `query:"page" api:"required" json:"-"`
-	// Number of items per page
-	PageSize int64 `query:"page_size" api:"required" json:"-"`
 	// Optional channel filter (sms, whatsapp)
 	Channel param.Opt[string] `query:"channel,omitzero" json:"-"`
 	// Optional phone number filter (alternative to list view)
 	Phone param.Opt[string] `query:"phone,omitzero" json:"-"`
 	// Optional search term for filtering contacts
-	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
+	Search param.Opt[string] `query:"search,omitzero" json:"-"`
+	// Page number (1-indexed)
+	Page param.Opt[int64] `query:"page,omitzero" json:"-"`
+	// Number of items per page
+	PageSize   param.Opt[int64]  `query:"page_size,omitzero" json:"-"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
@@ -1008,16 +412,13 @@ func (r ContactListParams) URLQuery() (v url.Values, err error) {
 }
 
 type ContactDeleteParams struct {
-	// Sandbox flag - when true, the operation is simulated without side effects Useful
-	// for testing integrations without actual execution
-	Sandbox    param.Opt[bool]   `json:"sandbox,omitzero"`
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	MutationRequest MutationRequestParam
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
 func (r ContactDeleteParams) MarshalJSON() (data []byte, err error) {
-	type shadow ContactDeleteParams
-	return param.MarshalObject(r, (*shadow)(&r))
+	return shimjson.Marshal(r.MutationRequest)
 }
 func (r *ContactDeleteParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)

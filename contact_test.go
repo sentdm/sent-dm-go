@@ -117,9 +117,9 @@ func TestContactListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Contacts.List(context.TODO(), sentdm.ContactListParams{
-		Page:       0,
-		PageSize:   0,
 		Channel:    sentdm.String("channel"),
+		Page:       sentdm.Int(0),
+		PageSize:   sentdm.Int(0),
 		Phone:      sentdm.String("phone"),
 		Search:     sentdm.String("search"),
 		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -150,7 +150,9 @@ func TestContactDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.ContactDeleteParams{
-			Sandbox:    sentdm.Bool(false),
+			MutationRequest: sentdm.MutationRequestParam{
+				Sandbox: sentdm.Bool(false),
+			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)

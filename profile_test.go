@@ -30,15 +30,15 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 	_, err := client.Profiles.New(context.TODO(), sentdm.ProfileNewParams{
 		AllowContactSharing:  param.Null[bool](),
 		AllowTemplateSharing: param.Null[bool](),
-		BillingContact: sentdm.ProfileNewParamsBillingContact{
+		BillingContact: sentdm.BillingContactInfoParam{
 			Email:   "billing@acmecorp.com",
 			Name:    "Acme Corp",
 			Address: sentdm.String("123 Main Street, New York, NY 10001, US"),
 			Phone:   sentdm.String("+12025551234"),
 		},
 		BillingModel: sentdm.String("profile"),
-		Brand: sentdm.ProfileNewParamsBrand{
-			Compliance: sentdm.ProfileNewParamsBrandCompliance{
+		Brand: sentdm.BrandsBrandDataParam{
+			Compliance: sentdm.BrandComplianceInfoParam{
 				BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 				Vertical:          sentdm.TcrVerticalProfessional,
 				DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -49,7 +49,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				Notes:             param.Null[string](),
 				PhoneNumberPrefix: sentdm.String("+1"),
 			},
-			Contact: sentdm.ProfileNewParamsBrandContact{
+			Contact: sentdm.BrandContactInfoParam{
 				Name:             "John Smith",
 				BusinessName:     sentdm.String("Acme Corp"),
 				Email:            sentdm.String("john@acmecorp.com"),
@@ -57,11 +57,11 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 				PhoneCountryCode: sentdm.String("1"),
 				Role:             sentdm.String("CEO"),
 			},
-			Business: sentdm.ProfileNewParamsBrandBusiness{
+			Business: sentdm.BrandBusinessInfoParam{
 				City:                  sentdm.String("New York"),
 				Country:               sentdm.String("US"),
 				CountryOfRegistration: sentdm.String("US"),
-				EntityType:            "PRIVATE_PROFIT",
+				EntityType:            sentdm.BrandBusinessInfoEntityTypePrivateProfit,
 				LegalName:             sentdm.String("Acme Corporation LLC"),
 				PostalCode:            sentdm.String("10001"),
 				State:                 sentdm.String("NY"),
@@ -78,7 +78,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 		InheritTcrCampaign: sentdm.Bool(false),
 		InheritTemplates:   param.Null[bool](),
 		Name:               sentdm.String("Sales Team"),
-		PaymentDetails: sentdm.ProfileNewParamsPaymentDetails{
+		PaymentDetails: sentdm.PaymentDetailsParam{
 			CardNumber: "4111111111111111",
 			Cvc:        "123",
 			Expiry:     "09/27",
@@ -152,15 +152,15 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 			AllowContactSharing:               param.Null[bool](),
 			AllowNumberChangeDuringOnboarding: param.Null[bool](),
 			AllowTemplateSharing:              param.Null[bool](),
-			BillingContact: sentdm.ProfileUpdateParamsBillingContact{
+			BillingContact: sentdm.BillingContactInfoParam{
 				Email:   "dev@stainless.com",
 				Name:    "x",
 				Address: sentdm.String("address"),
 				Phone:   sentdm.String("phone"),
 			},
 			BillingModel: sentdm.String("organization"),
-			Brand: sentdm.ProfileUpdateParamsBrand{
-				Compliance: sentdm.ProfileUpdateParamsBrandCompliance{
+			Brand: sentdm.BrandsBrandDataParam{
+				Compliance: sentdm.BrandComplianceInfoParam{
 					BrandRelationship: sentdm.TcrBrandRelationshipSmallAccount,
 					Vertical:          sentdm.TcrVerticalProfessional,
 					DestinationCountries: []sentdm.DestinationCountryParam{{
@@ -171,7 +171,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					Notes:             param.Null[string](),
 					PhoneNumberPrefix: sentdm.String("+1"),
 				},
-				Contact: sentdm.ProfileUpdateParamsBrandContact{
+				Contact: sentdm.BrandContactInfoParam{
 					Name:             "John Smith",
 					BusinessName:     sentdm.String("Acme Corp"),
 					Email:            sentdm.String("john@acmecorp.com"),
@@ -179,11 +179,11 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 					PhoneCountryCode: sentdm.String("1"),
 					Role:             sentdm.String("CEO"),
 				},
-				Business: sentdm.ProfileUpdateParamsBrandBusiness{
+				Business: sentdm.BrandBusinessInfoParam{
 					City:                  sentdm.String("New York"),
 					Country:               sentdm.String("US"),
 					CountryOfRegistration: sentdm.String("US"),
-					EntityType:            "PRIVATE_PROFIT",
+					EntityType:            sentdm.BrandBusinessInfoEntityTypePrivateProfit,
 					LegalName:             sentdm.String("Acme Corporation LLC"),
 					PostalCode:            sentdm.String("10001"),
 					State:                 sentdm.String("NY"),
@@ -200,7 +200,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 			InheritTcrCampaign: param.Null[bool](),
 			InheritTemplates:   param.Null[bool](),
 			Name:               sentdm.String("Sales Team - Updated"),
-			PaymentDetails: sentdm.ProfileUpdateParamsPaymentDetails{
+			PaymentDetails: sentdm.PaymentDetailsParam{
 				CardNumber: "3216699102256101",
 				Cvc:        "3216",
 				Expiry:     "11/66",
@@ -267,7 +267,9 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileDeleteParams{
-			Sandbox:    sentdm.Bool(false),
+			MutationRequest: sentdm.MutationRequestParam{
+				Sandbox: sentdm.Bool(false),
+			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
 	)
