@@ -49,7 +49,9 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 
 // Creates a new message template with header, body, footer, and buttons. The
 // template can be submitted for review immediately or saved as draft for later
-// submission.
+// submission. There is no `name` field on create — the display name is derived
+// from the template's content and can be changed afterwards with
+// `PUT /v3/templates/{id}`.
 func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -80,7 +82,10 @@ func (r *TemplateService) Get(ctx context.Context, id string, query TemplateGetP
 }
 
 // Updates an existing template's name, category, language, definition, or submits
-// it for review.
+// it for review. While the template is in review (status PENDING, or any channel
+// awaiting a verdict) its definition, category and language are frozen and a
+// resubmission is refused — those requests answer 409 CONFLICT_006. The display
+// name stays editable throughout.
 func (r *TemplateService) Update(ctx context.Context, id string, params TemplateUpdateParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -208,7 +213,8 @@ type Template struct {
 	Language string `json:"language"`
 	// Template display name
 	Name string `json:"name"`
-	// Template status: APPROVED, PENDING, REJECTED
+	// Template status: DRAFT, PENDING, APPROVED, REJECTED. A template created with
+	// submit_for_review: false starts as DRAFT and stays there until it is submitted.
 	Status string `json:"status"`
 	// When the template was last updated
 	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
@@ -263,8 +269,27 @@ func (r *TemplateBodyParam) UnmarshalJSON(data []byte) error {
 
 // The property Template is required.
 type TemplateBodyContentParam struct {
-	Template  string                  `json:"template" api:"required"`
-	Type      param.Opt[string]       `json:"type,omitzero"`
+	// The body copy, with variables written as {{index:variable}}.
+	//
+	// Meta requires every variable to carry surrounding context, so a body is refused
+	// unless it also satisfies all of the following (enforced by
+	// TemplateDefinitionValidator): At least one letter before the first variable and
+	// after the last — trailing punctuation such as "... {{1:variable}}." does not
+	// count. At least (2 × variable count) + 1 words once the placeholders are
+	// removed. No two variables adjacent with only whitespace between them. No leading
+	// or trailing newline, no more than two consecutive line breaks, and no more than
+	// four consecutive spaces.
+	//
+	// Example: "Hello {{0:variable}}! Welcome to {{1:variable}}. We are glad to have
+	// you on board." — two variables, so at least five words are required, and the
+	// copy after the final variable contains letters.
+	Template string `json:"template" api:"required"`
+	// The type of body content — send "text". It is dropped from the stored definition
+	// when null, so a body posted without it is saved with no type key at all and the
+	// template editor has nothing to render the block from.
+	Type param.Opt[string] `json:"type,omitzero"`
+	// The variables referenced by the body copy, one entry per {{index:variable}}
+	// placeholder.
 	Variables []TemplateVariableParam `json:"variables,omitzero"`
 	paramObj
 }
