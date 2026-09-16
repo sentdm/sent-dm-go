@@ -33,8 +33,8 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		Definition: sentdm.TemplateDefinitionParam{
 			Body: sentdm.TemplateBodyParam{
 				MultiChannel: sentdm.TemplateBodyContentParam{
-					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}.",
-					Type:     sentdm.String("type"),
+					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}. We are glad to have you on board.",
+					Type:     sentdm.String("text"),
 					Variables: []sentdm.TemplateVariableParam{{
 						Name: "name",
 						Props: sentdm.TemplateVariablePropsParam{
