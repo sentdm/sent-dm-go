@@ -446,6 +446,10 @@ type MessageEventPayload struct {
 	AccountID string `json:"account_id" format:"uuid"`
 	// The agent attributed to the send, when the send was attributed to one.
 	AgentID string `json:"agent_id" api:"nullable"`
+	// The rendered message body, as plain text. Sent as null when we aren't asserting
+	// a body for this event. The field is always present, so read it and check for
+	// null rather than checking whether the key exists. Truncated to 3072 characters.
+	Body string `json:"body" api:"nullable"`
 	// The channel the message went out on, for example sms or whatsapp. A message that
 	// falls back to another channel reports the channel actually used.
 	Channel string `json:"channel"`
@@ -466,6 +470,7 @@ type MessageEventPayload struct {
 		MessageStatus  respjson.Field
 		AccountID      respjson.Field
 		AgentID        respjson.Field
+		Body           respjson.Field
 		Channel        respjson.Field
 		MessageID      respjson.Field
 		OutboundNumber respjson.Field
@@ -603,6 +608,21 @@ type TemplateEventPayload struct {
 	WhatsappTemplateID string `json:"whatsapp_template_id" api:"required"`
 	// The account the template belongs to.
 	AccountID string `json:"account_id" format:"uuid"`
+	// Which consent keyword this template answers, when it is one of Sent's
+	// auto-replies: OPT_IN, OPT_OUT, HELP, or OTHER for a customer-defined keyword.
+	//
+	// Omitted for an ordinary template, so its presence is the answer to "is this an
+	// auto-reply". Sent creates the three compliance auto-replies at signup and they
+	// go through review like any other template, so their events arrive mixed in with
+	// the customer's own with nothing else to tell them apart.
+	//
+	// Named for the reader rather than after Template.OptAction, which it is mapped
+	// from. The MCP tool result deliberately keeps OptAction, OptKeywords and IsOpt:
+	// it mirrors the internal shape on purpose and publishes the keywords too, so
+	// renaming one of the three there would leave a surface half in each vocabulary.
+	// Two names for one concept, each consistent within its own surface, chosen over a
+	// rename that breaks MCP clients silently.
+	AutoReplyAction string `json:"auto_reply_action" api:"nullable"`
 	// The template's category, for example UTILITY, MARKETING, or AUTHENTICATION.
 	Category string `json:"category"`
 	// The channel leg this decision is about, for example whatsapp, sms, or rcs. A
@@ -627,6 +647,7 @@ type TemplateEventPayload struct {
 		Status             respjson.Field
 		WhatsappTemplateID respjson.Field
 		AccountID          respjson.Field
+		AutoReplyAction    respjson.Field
 		Category           respjson.Field
 		Channel            respjson.Field
 		Language           respjson.Field
@@ -874,7 +895,9 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	MessageStatus string `json:"message_status"`
 	AccountID     string `json:"account_id"`
 	// This field is from variant [MessageEventPayload].
-	AgentID        string `json:"agent_id"`
+	AgentID string `json:"agent_id"`
+	// This field is from variant [MessageEventPayload].
+	Body           string `json:"body"`
 	Channel        string `json:"channel"`
 	MessageID      string `json:"message_id"`
 	OutboundNumber string `json:"outbound_number"`
@@ -889,6 +912,8 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	Status     string `json:"status"`
 	// This field is from variant [TemplateEventPayload].
 	WhatsappTemplateID string `json:"whatsapp_template_id"`
+	// This field is from variant [TemplateEventPayload].
+	AutoReplyAction string `json:"auto_reply_action"`
 	// This field is from variant [TemplateEventPayload].
 	Category string `json:"category"`
 	// This field is from variant [TemplateEventPayload].
@@ -919,6 +944,7 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		MessageStatus      respjson.Field
 		AccountID          respjson.Field
 		AgentID            respjson.Field
+		Body               respjson.Field
 		Channel            respjson.Field
 		MessageID          respjson.Field
 		OutboundNumber     respjson.Field
@@ -930,6 +956,7 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		Text               respjson.Field
 		Status             respjson.Field
 		WhatsappTemplateID respjson.Field
+		AutoReplyAction    respjson.Field
 		Category           respjson.Field
 		Language           respjson.Field
 		Reason             respjson.Field
