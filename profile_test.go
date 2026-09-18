@@ -46,7 +46,7 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 					IsMain: sentdm.Bool(false),
 				}},
 				IsTcrApplication:  sentdm.Bool(true),
-				Notes:             param.Null[string](),
+				Notes:             sentdm.String("notes"),
 				PhoneNumberPrefix: sentdm.String("+1"),
 			},
 			Contact: sentdm.BrandContactInfoParam{
@@ -168,7 +168,7 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 						IsMain: sentdm.Bool(false),
 					}},
 					IsTcrApplication:  sentdm.Bool(true),
-					Notes:             param.Null[string](),
+					Notes:             sentdm.String("notes"),
 					PhoneNumberPrefix: sentdm.String("+1"),
 				},
 				Contact: sentdm.BrandContactInfoParam{
