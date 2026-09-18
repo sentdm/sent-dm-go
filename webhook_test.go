@@ -30,9 +30,10 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 		DisplayName: sentdm.String("Order Notifications"),
 		EndpointURL: sentdm.String("https://example.com/webhooks/orders"),
 		EventFilters: map[string][]string{
-			"message": {"delivered", "failed"},
+			"message":   {"delivered", "failed"},
+			"templates": {"approved", "rejected"},
 		},
-		EventTypes:     []string{"message", "templates"},
+		EventTypes:     []string{"contact", "message", "templates"},
 		RetryCount:     sentdm.Int(3),
 		Sandbox:        sentdm.Bool(false),
 		TimeoutSeconds: sentdm.Int(30),
@@ -99,7 +100,7 @@ func TestWebhookUpdateWithOptionalParams(t *testing.T) {
 			EventFilters: map[string][]string{
 				"message": {"delivered", "failed"},
 			},
-			EventTypes:     []string{"message", "templates"},
+			EventTypes:     []string{"contact", "message", "templates"},
 			RetryCount:     sentdm.Int(5),
 			Sandbox:        sentdm.Bool(false),
 			TimeoutSeconds: sentdm.Int(60),

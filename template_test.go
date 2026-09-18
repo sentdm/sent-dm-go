@@ -33,8 +33,8 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		Definition: sentdm.TemplateDefinitionParam{
 			Body: sentdm.TemplateBodyParam{
 				MultiChannel: sentdm.TemplateBodyContentParam{
-					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}.",
-					Type:     param.Null[string](),
+					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}. We are glad to have you on board.",
+					Type:     sentdm.String("text"),
 					Variables: []sentdm.TemplateVariableParam{{
 						Name: "name",
 						Props: sentdm.TemplateVariablePropsParam{
@@ -42,9 +42,9 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 							Sample:       "John",
 							URL:          "x",
 							VariableType: "text",
-							Alt:          param.Null[string](),
-							Regex:        param.Null[string](),
-							ShortURL:     param.Null[string](),
+							Alt:          sentdm.String("alt"),
+							Regex:        sentdm.String("regex"),
+							ShortURL:     sentdm.String("shortUrl"),
 						},
 						Type: "variable",
 						ID:   sentdm.Int(0),
@@ -55,9 +55,9 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 							Sample:       "SentDM",
 							URL:          "x",
 							VariableType: "text",
-							Alt:          param.Null[string](),
-							Regex:        param.Null[string](),
-							ShortURL:     param.Null[string](),
+							Alt:          sentdm.String("alt"),
+							Regex:        sentdm.String("regex"),
+							ShortURL:     sentdm.String("shortUrl"),
 						},
 						Type: "variable",
 						ID:   sentdm.Int(1),

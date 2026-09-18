@@ -11,7 +11,6 @@ import (
 	"github.com/sentdm/sent-dm-go"
 	"github.com/sentdm/sent-dm-go/internal/testutil"
 	"github.com/sentdm/sent-dm-go/option"
-	"github.com/sentdm/sent-dm-go/packages/param"
 )
 
 func TestProfileCampaignNewWithOptionalParams(t *testing.T) {
@@ -48,7 +47,7 @@ func TestProfileCampaignNewWithOptionalParams(t *testing.T) {
 				OptoutMessage:          sentdm.String("You have been unsubscribed. Reply START to opt back in."),
 				PrivacyPolicyLink:      sentdm.String("https://acmecorp.com/privacy"),
 				TermsAndConditionsLink: sentdm.String("https://acmecorp.com/terms"),
-				Volume:                 param.Null[string](),
+				Volume:                 sentdm.String("volume"),
 			},
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
@@ -90,16 +89,16 @@ func TestProfileCampaignUpdateWithOptionalParams(t *testing.T) {
 					MessagingUseCaseUs: sentdm.MessagingUseCaseUsAccountNotification,
 					SampleMessages:     []string{"Hi {name}, your appointment is confirmed for {date} at {time}.", "Your order #{order_id} has been shipped. Track at {url}"},
 				}},
-				HelpKeywords:           param.Null[string](),
-				HelpMessage:            param.Null[string](),
+				HelpKeywords:           sentdm.String("helpKeywords"),
+				HelpMessage:            sentdm.String("helpMessage"),
 				MessageFlow:            sentdm.String("User signs up on website and opts in to receive SMS notifications"),
-				OptinKeywords:          param.Null[string](),
-				OptinMessage:           param.Null[string](),
-				OptoutKeywords:         param.Null[string](),
-				OptoutMessage:          param.Null[string](),
-				PrivacyPolicyLink:      param.Null[string](),
-				TermsAndConditionsLink: param.Null[string](),
-				Volume:                 param.Null[string](),
+				OptinKeywords:          sentdm.String("optinKeywords"),
+				OptinMessage:           sentdm.String("optinMessage"),
+				OptoutKeywords:         sentdm.String("optoutKeywords"),
+				OptoutMessage:          sentdm.String("optoutMessage"),
+				PrivacyPolicyLink:      sentdm.String("https://example.com"),
+				TermsAndConditionsLink: sentdm.String("https://example.com"),
+				Volume:                 sentdm.String("volume"),
 			},
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
