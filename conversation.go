@@ -235,12 +235,15 @@ type ConversationMessagesListMessageMessageBody struct {
 	Content string                                             `json:"content"`
 	Footer  string                                             `json:"footer" api:"nullable"`
 	Header  string                                             `json:"header" api:"nullable"`
+	// The media asset that rode a message's header, recorded as sent.
+	HeaderMedia ConversationMessagesListMessageMessageBodyHeaderMedia `json:"headerMedia" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Buttons     respjson.Field
 		Content     respjson.Field
 		Footer      respjson.Field
 		Header      respjson.Field
+		HeaderMedia respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -271,6 +274,29 @@ type ConversationMessagesListMessageMessageBodyButton struct {
 // Returns the unmodified JSON received from the API
 func (r ConversationMessagesListMessageMessageBodyButton) RawJSON() string { return r.JSON.raw }
 func (r *ConversationMessagesListMessageMessageBodyButton) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The media asset that rode a message's header, recorded as sent.
+type ConversationMessagesListMessageMessageBodyHeaderMedia struct {
+	// "image", "video" or "document" — taken from the header's media variable.
+	Type string `json:"type"`
+	// The https URL the caller supplied for this send. Never the template's stored
+	// props.sample, which is Meta's expiring header_handle rather than what was
+	// delivered.
+	URL string `json:"url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConversationMessagesListMessageMessageBodyHeaderMedia) RawJSON() string { return r.JSON.raw }
+func (r *ConversationMessagesListMessageMessageBodyHeaderMedia) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

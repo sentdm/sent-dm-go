@@ -298,12 +298,15 @@ type MessageGetStatusResponseDataMessageBody struct {
 	Content string                                          `json:"content"`
 	Footer  string                                          `json:"footer" api:"nullable"`
 	Header  string                                          `json:"header" api:"nullable"`
+	// The media asset that rode a message's header, recorded as sent.
+	HeaderMedia MessageGetStatusResponseDataMessageBodyHeaderMedia `json:"headerMedia" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Buttons     respjson.Field
 		Content     respjson.Field
 		Footer      respjson.Field
 		Header      respjson.Field
+		HeaderMedia respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -334,6 +337,29 @@ type MessageGetStatusResponseDataMessageBodyButton struct {
 // Returns the unmodified JSON received from the API
 func (r MessageGetStatusResponseDataMessageBodyButton) RawJSON() string { return r.JSON.raw }
 func (r *MessageGetStatusResponseDataMessageBodyButton) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The media asset that rode a message's header, recorded as sent.
+type MessageGetStatusResponseDataMessageBodyHeaderMedia struct {
+	// "image", "video" or "document" — taken from the header's media variable.
+	Type string `json:"type"`
+	// The https URL the caller supplied for this send. Never the template's stored
+	// props.sample, which is Meta's expiring header_handle rather than what was
+	// delivered.
+	URL string `json:"url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageGetStatusResponseDataMessageBodyHeaderMedia) RawJSON() string { return r.JSON.raw }
+func (r *MessageGetStatusResponseDataMessageBodyHeaderMedia) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -479,7 +505,20 @@ type MessageSendParamsTemplate struct {
 	ID param.Opt[string] `json:"id,omitzero" format:"uuid"`
 	// Template name (mutually exclusive with id)
 	Name param.Opt[string] `json:"name,omitzero"`
-	// Template variable parameters for personalization
+	// Template variable parameters for personalization, keyed by variable name.
+	//
+	// Every variable the template declares is required; GET /v3/templates/{id} lists
+	// them. Supplying a key the template does not declare is ignored.
+	//
+	// Media headers. A template whose header is an image (designed in WhatsApp Manager
+	// and imported into Sent) declares a reserved header_image key. Its value is a
+	// publicly reachable https URL that Meta fetches at send time — Sent does not host
+	// the asset, and the sample approved with the template is not reused. The key is
+	// derived from the header's media type, so header_video and header_document follow
+	// the same shape when those formats ship.
+	//
+	// "parameters": { "header_image": "https://cdn.example.com/banner.jpg", "name":
+	// "John Doe" }
 	Parameters map[string]string `json:"parameters,omitzero"`
 	paramObj
 }
