@@ -156,7 +156,12 @@ func (r *ConversationMessagesList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Message response for v3 API — same shape as v2 with snake_case JSON conventions
+// Message response for v3 API — same shape as v2 with snake_case JSON conventions.
+//
+// The shape of a message that was sent immediately: it never has a scheduled_at
+// key. A message that is or was held for a later instant is a
+// ScheduledMessageResponse, and the endpoint decides which of the two to answer
+// with. From always returns this type.
 type ConversationMessagesListMessage struct {
 	ID                 string                                 `json:"id" format:"uuid"`
 	ActiveContactPrice float64                                `json:"active_contact_price" api:"nullable" format:"decimal"`
@@ -167,7 +172,14 @@ type ConversationMessagesListMessage struct {
 	Direction          string                                 `json:"direction"`
 	Events             []ConversationMessagesListMessageEvent `json:"events" api:"nullable"`
 	// Structured message body format for database storage. Preserves channel-specific
-	// components (header, body, footer, buttons).
+	// components (header, header media, body, footer, buttons, MMS subject and media).
+	//
+	// Persisted as the messageBody jsonb column on Messages. Every write path goes
+	// through MessageUtils.MessageBodyJsonOptions, which writes nulls, so the envelope
+	// shape is stable regardless of channel or status. Anything that rebuilds this
+	// object field by field — the four IMessageBodyStrategy implementations and
+	// MessageUtils.BuildSegmentBody — has to carry every member, or that member is
+	// silently dropped on whichever path forgot it.
 	MessageBody        ConversationMessagesListMessageMessageBody `json:"message_body" api:"nullable"`
 	Phone              string                                     `json:"phone"`
 	PhoneInternational string                                     `json:"phone_international"`
@@ -229,18 +241,40 @@ func (r *ConversationMessagesListMessageEvent) UnmarshalJSON(data []byte) error 
 }
 
 // Structured message body format for database storage. Preserves channel-specific
-// components (header, body, footer, buttons).
+// components (header, header media, body, footer, buttons, MMS subject and media).
+//
+// Persisted as the messageBody jsonb column on Messages. Every write path goes
+// through MessageUtils.MessageBodyJsonOptions, which writes nulls, so the envelope
+// shape is stable regardless of channel or status. Anything that rebuilds this
+// object field by field — the four IMessageBodyStrategy implementations and
+// MessageUtils.BuildSegmentBody — has to carry every member, or that member is
+// silently dropped on whichever path forgot it.
 type ConversationMessagesListMessageMessageBody struct {
 	Buttons []ConversationMessagesListMessageMessageBodyButton `json:"buttons" api:"nullable"`
 	Content string                                             `json:"content"`
 	Footer  string                                             `json:"footer" api:"nullable"`
 	Header  string                                             `json:"header" api:"nullable"`
+	// The media asset that rode a message's header, recorded as sent.
+	HeaderMedia ConversationMessagesListMessageMessageBodyHeaderMedia `json:"headerMedia" api:"nullable"`
+	// MMS attachments, as the publicly fetchable URLs handed to the carrier. Null on
+	// every other channel.
+	//
+	// Persisted rather than derived because a resend and a curfew release rebuild the
+	// send from the stored row — MessageReplayCommandBuilder reads templateId and
+	// templateVariables and nothing else — so media that lives only on the original
+	// request would silently turn a replayed MMS into a text message.
+	Media []ConversationMessagesListMessageMessageBodyMedia `json:"media" api:"nullable"`
+	// MMS subject line. Null on every other channel.
+	Subject string `json:"subject" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Buttons     respjson.Field
 		Content     respjson.Field
 		Footer      respjson.Field
 		Header      respjson.Field
+		HeaderMedia respjson.Field
+		Media       respjson.Field
+		Subject     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -271,6 +305,55 @@ type ConversationMessagesListMessageMessageBodyButton struct {
 // Returns the unmodified JSON received from the API
 func (r ConversationMessagesListMessageMessageBodyButton) RawJSON() string { return r.JSON.raw }
 func (r *ConversationMessagesListMessageMessageBodyButton) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The media asset that rode a message's header, recorded as sent.
+type ConversationMessagesListMessageMessageBodyHeaderMedia struct {
+	// "image", "video" or "document" — taken from the header's media variable.
+	Type string `json:"type"`
+	// The https URL the caller supplied for this send. Never the template's stored
+	// props.sample, which is Meta's expiring header_handle rather than what was
+	// delivered.
+	URL string `json:"url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConversationMessagesListMessageMessageBodyHeaderMedia) RawJSON() string { return r.JSON.raw }
+func (r *ConversationMessagesListMessageMessageBodyHeaderMedia) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One attachment on a message: a customer-supplied public URL handed to the
+// carrier as-is.
+//
+//	A URL and nothing else. sent.dm never takes custody of MMS media — the customer hosts it and we
+//	pass the link through at send time — so there is no storage key, size or expiry to record. If we ever
+//	do host attachments, that belongs with the change that introduces the hosting, not here.
+type ConversationMessagesListMessageMessageBodyMedia struct {
+	// One of Constants.MmsMediaTypes when known. Advisory — the carrier reads the
+	// fetched object's Content-Type, not this.
+	MediaType string `json:"mediaType" api:"nullable"`
+	URL       string `json:"url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		MediaType   respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConversationMessagesListMessageMessageBodyMedia) RawJSON() string { return r.JSON.raw }
+func (r *ConversationMessagesListMessageMessageBodyMedia) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

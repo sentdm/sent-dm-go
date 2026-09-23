@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/sentdm/sent-dm-go"
 	"github.com/sentdm/sent-dm-go/internal/testutil"
@@ -86,8 +87,11 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
-		Channel: []string{"sms", "whatsapp"},
-		Sandbox: sentdm.Bool(false),
+		Channel:     []string{"sms", "whatsapp"},
+		MediaURLs:   []string{"string"},
+		Sandbox:     sentdm.Bool(false),
+		ScheduledAt: param.Null[time.Time](),
+		Subject:     param.Null[string](),
 		Template: sentdm.MessageSendParamsTemplate{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),

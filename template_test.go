@@ -32,6 +32,31 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		CreationSource: param.Null[string](),
 		Definition: sentdm.TemplateDefinitionParam{
 			Body: sentdm.TemplateBodyParam{
+				Mms: sentdm.TemplateBodyMmsParam{
+					TemplateBodyContentParam: sentdm.TemplateBodyContentParam{
+						Template: "template",
+						Type:     sentdm.String("type"),
+						Variables: []sentdm.TemplateVariableParam{{
+							Name: "x",
+							Props: sentdm.TemplateVariablePropsParam{
+								MediaType:    "x",
+								Sample:       "x",
+								URL:          "x",
+								VariableType: "x",
+								Alt:          sentdm.String("alt"),
+								Regex:        sentdm.String("regex"),
+								ShortURL:     sentdm.String("shortUrl"),
+							},
+							Type: "x",
+							ID:   sentdm.Int(0),
+						}},
+					},
+					Media: []sentdm.TemplateBodyMmsMediaParam{{
+						MediaType: sentdm.String("mediaType"),
+						URL:       sentdm.String("url"),
+					}},
+					Subject: sentdm.String("subject"),
+				},
 				MultiChannel: sentdm.TemplateBodyContentParam{
 					Template: "Hello {{0:variable}}! Welcome to {{1:variable}}. We are glad to have you on board.",
 					Type:     sentdm.String("text"),
@@ -256,6 +281,31 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 			Category: sentdm.String("MARKETING"),
 			Definition: sentdm.TemplateDefinitionParam{
 				Body: sentdm.TemplateBodyParam{
+					Mms: sentdm.TemplateBodyMmsParam{
+						TemplateBodyContentParam: sentdm.TemplateBodyContentParam{
+							Template: "template",
+							Type:     sentdm.String("type"),
+							Variables: []sentdm.TemplateVariableParam{{
+								Name: "x",
+								Props: sentdm.TemplateVariablePropsParam{
+									MediaType:    "x",
+									Sample:       "x",
+									URL:          "x",
+									VariableType: "x",
+									Alt:          sentdm.String("alt"),
+									Regex:        sentdm.String("regex"),
+									ShortURL:     sentdm.String("shortUrl"),
+								},
+								Type: "x",
+								ID:   sentdm.Int(0),
+							}},
+						},
+						Media: []sentdm.TemplateBodyMmsMediaParam{{
+							MediaType: sentdm.String("mediaType"),
+							URL:       sentdm.String("url"),
+						}},
+						Subject: sentdm.String("subject"),
+					},
 					MultiChannel: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
