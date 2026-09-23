@@ -301,6 +301,14 @@ func (r *Template) UnmarshalJSON(data []byte) error {
 // channel. rcs is the one true override: it may accompany either strategy to vary
 // the copy, but cannot stand alone.
 type TemplateBodyParam struct {
+	// MMS-specific content — subject, text and attachments.
+	//
+	// Like Rcs, an override that cannot stand on its own: a template still needs a
+	// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Unlike
+	// Rcs, it has no fallback at send time — MMS with no media is a more expensive
+	// SMS, so a template without this slot is deliberately not MMS-capable and never
+	// produces an MMS route candidate.
+	Mms TemplateBodyMmsParam `json:"mms,omitzero"`
 	// The shared body, used for every channel. One half of the choice described above.
 	MultiChannel TemplateBodyContentParam `json:"multiChannel,omitzero"`
 	// RCS-specific copy that overrides the chosen strategy for RCS only. The one true
@@ -319,6 +327,58 @@ func (r TemplateBodyParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateBodyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// MMS-specific content — subject, text and attachments.
+//
+// Like Rcs, an override that cannot stand on its own: a template still needs a
+// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Unlike
+// Rcs, it has no fallback at send time — MMS with no media is a more expensive
+// SMS, so a template without this slot is deliberately not MMS-capable and never
+// produces an MMS route candidate.
+type TemplateBodyMmsParam struct {
+	// Attachments carried by every send on this template, in order. A per-send
+	// media_urls on the request replaces this list rather than adding to it, so a
+	// template can hold a default creative and a caller can still send something
+	// recipient-specific.
+	Media []TemplateBodyMmsMediaParam `json:"media,omitzero"`
+	// MMS subject line. Optional — most handsets render it above the body, some ignore
+	// it entirely. Deliberately its own field rather than riding TemplateHeader: the
+	// header is authored once and shared across every channel, and carries Meta's
+	// 60-character cap plus its no-newline, no-emoji text rules, none of which
+	// describe an MMS subject.
+	Subject param.Opt[string] `json:"subject,omitzero"`
+	TemplateBodyContentParam
+}
+
+func (r TemplateBodyMmsParam) MarshalJSON() (data []byte, err error) {
+	type shadow struct {
+		*TemplateBodyMmsParam
+		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
+	}
+	return param.MarshalObject(r, shadow{&r, false})
+}
+
+// One attachment on an MMS template body.
+type TemplateBodyMmsMediaParam struct {
+	// One of MmsMediaTypes. Advisory: the carrier reads the Content-Type off the
+	// fetched object, not this field. It exists so an authoring UI can render the
+	// right preview and so a reviewer can see what was intended.
+	MediaType param.Opt[string] `json:"mediaType,omitzero"`
+	// Publicly fetchable https URL. The carrier's MMSC fetches this at send time, so
+	// it has to stay reachable and unauthenticated for the life of the send —
+	// including retries and a DLQ replay — which is why a presigned URL is not a valid
+	// value here.
+	URL param.Opt[string] `json:"url,omitzero"`
+	paramObj
+}
+
+func (r TemplateBodyMmsMediaParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateBodyMmsMediaParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateBodyMmsMediaParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -543,7 +603,12 @@ func (r *TemplateVariableParam) UnmarshalJSON(data []byte) error {
 
 // The properties MediaType, Sample, URL, VariableType are required.
 type TemplateVariablePropsParam struct {
-	MediaType    string            `json:"mediaType" api:"required"`
+	MediaType string `json:"mediaType" api:"required"`
+	// Example value substituted into the template when previewing it and when
+	// submitting it to Meta for review. Free text by nature, so the converter accepts
+	// a JSON number or boolean here and normalizes it — see
+	// JsonScalarToStringConverter for why — and guarantees it is always serialized
+	// back out as a JSON string.
 	Sample       string            `json:"sample" api:"required"`
 	URL          string            `json:"url" api:"required"`
 	VariableType string            `json:"variableType" api:"required"`

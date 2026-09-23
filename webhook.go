@@ -373,12 +373,32 @@ type ChannelEventPayload struct {
 	// The account whose market this is, named as on every other family. When an
 	// organization receives an event for one of its sender profiles this is the
 	// profile, so a reseller compares it with its own id and anything different is one
-	// of its profiles.
+	// of its profiles. Matches customer_id on GET /v3/channels and the sender
+	// profile's id. Together with channel, country, and number_type, it identifies the
+	// market.
 	AccountID string `json:"account_id" format:"uuid"`
 	// The channel this market belongs to: sms, whatsapp, or rcs. Never sent — that
 	// value belongs to message events, where it names the smart-routing brand rather
 	// than a channel that can be provisioned.
 	Channel string `json:"channel"`
+	// What a market has been given: the identity it registers under, its programme,
+	// and any documents attached.
+	//
+	// What it does not carry is what the market asks for. That is the subject of GET
+	// /v3/compliance/requirements, and it is the same answer for every caller — a
+	// description of what a compliance regime wants, not a record of one customer's
+	// progress through it. It was reported here as well for a while, which put the
+	// same array in six response shapes and left a caller deciding which of two
+	// sources to believe.
+	//
+	// Present on a list read for markets that register (carrying brand and campaign),
+	// but with documents absent — documents are not fetched for a list, because a
+	// catalog lookup and a document read per market would multiply across a page.
+	// Absent documents is distinct from an empty list: absent says they were not
+	// fetched; empty says the market has been given none. The parent object is null
+	// only when the market registers with nobody and compliance was not computed —
+	// nothing to show at all.
+	Compliance ChannelEventPayloadCompliance `json:"compliance" api:"nullable"`
 	// The kind of sender the market uses, for example TEN_DLC, LOCAL, or ALPHANUMERIC.
 	// Omitted when the subject has no sender type of its own.
 	NumberType string `json:"number_type" api:"nullable"`
@@ -418,6 +438,7 @@ type ChannelEventPayload struct {
 		Country     respjson.Field
 		AccountID   respjson.Field
 		Channel     respjson.Field
+		Compliance  respjson.Field
 		NumberType  respjson.Field
 		Reason      respjson.Field
 		SenderValue respjson.Field
@@ -434,6 +455,101 @@ func (r *ChannelEventPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// What a market has been given: the identity it registers under, its programme,
+// and any documents attached.
+//
+// What it does not carry is what the market asks for. That is the subject of GET
+// /v3/compliance/requirements, and it is the same answer for every caller — a
+// description of what a compliance regime wants, not a record of one customer's
+// progress through it. It was reported here as well for a while, which put the
+// same array in six response shapes and left a caller deciding which of two
+// sources to believe.
+//
+// Present on a list read for markets that register (carrying brand and campaign),
+// but with documents absent — documents are not fetched for a list, because a
+// catalog lookup and a document read per market would multiply across a page.
+// Absent documents is distinct from an empty list: absent says they were not
+// fetched; empty says the market has been given none. The parent object is null
+// only when the market registers with nobody and compliance was not computed —
+// nothing to show at all.
+type ChannelEventPayloadCompliance struct {
+	// The identity this market registers under, with inherit saying whose it is.
+	//
+	// Reported here rather than on the profile because it belongs to the registration
+	// this market files, and only one market files one. It was a top-level block for a
+	// while, which put a per-registration value beside a list of markets and left a
+	// caller to work out which market it belonged to.
+	//
+	// Absent for a market that registers with nobody — such a market asks for no
+	// identity, so there is none to report. Absent and null mean different things:
+	// absent says this market does not ask, null would say it asks and nothing was
+	// supplied.
+	//
+	// Untyped, like the request side, because its members are declared by the market's
+	// own schema rather than by a C# class. A typed pair here would be a second
+	// definition of what a market wants, free to drift from the one that validates.
+	Brand map[string]any `json:"brand" api:"nullable"`
+	// The programme this market registers, with inherit saying whose it is.
+	//
+	// One, not a list. TcrCampaigns permits several and an account built on the admin
+	// side may hold them, but this surface offers one — which is what lets the
+	// market's PATCH be an upsert rather than a collection with an addressable create
+	// behind it. An account holding several is reported as its first and refused on
+	// write, rather than half-edited.
+	//
+	// Carries no id. Nothing addresses a campaign, and an undeclared key would be
+	// refused if the caller sent this object back — which it is meant to be able to
+	// do.
+	Campaign map[string]any `json:"campaign" api:"nullable"`
+	// What has been supplied for this market.
+	//
+	// Files, not values — the declared halves above carry the values. A document
+	// cannot be a JSON value, so it is sent as multipart on the channel call and
+	// reported here as a reference.
+	//
+	// Absent on a list read, which fetches identity but does not compute compliance
+	// documents per market. Absent and empty mean different things: absent says the
+	// documents were not fetched; empty says the market has been given none.
+	Documents []ChannelEventPayloadComplianceDocument `json:"documents" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Brand       respjson.Field
+		Campaign    respjson.Field
+		Documents   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChannelEventPayloadCompliance) RawJSON() string { return r.JSON.raw }
+func (r *ChannelEventPayloadCompliance) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A document a market asked for and has been given.
+type ChannelEventPayloadComplianceDocument struct {
+	// Identifier of the upload, for fetching it back through the documents endpoints.
+	DocumentID string `json:"document_id" api:"nullable" format:"uuid"`
+	FileName   string `json:"file_name" api:"nullable"`
+	// The catalog's name for this document, matching the requirement it satisfies.
+	Key string `json:"key"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DocumentID  respjson.Field
+		FileName    respjson.Field
+		Key         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChannelEventPayloadComplianceDocument) RawJSON() string { return r.JSON.raw }
+func (r *ChannelEventPayloadComplianceDocument) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
 // this shape and varies only in Payload.
 type ContactEvent struct {
@@ -444,17 +560,25 @@ type ContactEvent struct {
 	// The event family, for example message, templates or contact. Route on this
 	// first, then on event for the specific change.
 	Field string `json:"field"`
-	// Body of a contact.opt_in, contact.opt_out or contact.help event. Delivered when
-	// a contact signals a consent change or asks for help.
+	// Body of a contact.opt_in, contact.opt_out, contact.help or
+	// contact.custom_keyword event. Delivered when a contact signals a consent change,
+	// asks for help, or sends one of your own auto-reply keywords.
 	//
 	// These events state the signal outright, so you do not have to recognise keywords
 	// in the text of a message.received event. They also cover cases that produce no
 	// inbound message at all, such as a network handling an opt-out on your behalf.
 	//
-	// Fields are ordered identity → resulting state → provenance → join key. Nothing
-	// here restates the envelope: which of the three signals occurred is the
-	// envelope's event, and when it was emitted is its timestamp. Retries carry the
-	// same X-Webhook-Event-ID header, which is what to deduplicate on.
+	// Two of the four change consent and two do not: contact.help and
+	// contact.custom_keyword report the state the contact already had. Read opt_out
+	// for the state and the envelope's event for what happened, rather than inferring
+	// one from the other.
+	//
+	// Fields are ordered identity → resulting state → provenance → join keys. The two
+	// parties are from and to. Note that the message family has not moved to those
+	// names yet — message.received still calls the same two parties inbound_number and
+	// outbound_number. Nothing here restates the envelope: which signal occurred is
+	// the envelope's event, and when it was emitted is its timestamp. Retries carry
+	// the same X-Webhook-Event-ID header, which is what to deduplicate on.
 	Payload ContactEventPayload `json:"payload" api:"nullable"`
 	// The event-specific body.
 	RequestID string `json:"request_id" api:"nullable"`
@@ -480,21 +604,30 @@ func (r *ContactEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Body of a contact.opt_in, contact.opt_out or contact.help event. Delivered when
-// a contact signals a consent change or asks for help.
+// Body of a contact.opt_in, contact.opt_out, contact.help or
+// contact.custom_keyword event. Delivered when a contact signals a consent change,
+// asks for help, or sends one of your own auto-reply keywords.
 //
 // These events state the signal outright, so you do not have to recognise keywords
 // in the text of a message.received event. They also cover cases that produce no
 // inbound message at all, such as a network handling an opt-out on your behalf.
 //
-// Fields are ordered identity → resulting state → provenance → join key. Nothing
-// here restates the envelope: which of the three signals occurred is the
-// envelope's event, and when it was emitted is its timestamp. Retries carry the
-// same X-Webhook-Event-ID header, which is what to deduplicate on.
+// Two of the four change consent and two do not: contact.help and
+// contact.custom_keyword report the state the contact already had. Read opt_out
+// for the state and the envelope's event for what happened, rather than inferring
+// one from the other.
+//
+// Fields are ordered identity → resulting state → provenance → join keys. The two
+// parties are from and to. Note that the message family has not moved to those
+// names yet — message.received still calls the same two parties inbound_number and
+// outbound_number. Nothing here restates the envelope: which signal occurred is
+// the envelope's event, and when it was emitted is its timestamp. Retries carry
+// the same X-Webhook-Event-ID header, which is what to deduplicate on.
 type ContactEventPayload struct {
 	// Whether the contact is opted out after this signal — the state to write to your
-	// own record. Same meaning as opt_out on the contact resource. On contact.help
-	// this reports the contact's existing state, which help does not change.
+	// own record. Same meaning as opt_out on the contact resource. On contact.help and
+	// contact.custom_keyword this reports the contact's existing state, which neither
+	// changes.
 	//
 	// Two signals from the same contact can arrive out of order, because each one is
 	// queued on its own rather than against the contact. Compare the envelope's
@@ -510,12 +643,24 @@ type ContactEventPayload struct {
 	// The account the contact belongs to. Present so one endpoint can serve several
 	// accounts.
 	AccountID string `json:"account_id" format:"uuid"`
+	// The RCS agent the signal reached, when it reached one.
+	//
+	// Omitted entirely on channels that have no agent, rather than sent as null — an
+	// SMS or WhatsApp payload does not carry this key at all. On RCS it is the
+	// counterpart to To: a contact reaches an agent rather than a number, so exactly
+	// one of the two is populated and never both. If you run more than one agent, this
+	// is what tells you which of them the contact acted on.
+	AgentID string `json:"agent_id" api:"nullable"`
 	// The channel the signal arrived on, for example sms or whatsapp.
 	Channel string `json:"channel"`
 	// The contact who raised the signal. Always populated, including for contact.help
-	// from a number you have not messaged before — the contact is created if it does
-	// not exist yet, so this identifier is always resolvable against the contacts API.
+	// or contact.custom_keyword from a number you have not messaged before — the
+	// contact is created if it does not exist yet, so this identifier is always
+	// resolvable against the contacts API.
 	ContactID string `json:"contact_id" format:"uuid"`
+	// The contact's number, in E.164 format with the leading + — who raised the
+	// signal. The same party message.received publishes as inbound_number.
+	From string `json:"from"`
 	// The inbound message that carried the signal, matching message_id on the
 	// corresponding message.received event so the two can be joined.
 	//
@@ -525,23 +670,48 @@ type ContactEventPayload struct {
 	// number. The field is always present, so read it and check for null rather than
 	// checking whether the key exists.
 	MessageID string `json:"message_id" api:"nullable" format:"uuid"`
-	// The contact's number in E.164 format. Same value as phone_number on the contact
-	// resource.
-	PhoneNumber string `json:"phone_number"`
+	// The auto-reply template whose keyword the contact matched, joinable against the
+	// templates API.
+	//
+	// This is what identifies which signal arrived on contact.custom_keyword: every
+	// custom template reports the same event name, so the event alone cannot tell your
+	// booking keyword from your opening-hours one. One template holds as many keywords
+	// as you configured, so this is steadier to switch on than text.
+	//
+	// Populated on the compliance sub-types too, where it names the template that
+	// replied. Sent as null when no template was involved — a network-reported opt-out
+	// matches no keyword. The field is always present, so read it and check for null.
+	TemplateID string `json:"template_id" api:"nullable" format:"uuid"`
 	// The text the contact sent, for example STOP or UNSUBSCRIBE. Sent as null when
 	// the signal did not arrive as text. The field is always present, so read it and
 	// check for null rather than checking whether the key exists.
 	Text string `json:"text" api:"nullable"`
+	// The number of yours that received the signal, in E.164 format with the leading
+	// +. Tells a multi-number account which of its senders the contact acted on, which
+	// nothing else on this payload answers.
+	//
+	// This is your number, not the contact's. That is the opposite of what to means on
+	// POST /v3/messages, where it is the list of recipients you are sending to. Reply
+	// to From, not to this field, or the message goes back to yourself.
+	//
+	// Sent as null when the signal did not arrive at a number of yours — an RCS signal
+	// terminates at an agent rather than a number, and a provider-reported opt-out may
+	// name no receiving number at all. The field is always present, so read it and
+	// check for null rather than checking whether the key exists.
+	To string `json:"to" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		OptOut      respjson.Field
 		Source      respjson.Field
 		AccountID   respjson.Field
+		AgentID     respjson.Field
 		Channel     respjson.Field
 		ContactID   respjson.Field
+		From        respjson.Field
 		MessageID   respjson.Field
-		PhoneNumber respjson.Field
+		TemplateID  respjson.Field
 		Text        respjson.Field
+		To          respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -722,6 +892,13 @@ type MessageEventPayload struct {
 	MessageID string `json:"message_id" format:"uuid"`
 	// The recipient's number in E.164 format.
 	OutboundNumber string `json:"outbound_number"`
+	// message.scheduled only: why the message is held, either because you scheduled it
+	// or because the recipient is inside a protected quiet-hours window. Omitted on
+	// every other event.
+	ScheduleReason string `json:"schedule_reason" api:"nullable"`
+	// message.scheduled only: when the held message will be released for delivery, in
+	// UTC (yyyy-MM-ddTHH:mm:ssZ). Omitted on every other event.
+	ScheduledAt string `json:"scheduled_at" api:"nullable"`
 	// The template the message was sent from, when it was sent from one.
 	TemplateID string `json:"template_id" api:"nullable" format:"uuid"`
 	// Name of the template the message was sent from. Omitted when the message wasn't
@@ -738,6 +915,8 @@ type MessageEventPayload struct {
 		Channel        respjson.Field
 		MessageID      respjson.Field
 		OutboundNumber respjson.Field
+		ScheduleReason respjson.Field
+		ScheduledAt    respjson.Field
 		TemplateID     respjson.Field
 		TemplateName   respjson.Field
 		UpdatedAt      respjson.Field
@@ -1056,9 +1235,22 @@ type WebhookListEventsResponse struct {
 	DeliveryStatus   string    `json:"delivery_status"`
 	ErrorMessage     string    `json:"error_message" api:"nullable"`
 	// The exact event body that was delivered, or attempted, for this record. One of
-	// the four webhook envelopes: a message status change, an inbound message, a
-	// template status change, or a contact consent signal. Read field and event to
-	// tell which, the same way your endpoint does.
+	// the six webhook envelopes:
+	//
+	// message — an outbound message changed status. message with event:
+	// message.received — someone replied to you. templates — a template was approved,
+	// rejected, paused or similar. channel — one of your markets moved in provisioning
+	// or compliance. contact — a consent signal: opt-in, opt-out or help. link — a
+	// tracked short link was clicked or a hosted file downloaded, or one expired or
+	// was revoked.
+	//
+	// Read field and event to tell which, the same way your endpoint does. The two
+	// message envelopes are the reason that is two fields and not one: they share a
+	// field and differ by event.
+	//
+	// Treat the list as open. It has grown twice — channel and then link — and a
+	// handler that rejects an envelope it does not recognise will break on the next
+	// addition rather than ignore it.
 	EventData             WebhookListEventsResponseEventDataUnion `json:"event_data"`
 	EventType             string                                  `json:"event_type"`
 	HTTPStatusCode        int64                                   `json:"http_status_code" api:"nullable"`
@@ -1091,14 +1283,16 @@ func (r *WebhookListEventsResponse) UnmarshalJSON(data []byte) error {
 
 // WebhookListEventsResponseEventDataUnion contains all possible properties and
 // values from [MessageEvent], [InboundMessageEvent], [TemplateEvent],
-// [ChannelEvent], [ContactEvent].
+// [ChannelEvent], [ContactEvent],
+// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type WebhookListEventsResponseEventDataUnion struct {
 	Event string `json:"event"`
 	Field string `json:"field"`
 	// This field is a union of [MessageEventPayload], [InboundMessageEventPayload],
-	// [TemplateEventPayload], [ChannelEventPayload], [ContactEventPayload]
+	// [TemplateEventPayload], [ChannelEventPayload], [ContactEventPayload],
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload]
 	Payload   WebhookListEventsResponseEventDataUnionPayload `json:"payload"`
 	RequestID string                                         `json:"request_id"`
 	Timestamp string                                         `json:"timestamp"`
@@ -1137,6 +1331,11 @@ func (u WebhookListEventsResponseEventDataUnion) AsContactEvent() (v ContactEven
 	return
 }
 
+func (u WebhookListEventsResponseEventDataUnion) AsWebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload() (v WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u WebhookListEventsResponseEventDataUnion) RawJSON() string { return u.JSON.raw }
 
@@ -1155,16 +1354,19 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	// This field is from variant [MessageEventPayload].
 	MessageStatus string `json:"message_status"`
 	AccountID     string `json:"account_id"`
-	// This field is from variant [MessageEventPayload].
-	AgentID string `json:"agent_id"`
+	AgentID       string `json:"agent_id"`
 	// This field is from variant [MessageEventPayload].
 	Body           string `json:"body"`
 	Channel        string `json:"channel"`
 	MessageID      string `json:"message_id"`
 	OutboundNumber string `json:"outbound_number"`
-	TemplateID     string `json:"template_id"`
-	TemplateName   string `json:"template_name"`
-	UpdatedAt      string `json:"updated_at"`
+	// This field is from variant [MessageEventPayload].
+	ScheduleReason string `json:"schedule_reason"`
+	// This field is from variant [MessageEventPayload].
+	ScheduledAt  string `json:"scheduled_at"`
+	TemplateID   string `json:"template_id"`
+	TemplateName string `json:"template_name"`
+	UpdatedAt    string `json:"updated_at"`
 	// This field is from variant [InboundMessageEventPayload].
 	InboundNumber string `json:"inbound_number"`
 	// This field is from variant [InboundMessageEventPayload].
@@ -1183,6 +1385,8 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	// This field is from variant [ChannelEventPayload].
 	Country string `json:"country"`
 	// This field is from variant [ChannelEventPayload].
+	Compliance ChannelEventPayloadCompliance `json:"compliance"`
+	// This field is from variant [ChannelEventPayload].
 	NumberType string `json:"number_type"`
 	// This field is from variant [ChannelEventPayload].
 	SenderValue string `json:"sender_value"`
@@ -1193,8 +1397,55 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	// This field is from variant [ContactEventPayload].
 	ContactID string `json:"contact_id"`
 	// This field is from variant [ContactEventPayload].
-	PhoneNumber string `json:"phone_number"`
-	JSON        struct {
+	From string `json:"from"`
+	// This field is from variant [ContactEventPayload].
+	To string `json:"to"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	RecordID string `json:"record_id"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	AccessCountry string `json:"access_country"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	AccessOutcome string `json:"access_outcome"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	Browser string `json:"browser"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	BytesServed int64 `json:"bytes_served"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	CustomerID string `json:"customer_id"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	Device string `json:"device"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	LinkKind string `json:"link_kind"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	OccurredAt string `json:"occurred_at"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	ReferenceKey string `json:"reference_key"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	ReferrerHost string `json:"referrer_host"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	RequestMethod string `json:"request_method"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	SenderProfileID string `json:"sender_profile_id"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	StatusCode int64 `json:"status_code"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
+	TrafficClass string `json:"traffic_class"`
+	JSON         struct {
 		MessageStatus      respjson.Field
 		AccountID          respjson.Field
 		AgentID            respjson.Field
@@ -1202,6 +1453,8 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		Channel            respjson.Field
 		MessageID          respjson.Field
 		OutboundNumber     respjson.Field
+		ScheduleReason     respjson.Field
+		ScheduledAt        respjson.Field
 		TemplateID         respjson.Field
 		TemplateName       respjson.Field
 		UpdatedAt          respjson.Field
@@ -1215,17 +1468,222 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		Language           respjson.Field
 		Reason             respjson.Field
 		Country            respjson.Field
+		Compliance         respjson.Field
 		NumberType         respjson.Field
 		SenderValue        respjson.Field
 		OptOut             respjson.Field
 		Source             respjson.Field
 		ContactID          respjson.Field
-		PhoneNumber        respjson.Field
+		From               respjson.Field
+		To                 respjson.Field
+		RecordID           respjson.Field
+		AccessCountry      respjson.Field
+		AccessOutcome      respjson.Field
+		Browser            respjson.Field
+		BytesServed        respjson.Field
+		CustomerID         respjson.Field
+		Device             respjson.Field
+		LinkKind           respjson.Field
+		OccurredAt         respjson.Field
+		ReferenceKey       respjson.Field
+		ReferrerHost       respjson.Field
+		RequestMethod      respjson.Field
+		SenderProfileID    respjson.Field
+		StatusCode         respjson.Field
+		TrafficClass       respjson.Field
 		raw                string
 	} `json:"-"`
 }
 
 func (r *WebhookListEventsResponseEventDataUnionPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload struct {
+	// The specific event within the family, for example message.delivered,
+	// message.received or contact.opt_out. Absent on events that have no subtype, so
+	// treat it as optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message, templates or contact. Route on this
+	// first, then on event for the specific change.
+	Field string `json:"field"`
+	// Body of a link event: something happened to a tracked link Sent published on the
+	// customer's behalf. A link points either at a URL the customer supplied or at a
+	// file Sent hosts for them; LinkKind says which. Delivered when an eligible
+	// request is served, or when a published link reaches the end of its life.
+	//
+	// A click is a request, not a read receipt. link.clicked means the redirect was
+	// served; link.downloaded means bytes went out. Neither proves a person saw
+	// anything — messaging providers and link scanners fetch URLs on their own, which
+	// is what TrafficClass exists to tell apart. Filter on it before reporting a
+	// click-through rate; treat likely_human as a hint, never as delivery
+	// confirmation.
+	//
+	// RecordId identifies the link; the X-Webhook-Event-ID header identifies the
+	// delivery. One link is hit many times, so those are the two keys a subscriber
+	// needs: group by the first, deduplicate on the second — exactly as on every other
+	// family. The payload carries no event identifier of its own, for the same reason
+	// none of the others do.
+	//
+	// Nothing here identifies the visitor. No IP address and no visitor token crosses
+	// this boundary. Country, Device and Browser are coarse buckets derived at the
+	// edge and are absent whenever the request did not supply enough to derive them.
+	Payload WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload `json:"payload" api:"nullable"`
+	// The event-specific body.
+	RequestID string `json:"request_id" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of a link event: something happened to a tracked link Sent published on the
+// customer's behalf. A link points either at a URL the customer supplied or at a
+// file Sent hosts for them; LinkKind says which. Delivered when an eligible
+// request is served, or when a published link reaches the end of its life.
+//
+// A click is a request, not a read receipt. link.clicked means the redirect was
+// served; link.downloaded means bytes went out. Neither proves a person saw
+// anything — messaging providers and link scanners fetch URLs on their own, which
+// is what TrafficClass exists to tell apart. Filter on it before reporting a
+// click-through rate; treat likely_human as a hint, never as delivery
+// confirmation.
+//
+// RecordId identifies the link; the X-Webhook-Event-ID header identifies the
+// delivery. One link is hit many times, so those are the two keys a subscriber
+// needs: group by the first, deduplicate on the second — exactly as on every other
+// family. The payload carries no event identifier of its own, for the same reason
+// none of the others do.
+//
+// Nothing here identifies the visitor. No IP address and no visitor token crosses
+// this boundary. Country, Device and Browser are coarse buckets derived at the
+// edge and are absent whenever the request did not supply enough to derive them.
+type WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload struct {
+	// The link's public identifier — the eight-character code in the short URL, for
+	// example A78B2BU0. Unique across both kinds, and never reused, so it is the
+	// stable key to group one link's events by.
+	RecordID string `json:"record_id" api:"required"`
+	// Where the request appeared to come from, as an ISO 3166-1 alpha-2 code. Named
+	// separately from the country on a channel event, which is a destination market
+	// the customer registered for — this one is a property of a single visitor and is
+	// absent when the edge could not resolve it.
+	AccessCountry string `json:"access_country" api:"nullable"`
+	// How the request was served, when the edge recorded it. Free text describing the
+	// outcome — show it to a human rather than branching on it.
+	AccessOutcome string `json:"access_outcome" api:"nullable"`
+	// The requesting browser family, for example chrome or safari, or unknown. Derived
+	// from the user agent.
+	Browser string `json:"browser" api:"nullable"`
+	// How many bytes were served, for a file access. A ranged request reports the
+	// bytes in that range, not the size of the file, so several accesses of one file
+	// can each report a part.
+	BytesServed int64 `json:"bytes_served" api:"nullable"`
+	// The channel the message carrying this link went out on: sms, whatsapp, or rcs.
+	Channel string `json:"channel" api:"nullable"`
+	// The organization the link belongs to. Always the parent account, never a sender
+	// profile — read SenderProfileId for that.
+	//
+	// This family publishes the owner as an explicit pair rather than the single
+	// account_id the other families use. The pair says which organization and which
+	// profile without the subscriber deriving either, which is the trade: one more key
+	// against not having to know that account_id silently becomes the profile when one
+	// exists.
+	CustomerID string `json:"customer_id" format:"uuid"`
+	// The requesting device class: mobile, tablet, desktop or unknown. Derived from
+	// the user agent.
+	Device string `json:"device" api:"nullable"`
+	// What the link points at: url for a destination the customer supplied, file for
+	// media Sent hosts. Always present, and implied by the event — link.clicked is
+	// always url and link.downloaded always file — but published as its own field so a
+	// subscriber can branch on the kind without parsing the event name, the same
+	// separation the channel family keeps between its event and its status.
+	LinkKind string `json:"link_kind"`
+	// The message the link was published in.
+	//
+	// The event can arrive before the message is readable through GET /v3/messages: a
+	// provider may fetch a link within milliseconds of the send, and nothing here
+	// waits for the message row. Retry the read rather than treating an unknown id as
+	// an error.
+	MessageID string `json:"message_id" api:"nullable" format:"uuid"`
+	// When the access or lifecycle change actually happened, in UTC
+	// (yyyy-MM-ddTHH:mm:ssZ). The envelope's timestamp is when Sent emitted the event;
+	// this is when the thing occurred, and the two differ by the ingest delay.
+	OccurredAt string `json:"occurred_at"`
+	// The caller-supplied label tying this link back to a position in the message, for
+	// example body:0 for the first link in the body. Present when the link was created
+	// with one.
+	ReferenceKey string `json:"reference_key" api:"nullable"`
+	// The host of the page that linked here, when the request supplied one. The host
+	// only — never a full referring URL.
+	ReferrerHost string `json:"referrer_host" api:"nullable"`
+	// The HTTP method of the request that was served, for an access event. Omitted on
+	// link.expired and link.revoked, which describe no request.
+	RequestMethod string `json:"request_method" api:"nullable"`
+	// The sender profile that owns the link, or null when the organization owns it
+	// directly. Always on the wire so a handler reads one shape rather than branching
+	// on whether the key arrived.
+	//
+	// sender_profile_id, not profile_id: the API already publishes
+	// messaging_profile_id and sending_phone_number_profile_id for provider-side
+	// profiles, which are a different thing entirely. The unqualified name would read
+	// as one of those.
+	SenderProfileID string `json:"sender_profile_id" api:"nullable" format:"uuid"`
+	// The HTTP status Sent answered the request with: 302 for a link, 200 or 206 for a
+	// file. Omitted on lifecycle events.
+	StatusCode int64 `json:"status_code" api:"nullable"`
+	// A coarse guess at what made the request: likely_human, provider (a messaging
+	// platform prefetching the link), bot, or unknown. Derived from the user agent, so
+	// it is a hint for filtering noise rather than a fact to bill or report on.
+	TrafficClass string `json:"traffic_class" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RecordID        respjson.Field
+		AccessCountry   respjson.Field
+		AccessOutcome   respjson.Field
+		Browser         respjson.Field
+		BytesServed     respjson.Field
+		Channel         respjson.Field
+		CustomerID      respjson.Field
+		Device          respjson.Field
+		LinkKind        respjson.Field
+		MessageID       respjson.Field
+		OccurredAt      respjson.Field
+		ReferenceKey    respjson.Field
+		ReferrerHost    respjson.Field
+		RequestMethod   respjson.Field
+		SenderProfileID respjson.Field
+		StatusCode      respjson.Field
+		TrafficClass    respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
