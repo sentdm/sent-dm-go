@@ -199,8 +199,16 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 				}},
 			},
 			Header: sentdm.TemplateHeaderParam{
-				Template: "template",
-				Type:     sentdm.String("type"),
+				Template:   "template",
+				ExampleURL: sentdm.String("example_url"),
+				Location: sentdm.TemplateHeaderLocationParam{
+					Address:   "x",
+					Latitude:  "x",
+					Longitude: "x",
+					Name:      "x",
+				},
+				StaticResource: sentdm.Bool(true),
+				Type:           sentdm.String("type"),
 				Variables: []sentdm.TemplateVariableParam{{
 					Name: "x",
 					Props: sentdm.TemplateVariablePropsParam{
@@ -435,8 +443,16 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 					}},
 				},
 				Header: sentdm.TemplateHeaderParam{
-					Template: "template",
-					Type:     sentdm.String("type"),
+					Template:   "template",
+					ExampleURL: sentdm.String("example_url"),
+					Location: sentdm.TemplateHeaderLocationParam{
+						Address:   "x",
+						Latitude:  "x",
+						Longitude: "x",
+						Name:      "x",
+					},
+					StaticResource: sentdm.Bool(true),
+					Type:           sentdm.String("type"),
 					Variables: []sentdm.TemplateVariableParam{{
 						Name: "x",
 						Props: sentdm.TemplateVariablePropsParam{
