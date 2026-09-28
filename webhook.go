@@ -1788,7 +1788,10 @@ type WebhookNewParams struct {
 	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventFilters   map[string][]string `json:"event_filters,omitzero"`
-	EventTypes     []string            `json:"event_types,omitzero"`
+	// Request-only: the events an organization webhook's sender profile clones
+	// receive, one clone per existing and future profile. Responses never return it.
+	SenderProfile WebhookNewParamsSenderProfile `json:"sender_profile,omitzero"`
+	EventTypes    []string                      `json:"event_types,omitzero"`
 	paramObj
 }
 
@@ -1797,6 +1800,22 @@ func (r WebhookNewParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *WebhookNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request-only: the events an organization webhook's sender profile clones
+// receive, one clone per existing and future profile. Responses never return it.
+type WebhookNewParamsSenderProfile struct {
+	EventFilters map[string][]string `json:"event_filters,omitzero"`
+	EventTypes   []string            `json:"event_types,omitzero"`
+	paramObj
+}
+
+func (r WebhookNewParamsSenderProfile) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookNewParamsSenderProfile
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookNewParamsSenderProfile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1816,7 +1835,10 @@ type WebhookUpdateParams struct {
 	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventFilters   map[string][]string `json:"event_filters,omitzero"`
-	EventTypes     []string            `json:"event_types,omitzero"`
+	// Request-only: the events an organization webhook's sender profile clones
+	// receive, one clone per existing and future profile. Responses never return it.
+	SenderProfile WebhookUpdateParamsSenderProfile `json:"sender_profile,omitzero"`
+	EventTypes    []string                         `json:"event_types,omitzero"`
 	paramObj
 }
 
@@ -1825,6 +1847,22 @@ func (r WebhookUpdateParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request-only: the events an organization webhook's sender profile clones
+// receive, one clone per existing and future profile. Responses never return it.
+type WebhookUpdateParamsSenderProfile struct {
+	EventFilters map[string][]string `json:"event_filters,omitzero"`
+	EventTypes   []string            `json:"event_types,omitzero"`
+	paramObj
+}
+
+func (r WebhookUpdateParamsSenderProfile) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookUpdateParamsSenderProfile
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookUpdateParamsSenderProfile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
