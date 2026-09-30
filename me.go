@@ -68,6 +68,11 @@ func NewMeService(opts ...option.RequestOption) (r MeService) {
 // `sending_phone_number_profile_id` names the account that holds that number in
 // inventory — normally this account, and a different one where a number is shared.
 // Both are `null` when the account has no US SMS sender.
+//
+// **Template auto-creation:** `enable_template_auto_creation_for_sp` reports
+// whether this account may mark a template for automatic creation on its sender
+// profiles. It is granted by Sent and off by default. A `profile` reports `false`,
+// having no sender profiles of its own to create anything on.
 func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.RequestOption) (res *MeGetResponse, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
@@ -174,6 +179,20 @@ type MeGetResponseData struct {
 	Description string `json:"description" api:"nullable"`
 	// Contact email address
 	Email string `json:"email" api:"nullable"`
+	// Whether this account may mark a template for automatic creation on its sender
+	// profiles. Granted by Sent per account and off by default, so it is what a
+	// template-create form reads to decide whether to offer the option at all —
+	// marking a template without it does nothing.
+	//
+	// Top-level rather than inside settings, which is written for type: "profile" only
+	// and so would never carry it to the account type that can act on it.
+	//
+	// This is the capability, not the stored flag: a profile reports false whatever
+	// its own row holds. A sender profile owns no sender profiles, so a template it
+	// marked would have nothing to be created on and the fan-out would never read the
+	// flag. The admin GET /customers/{id} reports the stored value instead, because
+	// that is the one an operator granted.
+	EnableTemplateAutoCreationForSp bool `json:"enable_template_auto_creation_for_sp"`
 	// Account icon URL
 	Icon string `json:"icon" api:"nullable"`
 	// Account name
@@ -213,23 +232,24 @@ type MeGetResponseData struct {
 	Type string `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                          respjson.Field
-		Channels                    respjson.Field
-		CreatedAt                   respjson.Field
-		Description                 respjson.Field
-		Email                       respjson.Field
-		Icon                        respjson.Field
-		Name                        respjson.Field
-		OrganizationID              respjson.Field
-		Profiles                    respjson.Field
-		SendingPhoneNumber          respjson.Field
-		SendingPhoneNumberProfileID respjson.Field
-		Settings                    respjson.Field
-		ShortName                   respjson.Field
-		Status                      respjson.Field
-		Type                        respjson.Field
-		ExtraFields                 map[string]respjson.Field
-		raw                         string
+		ID                              respjson.Field
+		Channels                        respjson.Field
+		CreatedAt                       respjson.Field
+		Description                     respjson.Field
+		Email                           respjson.Field
+		EnableTemplateAutoCreationForSp respjson.Field
+		Icon                            respjson.Field
+		Name                            respjson.Field
+		OrganizationID                  respjson.Field
+		Profiles                        respjson.Field
+		SendingPhoneNumber              respjson.Field
+		SendingPhoneNumberProfileID     respjson.Field
+		Settings                        respjson.Field
+		ShortName                       respjson.Field
+		Status                          respjson.Field
+		Type                            respjson.Field
+		ExtraFields                     map[string]respjson.Field
+		raw                             string
 	} `json:"-"`
 }
 

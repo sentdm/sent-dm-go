@@ -153,7 +153,9 @@ func (r *WebhookService) ListEventTypes(ctx context.Context, query WebhookListEv
 	return res, err
 }
 
-// Retrieves a paginated list of delivery events for the specified webhook.
+// Retrieves a paginated list of delivery events for the specified webhook. If the
+// webhook is cloned onto your sender profiles, the list includes what those clones
+// received; read payload.account_id to tell whose event it is.
 func (r *WebhookService) ListEvents(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) (res *pagination.WebhookEventsPage[WebhookListEventsResponse], err error) {
 	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
@@ -178,7 +180,9 @@ func (r *WebhookService) ListEvents(ctx context.Context, id string, params Webho
 	return res, nil
 }
 
-// Retrieves a paginated list of delivery events for the specified webhook.
+// Retrieves a paginated list of delivery events for the specified webhook. If the
+// webhook is cloned onto your sender profiles, the list includes what those clones
+// received; read payload.account_id to tell whose event it is.
 func (r *WebhookService) ListEventsAutoPaging(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) *pagination.WebhookEventsPageAutoPager[WebhookListEventsResponse] {
 	return pagination.NewWebhookEventsPageAutoPager(r.ListEvents(ctx, id, params, opts...))
 }
@@ -402,11 +406,15 @@ type ChannelEventPayload struct {
 	// The kind of sender the market uses, for example TEN_DLC, LOCAL, or ALPHANUMERIC.
 	// Omitted when the subject has no sender type of its own.
 	NumberType string `json:"number_type" api:"nullable"`
-	// Why the market reached this state, when a reason was given — a correction
-	// explained, or a campaign lapse. Free text, passed through from the registry or
-	// carrier that wrote it, so treat it as a message to show a human rather than a
-	// value to branch on.
+	// Why the market reached this state, as a sentence to show a person: the specific
+	// explanation when one was given (a correction explained, a campaign lapse),
+	// otherwise what reason_code means for this market. Not a value to branch on.
 	Reason string `json:"reason" api:"nullable"`
+	// Why the market is not ACTIVE, as a stable code: an ErrorCodes CHANNEL_xxx value
+	// such as CHANNEL_001 (something you owe) or CHANNEL_002 (a correction was
+	// requested). The same code the channels resource reports for the market. Switch
+	// on this rather than on reason. Omitted while ACTIVE.
+	ReasonCode string `json:"reason_code" api:"nullable"`
 	// The sender itself — a number in E.164, or an alphanumeric sender ID.
 	//
 	// Always present, and null until a sender exists. The key is on every delivery so
@@ -441,6 +449,7 @@ type ChannelEventPayload struct {
 		Compliance  respjson.Field
 		NumberType  respjson.Field
 		Reason      respjson.Field
+		ReasonCode  respjson.Field
 		SenderValue respjson.Field
 		Status      respjson.Field
 		UpdatedAt   respjson.Field
@@ -796,8 +805,19 @@ type InboundMessageEventPayload struct {
 	ReceivedAt string `json:"received_at" api:"required"`
 	// The account the message belongs to.
 	AccountID string `json:"account_id" format:"uuid"`
-	// The channel the message arrived on, for example sms or whatsapp.
+	// The channel the message arrived on, for example sms or mms.
 	Channel string `json:"channel"`
+	// Attachments the contact sent, present only on channels that carry them (mms
+	// today) and omitted entirely otherwise.
+	//
+	// Each url points at the carrier's own copy of the file — sent.dm records where
+	// the attachment is, not the attachment itself. The link is unauthenticated and
+	// expires on the carrier's schedule, which differs between them: assume days, not
+	// months. Download what you need on receipt; re-reading the message through GET
+	// /v3/messages/{id} returns the same stored link, not a fresh one, so once it
+	// lapses the entry remains with whatever the carrier declared about the file but
+	// the file is no longer reachable.
+	Media []InboundMessageEventPayloadMedia `json:"media" api:"nullable"`
 	// The inbound message.
 	MessageID string `json:"message_id" format:"uuid"`
 	// Your number in E.164 format, meaning the number the message was addressed to.
@@ -815,6 +835,7 @@ type InboundMessageEventPayload struct {
 		ReceivedAt     respjson.Field
 		AccountID      respjson.Field
 		Channel        respjson.Field
+		Media          respjson.Field
 		MessageID      respjson.Field
 		OutboundNumber respjson.Field
 		Text           respjson.Field
@@ -827,6 +848,41 @@ type InboundMessageEventPayload struct {
 // Returns the unmodified JSON received from the API
 func (r InboundMessageEventPayload) RawJSON() string { return r.JSON.raw }
 func (r *InboundMessageEventPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One attachment on an inbound message.
+type InboundMessageEventPayloadMedia struct {
+	// SHA-256 of the file as the carrier declared it, when it declares one. Verify
+	// what you download against this — sent.dm never reads the bytes, so it is the
+	// only integrity signal available.
+	HashSha256 string `json:"hash_sha256" api:"nullable"`
+	// Content type as the carrier reported it, for example image/jpeg.
+	MimeType string `json:"mime_type" api:"nullable"`
+	// Size in bytes as the carrier declared it. Absent when it declared none.
+	SizeBytes int64 `json:"size_bytes" api:"nullable"`
+	// Where the carrier hosts the attachment.
+	//
+	// This link expires and is not authenticated. sent.dm relays it rather than
+	// copying the file, so how long it stays fetchable is the carrier's decision and
+	// differs between them — assume days, not months. Anyone holding the URL can fetch
+	// it until it lapses. Copy the file on receipt if you need it to outlive that
+	// window; do not store this URL as a permanent reference.
+	URL string `json:"url" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		HashSha256  respjson.Field
+		MimeType    respjson.Field
+		SizeBytes   respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r InboundMessageEventPayloadMedia) RawJSON() string { return r.JSON.raw }
+func (r *InboundMessageEventPayloadMedia) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -892,6 +948,16 @@ type MessageEventPayload struct {
 	MessageID string `json:"message_id" format:"uuid"`
 	// The recipient's number in E.164 format.
 	OutboundNumber string `json:"outbound_number"`
+	// A human-readable sentence for ReasonCode, for example "The recipient is not
+	// registered on this channel". Omitted whenever reason_code is.
+	Reason string `json:"reason" api:"nullable"`
+	// Why the message reached this status, as a stable platform code such as
+	// DELIVERY_007 or BUSINESS_003. Present on message.failed, message.filtered and
+	// message.blocked; omitted on every status that needs no explanation. Switch on
+	// this rather than on Reason: the code is stable, the wording may be improved. It
+	// is the platform's classification of the outcome and never a carrier or vendor
+	// code.
+	ReasonCode string `json:"reason_code" api:"nullable"`
 	// message.scheduled only: why the message is held, either because you scheduled it
 	// or because the recipient is inside a protected quiet-hours window. Omitted on
 	// every other event.
@@ -915,6 +981,8 @@ type MessageEventPayload struct {
 		Channel        respjson.Field
 		MessageID      respjson.Field
 		OutboundNumber respjson.Field
+		Reason         respjson.Field
+		ReasonCode     respjson.Field
 		ScheduleReason respjson.Field
 		ScheduledAt    respjson.Field
 		TemplateID     respjson.Field
@@ -1284,7 +1352,8 @@ func (r *WebhookListEventsResponse) UnmarshalJSON(data []byte) error {
 // WebhookListEventsResponseEventDataUnion contains all possible properties and
 // values from [MessageEvent], [InboundMessageEvent], [TemplateEvent],
 // [ChannelEvent], [ContactEvent],
-// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload].
+// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayload],
+// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayload].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type WebhookListEventsResponseEventDataUnion struct {
@@ -1292,7 +1361,8 @@ type WebhookListEventsResponseEventDataUnion struct {
 	Field string `json:"field"`
 	// This field is a union of [MessageEventPayload], [InboundMessageEventPayload],
 	// [TemplateEventPayload], [ChannelEventPayload], [ContactEventPayload],
-	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload]
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload],
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload]
 	Payload   WebhookListEventsResponseEventDataUnionPayload `json:"payload"`
 	RequestID string                                         `json:"request_id"`
 	Timestamp string                                         `json:"timestamp"`
@@ -1336,6 +1406,11 @@ func (u WebhookListEventsResponseEventDataUnion) AsWebhookListEventsResponseEven
 	return
 }
 
+func (u WebhookListEventsResponseEventDataUnion) AsWebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayload() (v WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayload) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u WebhookListEventsResponseEventDataUnion) RawJSON() string { return u.JSON.raw }
 
@@ -1360,6 +1435,8 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	Channel        string `json:"channel"`
 	MessageID      string `json:"message_id"`
 	OutboundNumber string `json:"outbound_number"`
+	Reason         string `json:"reason"`
+	ReasonCode     string `json:"reason_code"`
 	// This field is from variant [MessageEventPayload].
 	ScheduleReason string `json:"schedule_reason"`
 	// This field is from variant [MessageEventPayload].
@@ -1371,8 +1448,10 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	InboundNumber string `json:"inbound_number"`
 	// This field is from variant [InboundMessageEventPayload].
 	ReceivedAt string `json:"received_at"`
-	Text       string `json:"text"`
-	Status     string `json:"status"`
+	// This field is from variant [InboundMessageEventPayload].
+	Media  []InboundMessageEventPayloadMedia `json:"media"`
+	Text   string                            `json:"text"`
+	Status string                            `json:"status"`
 	// This field is from variant [TemplateEventPayload].
 	WhatsappTemplateID string `json:"whatsapp_template_id"`
 	// This field is from variant [TemplateEventPayload].
@@ -1381,7 +1460,6 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	Category string `json:"category"`
 	// This field is from variant [TemplateEventPayload].
 	Language string `json:"language"`
-	Reason   string `json:"reason"`
 	// This field is from variant [ChannelEventPayload].
 	Country string `json:"country"`
 	// This field is from variant [ChannelEventPayload].
@@ -1445,7 +1523,22 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	// This field is from variant
 	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfLinkWebhookPayloadPayload].
 	TrafficClass string `json:"traffic_class"`
-	JSON         struct {
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload].
+	CallID string `json:"call_id"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload].
+	DurationSeconds int64 `json:"duration_seconds"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload].
+	Number string `json:"number"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload].
+	Price float64 `json:"price"`
+	// This field is from variant
+	// [WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload].
+	RecordingID string `json:"recording_id"`
+	JSON        struct {
 		MessageStatus      respjson.Field
 		AccountID          respjson.Field
 		AgentID            respjson.Field
@@ -1453,6 +1546,8 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		Channel            respjson.Field
 		MessageID          respjson.Field
 		OutboundNumber     respjson.Field
+		Reason             respjson.Field
+		ReasonCode         respjson.Field
 		ScheduleReason     respjson.Field
 		ScheduledAt        respjson.Field
 		TemplateID         respjson.Field
@@ -1460,13 +1555,13 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		UpdatedAt          respjson.Field
 		InboundNumber      respjson.Field
 		ReceivedAt         respjson.Field
+		Media              respjson.Field
 		Text               respjson.Field
 		Status             respjson.Field
 		WhatsappTemplateID respjson.Field
 		AutoReplyAction    respjson.Field
 		Category           respjson.Field
 		Language           respjson.Field
-		Reason             respjson.Field
 		Country            respjson.Field
 		Compliance         respjson.Field
 		NumberType         respjson.Field
@@ -1491,6 +1586,11 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		SenderProfileID    respjson.Field
 		StatusCode         respjson.Field
 		TrafficClass       respjson.Field
+		CallID             respjson.Field
+		DurationSeconds    respjson.Field
+		Number             respjson.Field
+		Price              respjson.Field
+		RecordingID        respjson.Field
 		raw                string
 	} `json:"-"`
 }
@@ -1687,6 +1787,118 @@ func (r *WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksC
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayload struct {
+	// The specific event within the family, for example message.delivered,
+	// message.received or contact.opt_out. Absent on events that have no subtype, so
+	// treat it as optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message, templates or contact. Route on this
+	// first, then on event for the specific change.
+	Field string `json:"field"`
+	// Body of a call.initiated, call.answered, call.completed, call.failed or
+	// call.recording_ready event. Which of them occurred is the envelope's event.
+	//
+	// Shaped like the message, inbound, template and channel payloads: account_id
+	// names the account the event is about, channel names the channel, and updated_at
+	// is when the change happened on the call, in the same yyyy-MM-ddTHH:mm:ssZ form.
+	// duration_seconds and price are added on call.completed, reason on call.failed
+	// and recording_id on call.recording_ready; each is omitted rather than sent as
+	// null when it does not apply.
+	//
+	// Casing is snake_case because these ride the same webhook stream customers
+	// already parse message_id from; the question/answer contract is a separate
+	// surface and stays camelCase. Nothing here is provider-shaped: no provider call
+	// id, no namespaced identity.
+	Payload WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload `json:"payload" api:"nullable"`
+	// The event-specific body.
+	RequestID string `json:"request_id" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayload) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of a call.initiated, call.answered, call.completed, call.failed or
+// call.recording_ready event. Which of them occurred is the envelope's event.
+//
+// Shaped like the message, inbound, template and channel payloads: account_id
+// names the account the event is about, channel names the channel, and updated_at
+// is when the change happened on the call, in the same yyyy-MM-ddTHH:mm:ssZ form.
+// duration_seconds and price are added on call.completed, reason on call.failed
+// and recording_id on call.recording_ready; each is omitted rather than sent as
+// null when it does not apply.
+//
+// Casing is snake_case because these ride the same webhook stream customers
+// already parse message_id from; the question/answer contract is a separate
+// surface and stays camelCase. Nothing here is provider-shaped: no provider call
+// id, no namespaced identity.
+type WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload struct {
+	// Sent's call id, the same one the customer saw on the first question.
+	CallID string `json:"call_id" api:"required"`
+	// The account the call belongs to: the key's own customer, or the sender profile
+	// it acted as.
+	AccountID string `json:"account_id" format:"uuid"`
+	// Always voice.
+	Channel string `json:"channel"`
+	// How long the call lasted. Only on call.completed.
+	DurationSeconds int64 `json:"duration_seconds" api:"nullable"`
+	// The customer number that owns the call, in E.164 format.
+	Number string `json:"number"`
+	// What the call was charged. Only on call.completed, and omitted there until
+	// billing has recorded the charge.
+	Price float64 `json:"price" api:"nullable" format:"decimal"`
+	// The machine-readable reason the call did not complete. Only on call.failed, and
+	// omitted when no reason was recorded.
+	Reason string `json:"reason" api:"nullable"`
+	// The recording that became available, the same id GET /v3/calls/{id}/recordings
+	// lists it under. Only on call.recording_ready, which is sent once per recording.
+	RecordingID string `json:"recording_id" api:"nullable" format:"uuid"`
+	// When the change happened on the call, as opposed to when the event was emitted.
+	UpdatedAt string `json:"updated_at"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID          respjson.Field
+		AccountID       respjson.Field
+		Channel         respjson.Field
+		DurationSeconds respjson.Field
+		Number          respjson.Field
+		Price           respjson.Field
+		Reason          respjson.Field
+		RecordingID     respjson.Field
+		UpdatedAt       respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *WebhookListEventsResponseEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfCallWebhookPayloadPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Standard API response envelope for all v3 endpoints
 type WebhookRotateSecretResponse struct {
 	// The response data (null if error)
@@ -1788,7 +2000,10 @@ type WebhookNewParams struct {
 	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventFilters   map[string][]string `json:"event_filters,omitzero"`
-	EventTypes     []string            `json:"event_types,omitzero"`
+	// Request-only: the events an organization webhook's sender profile clones
+	// receive, one clone per existing and future profile. Responses never return it.
+	SenderProfile WebhookNewParamsSenderProfile `json:"sender_profile,omitzero"`
+	EventTypes    []string                      `json:"event_types,omitzero"`
 	paramObj
 }
 
@@ -1797,6 +2012,22 @@ func (r WebhookNewParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *WebhookNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request-only: the events an organization webhook's sender profile clones
+// receive, one clone per existing and future profile. Responses never return it.
+type WebhookNewParamsSenderProfile struct {
+	EventFilters map[string][]string `json:"event_filters,omitzero"`
+	EventTypes   []string            `json:"event_types,omitzero"`
+	paramObj
+}
+
+func (r WebhookNewParamsSenderProfile) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookNewParamsSenderProfile
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookNewParamsSenderProfile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1816,7 +2047,10 @@ type WebhookUpdateParams struct {
 	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventFilters   map[string][]string `json:"event_filters,omitzero"`
-	EventTypes     []string            `json:"event_types,omitzero"`
+	// Request-only: the events an organization webhook's sender profile clones
+	// receive, one clone per existing and future profile. Responses never return it.
+	SenderProfile WebhookUpdateParamsSenderProfile `json:"sender_profile,omitzero"`
+	EventTypes    []string                         `json:"event_types,omitzero"`
 	paramObj
 }
 
@@ -1825,6 +2059,22 @@ func (r WebhookUpdateParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Request-only: the events an organization webhook's sender profile clones
+// receive, one clone per existing and future profile. Responses never return it.
+type WebhookUpdateParamsSenderProfile struct {
+	EventFilters map[string][]string `json:"event_filters,omitzero"`
+	EventTypes   []string            `json:"event_types,omitzero"`
+	paramObj
+}
+
+func (r WebhookUpdateParamsSenderProfile) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookUpdateParamsSenderProfile
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookUpdateParamsSenderProfile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
