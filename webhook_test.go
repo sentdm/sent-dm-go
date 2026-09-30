@@ -33,9 +33,15 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 			"message":   {"delivered", "failed"},
 			"templates": {"approved", "rejected"},
 		},
-		EventTypes:     []string{"contact", "message", "templates"},
-		RetryCount:     sentdm.Int(3),
-		Sandbox:        sentdm.Bool(false),
+		EventTypes: []string{"contact", "message", "templates"},
+		RetryCount: sentdm.Int(3),
+		Sandbox:    sentdm.Bool(false),
+		SenderProfile: sentdm.WebhookNewParamsSenderProfile{
+			EventFilters: map[string][]string{
+				"foo": {"string"},
+			},
+			EventTypes: []string{"string"},
+		},
 		TimeoutSeconds: sentdm.Int(30),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
 		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -100,9 +106,15 @@ func TestWebhookUpdateWithOptionalParams(t *testing.T) {
 			EventFilters: map[string][]string{
 				"message": {"delivered", "failed"},
 			},
-			EventTypes:     []string{"contact", "message", "templates"},
-			RetryCount:     sentdm.Int(5),
-			Sandbox:        sentdm.Bool(false),
+			EventTypes: []string{"contact", "message", "templates"},
+			RetryCount: sentdm.Int(5),
+			Sandbox:    sentdm.Bool(false),
+			SenderProfile: sentdm.WebhookUpdateParamsSenderProfile{
+				EventFilters: map[string][]string{
+					"foo": {"string"},
+				},
+				EventTypes: []string{"string"},
+			},
 			TimeoutSeconds: sentdm.Int(60),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
