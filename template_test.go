@@ -28,8 +28,9 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Templates.New(context.TODO(), sentdm.TemplateNewParams{
-		Category:       sentdm.String("MARKETING"),
-		CreationSource: param.Null[string](),
+		AutoCreateForSp: sentdm.Bool(false),
+		Category:        sentdm.String("MARKETING"),
+		CreationSource:  param.Null[string](),
 		Definition: sentdm.TemplateDefinitionParam{
 			Body: sentdm.TemplateBodyParam{
 				Mms: sentdm.TemplateBodyMmsParam{

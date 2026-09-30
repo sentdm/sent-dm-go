@@ -194,6 +194,15 @@ type MessageGetActivitiesResponseDataActivity struct {
 	// Channel cost for this activity (e.g., SMS/WhatsApp provider cost), formatted to
 	// 4 decimal places.
 	Price string `json:"price" api:"nullable"`
+	// A human-readable sentence for reason_code, for example "The recipient is not
+	// registered on this channel" Omitted whenever reason_code is.
+	Reason string `json:"reason" api:"nullable"`
+	// Why the message reached this status, as a stable platform code such as
+	// DELIVERY_007 or BUSINESS_003. Present on FAILED, FILTERED and BLOCKED
+	// activities; omitted on every status that needs no explanation. Switch on this
+	// rather than on reason: the code is stable, the wording may be improved. Same
+	// wire name and vocabulary as on the message and the webhook.
+	ReasonCode string `json:"reason_code" api:"nullable"`
 	// SCHEDULED activities only: when the held message will be released for delivery,
 	// in UTC. Same wire name as on the send response, the message and the webhook.
 	// Omitted on every other activity. A message that quiet hours moved at release has
@@ -210,6 +219,8 @@ type MessageGetActivitiesResponseDataActivity struct {
 		Description        respjson.Field
 		From               respjson.Field
 		Price              respjson.Field
+		Reason             respjson.Field
+		ReasonCode         respjson.Field
 		ScheduledAt        respjson.Field
 		Status             respjson.Field
 		Timestamp          respjson.Field
@@ -284,11 +295,21 @@ type MessageGetStatusResponseData struct {
 	Phone              string                                  `json:"phone"`
 	PhoneInternational string                                  `json:"phone_international"`
 	Price              float64                                 `json:"price" api:"nullable" format:"decimal"`
-	RegionCode         string                                  `json:"region_code"`
-	Status             string                                  `json:"status"`
-	TemplateCategory   string                                  `json:"template_category" api:"nullable"`
-	TemplateID         string                                  `json:"template_id" api:"nullable" format:"uuid"`
-	TemplateName       string                                  `json:"template_name" api:"nullable"`
+	// A human-readable sentence for reason_code, for example "Insufficient balance".
+	// Omitted whenever reason_code is.
+	Reason string `json:"reason" api:"nullable"`
+	// Why the message is at its current status, as a stable platform code such as
+	// DELIVERY_007, BUSINESS_003 or DELIVERY_003. Present when the current status is
+	// FAILED, FILTERED or BLOCKED and the lifecycle was loaded; omitted otherwise.
+	// Switch on this rather than on reason: the code is stable, the wording may be
+	// improved. It is the platform's classification of the outcome, never a carrier or
+	// vendor code.
+	ReasonCode       string `json:"reason_code" api:"nullable"`
+	RegionCode       string `json:"region_code"`
+	Status           string `json:"status"`
+	TemplateCategory string `json:"template_category" api:"nullable"`
+	TemplateID       string `json:"template_id" api:"nullable" format:"uuid"`
+	TemplateName     string `json:"template_name" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                 respjson.Field
@@ -303,6 +324,8 @@ type MessageGetStatusResponseData struct {
 		Phone              respjson.Field
 		PhoneInternational respjson.Field
 		Price              respjson.Field
+		Reason             respjson.Field
+		ReasonCode         respjson.Field
 		RegionCode         respjson.Field
 		Status             respjson.Field
 		TemplateCategory   respjson.Field
@@ -324,11 +347,20 @@ type MessageGetStatusResponseDataEvent struct {
 	Status      string    `json:"status" api:"required"`
 	Timestamp   time.Time `json:"timestamp" api:"required" format:"date-time"`
 	Description string    `json:"description" api:"nullable"`
+	// A human-readable sentence for reason_code. Omitted whenever reason_code is.
+	Reason string `json:"reason" api:"nullable"`
+	// Why the message reached this status, as a stable platform code such as
+	// DELIVERY_007. Present on FAILED, FILTERED and BLOCKED events; omitted on every
+	// status that needs no explanation. Same wire name and vocabulary as on the
+	// activities list and the webhook.
+	ReasonCode string `json:"reason_code" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Status      respjson.Field
 		Timestamp   respjson.Field
 		Description respjson.Field
+		Reason      respjson.Field
+		ReasonCode  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -431,23 +463,48 @@ func (r *MessageGetStatusResponseDataMessageBodyHeaderMedia) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// One attachment on a message: a customer-supplied public URL handed to the
-// carrier as-is.
+// One attachment on a message, in either direction — and in both, a URL somebody
+// else hosts.
 //
-//	A URL and nothing else. sent.dm never takes custody of MMS media — the customer hosts it and we
-//	pass the link through at send time — so there is no storage key, size or expiry to record. If we ever
-//	do host attachments, that belongs with the change that introduces the hosting, not here.
+// Outbound: the customer supplied a public URL and we handed it to the carrier.
+// Inbound: the carrier hosts the file and we record where. sent.dm never holds the
+// bytes, so there is no key, no expiry bookkeeping and nothing minted per read —
+// what is stored is what is served.
+//
+// An inbound link expires on the carrier's own schedule and is unauthenticated.
+// That is the customer's to manage, and it is documented where they will see it
+// rather than only here — a recipient who needs an attachment to outlive that
+// window copies it on receipt.
+//
+// Storing a presigned URL is the specific mistake this shape still avoids:
+// M260826130000 and M260826140000 exist because RCS assets were stored as signed
+// URLs and went stale. Nothing here is signed.
 type MessageGetStatusResponseDataMessageBodyMedia struct {
-	// One of Constants.MmsMediaTypes when known. Advisory — the carrier reads the
-	// fetched object's Content-Type, not this.
+	// One of MmsMediaTypes when the content type is known. Advisory — a reader should
+	// trust the fetched object's own Content-Type.
 	MediaType string `json:"mediaType" api:"nullable"`
-	URL       string `json:"url"`
+	// Content type as the provider declared it. Null when it declared none.
+	MimeType string `json:"mimeType" api:"nullable"`
+	// Size as the provider declared it. Never measured here — nothing downloads the
+	// file.
+	SizeBytes int64 `json:"sizeBytes" api:"nullable"`
+	// Inbound only: the SHA-256 the provider declared alongside the attachment, when
+	// it declared one. Relayed to the customer so they can verify what they fetch
+	// matches what the carrier said it sent. It is the only integrity signal available
+	// on an attachment nobody here has read.
+	SourceHashSha256 string `json:"sourceHashSha256" api:"nullable"`
+	// Where the file lives. Outbound: the URL the customer gave us and the carrier
+	// fetched. Inbound: the URL the carrier hosts it at, relayed unchanged.
+	URL string `json:"url" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		MediaType   respjson.Field
-		URL         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		MediaType        respjson.Field
+		MimeType         respjson.Field
+		SizeBytes        respjson.Field
+		SourceHashSha256 respjson.Field
+		URL              respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 

@@ -692,6 +692,10 @@ type TemplateNewParams struct {
 	CreationSource param.Opt[string] `json:"creation_source,omitzero"`
 	// Template language code (e.g., en_US) (optional, auto-detected if not provided)
 	Language param.Opt[string] `json:"language,omitzero"`
+	// Create this template automatically on every sender profile of the organization,
+	// now and in future (default: false). Accepted only from an organization that has
+	// been enabled for it, and only at creation — it cannot be changed afterwards.
+	AutoCreateForSp param.Opt[bool] `json:"auto_create_for_sp,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
