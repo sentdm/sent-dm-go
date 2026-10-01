@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.39.0](https://github.com/sentdm/sent-dm-go/compare/v0.38.0...v0.39.0) (2026-10-01)
+
+
+### Features
+
+* **api:** add voice and calls endpoints to the SDKs ([0300f00](https://github.com/sentdm/sent-dm-go/commit/0300f00a6b7e602fcab9f24ebcd8b160d781d4af))
+
 ## [0.38.0](https://github.com/sentdm/sent-dm-go/compare/v0.37.0...v0.38.0) (2026-09-30)
 
 
