@@ -66,9 +66,11 @@ func NewChannelVoiceService(opts ...option.RequestOption) (r ChannelVoiceService
 	return
 }
 
-// Adds voice to one of the numbers you hold. The number must already be yours (see
-// `GET /v3/channels`); this does not procure one, and nothing registers, so the
-// number can carry calls as soon as this returns.
+// Adds voice to one of the numbers you hold, or gives you a new one. Send `number`
+// for a number that is already yours (see `GET /v3/channels`); leave it out to be
+// given a new US number, optionally in a particular `area_code`. Sending both is
+// refused. Nothing registers, so the number can carry calls as soon as this
+// returns.
 //
 // What happens on a call is decided by your `callback_url`: when a call arrives on
 // the number, or a caller presses a key on a menu, Sent POSTs a signed question
@@ -87,7 +89,7 @@ func NewChannelVoiceService(opts ...option.RequestOption) (r ChannelVoiceService
 // `PATCH /v3/channels/voice/{number}`.
 //
 // With `sandbox: true` the request is validated and a simulated number reported
-// with `202`, and nothing is written.
+// with `202`; nothing is written and no number is bought.
 func (r *ChannelVoiceService) New(ctx context.Context, params ChannelVoiceNewParams, opts ...option.RequestOption) (res *APIResponseOfVoiceNumberCreated, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -129,13 +131,13 @@ func (r *ChannelVoiceService) Get(ctx context.Context, number string, query Chan
 //
 // ## What it changes
 //
-// | Body                                          | Effect                                                                                            |
-// | --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-// | `"status": "ACTIVE"`                          | turns calls on again for a number you turned off; the callback URL and the secret it had are kept |
-// | `"status": "INACTIVE"`                        | turns calls off; the callback URL and the secret stay on the number                               |
-// | `"default_for_app_calls": true`               | makes this the line app-originated calls are placed from when a voice token names no number       |
-// | `"callback_url": "https://example.com/voice"` | replaces where Sent asks what to do with each call on the number; the signing secret is kept      |
-// | key omitted                                   | left exactly as it is                                                                             |
+// | Body                                          | Effect                                                                                                                                                     |
+// | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+// | `"status": "ACTIVE"`                          | turns calls on again for a number you turned off; the callback URL and the secret it had are kept                                                          |
+// | `"status": "INACTIVE"`                        | turns calls off; the callback URL and the secret stay on the number                                                                                        |
+// | `"default_for_app_calls": true`               | makes this the line app-originated calls are placed from when a voice token names no number                                                                |
+// | `"callback_url": "https://example.com/voice"` | replaces where Sent asks what to do with each call on the number; the signing secret is kept, and a number that was waiting for its first URL is turned on |
+// | key omitted                                   | left exactly as it is                                                                                                                                      |
 //
 // `status` is matched ignoring case. Any combination is accepted:
 // `status: "ACTIVE"` with `default_for_app_calls: true` turns a number on as the
@@ -154,6 +156,11 @@ func (r *ChannelVoiceService) Get(ctx context.Context, number string, query Chan
 //
 // **Making an inactive number the default is `400`.** Send `status: "ACTIVE"` in
 // the same call.
+//
+// A number added without a `callback_url` is `INACTIVE` for that one reason, so
+// sending it a `callback_url` turns it on by itself, and it becomes your default
+// line if you have no other active voice number. A number you turned off while it
+// had a URL stays off.
 //
 // **A number you never turned voice on for is `404`.** Add it with
 // `POST /v3/channels/voice`.
@@ -655,12 +662,19 @@ type ChannelVoiceNewParams struct {
 	// are signed. Turning the number on again with a different URL replaces it and
 	// keeps the secret.
 	CallbackURL string `json:"callback_url" api:"required"`
-	// One of your phone numbers, in E.164 format.
-	Number string `json:"number" api:"required"`
+	// The US area code a new number should be in, as 212. Only for a request that
+	// leaves number out — sending both says two different things about which number to
+	// use, and is refused. Omit it too and the number comes from anywhere in the
+	// country.
+	AreaCode param.Opt[string] `json:"area_code,omitzero"`
 	// Make this the line app-originated calls are placed from when a voice token names
 	// no number. Omit it and your first voice number takes that role; a later one
 	// leaves it where it is.
 	DefaultForAppCalls param.Opt[bool] `json:"default_for_app_calls,omitzero"`
+	// One of your phone numbers, in E.164 format. Leave the field out entirely to be
+	// given a new one instead; sending it empty is a refused request rather than a
+	// request for a new number.
+	Number param.Opt[string] `json:"number,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`

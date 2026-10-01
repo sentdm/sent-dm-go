@@ -11,6 +11,7 @@ import (
 	"github.com/sentdm/sent-dm-go"
 	"github.com/sentdm/sent-dm-go/internal/testutil"
 	"github.com/sentdm/sent-dm-go/option"
+	"github.com/sentdm/sent-dm-go/packages/param"
 )
 
 func TestChannelVoiceNewWithOptionalParams(t *testing.T) {
@@ -28,8 +29,9 @@ func TestChannelVoiceNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Channels.Voice.New(context.TODO(), sentdm.ChannelVoiceNewParams{
 		CallbackURL:        "https://example.com/voice",
-		Number:             "+12125550100",
+		AreaCode:           param.Null[string](),
 		DefaultForAppCalls: sentdm.Bool(false),
+		Number:             sentdm.String("+12125550100"),
 		Sandbox:            sentdm.Bool(false),
 		IdempotencyKey:     sentdm.String("req_abc123_retry1"),
 		XProfileID:         sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -92,7 +94,7 @@ func TestChannelVoiceUpdateWithOptionalParams(t *testing.T) {
 			CallbackURL:        sentdm.String("https://example.com/voice"),
 			DefaultForAppCalls: sentdm.Bool(true),
 			Sandbox:            sentdm.Bool(false),
-			Status:             nil,
+			Status:             sentdm.ChannelVoiceUpdateParamsStatusActive,
 			IdempotencyKey:     sentdm.String("req_abc123_retry1"),
 			XProfileID:         sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		},
