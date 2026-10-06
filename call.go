@@ -126,10 +126,11 @@ func (r *CallService) ListAutoPaging(ctx context.Context, params CallListParams,
 	return pagination.NewCallsPageAutoPager(r.List(ctx, params, opts...))
 }
 
-// Ends one of your live calls. The call then ends the way any other call does: its
-// status moves to completed and call.completed is sent once the disconnect is
-// reported. A call that has already ended answers 409, and so does a call with no
-// phone leg, such as one between two app users.
+// Ends one of your live calls. The call then ends the way any other call does once
+// the disconnect is reported: an answered call as COMPLETED with call.completed, a
+// call still ringing as NO_ANSWER, REJECTED or FAILED with call.failed. A call
+// that has already ended answers 409, and so does a call with no phone leg, such
+// as one between two app users.
 func (r *CallService) Hangup(ctx context.Context, id string, params CallHangupParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -289,8 +290,9 @@ type Call struct {
 	// When the call ended (UTC). Null while the call is live
 	EndedAt time.Time `json:"ended_at" api:"nullable" format:"date-time"`
 	// Why the call did not complete: callback_timeout, invalid_answer,
-	// insufficient_balance, destination_blocked, rejected or no_answer. Null while the
-	// call is live, when it completed, and when it failed without a recorded reason
+	// insufficient_balance, destination_blocked, callback_not_configured, rejected or
+	// no_answer. Null while the call is live, when it completed, and when it failed
+	// without a recorded reason
 	FailureReason string `json:"failure_reason" api:"nullable"`
 	// One end of a call
 	From CallParty `json:"from"`
@@ -303,7 +305,7 @@ type Call struct {
 	RecordingAvailable bool `json:"recording_available"`
 	// When the call was placed (UTC)
 	StartedAt time.Time `json:"started_at" format:"date-time"`
-	// initiated, ringing, answered, completed, failed, no_answer or rejected
+	// INITIATED, RINGING, ANSWERED, COMPLETED, FAILED, NO_ANSWER or REJECTED
 	Status string `json:"status"`
 	// When the call entered each status, oldest first. Only returned when reading one
 	// call
@@ -407,7 +409,7 @@ func (r *CallRecordings) UnmarshalJSON(data []byte) error {
 
 // When a call entered a status
 type CallTimelineEntry struct {
-	// initiated, ringing, answered, completed, failed, no_answer or rejected
+	// INITIATED, RINGING, ANSWERED, COMPLETED, FAILED, NO_ANSWER or REJECTED
 	Status string `json:"status"`
 	// When the call entered this status (UTC)
 	Timestamp time.Time `json:"timestamp" format:"date-time"`
