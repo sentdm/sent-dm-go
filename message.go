@@ -35,6 +35,11 @@ import (
 // again, the message is billed again, and its status webhooks fire again. A
 // FILTERED message is never resendable.
 //
+// **A scheduled message can be called off.** `POST /v3/messages/{id}/cancel`
+// cancels a send you scheduled with `scheduled_at`, as long as it has not been
+// released yet. Cancelling is free, fires `message.cancelled`, and is final — a
+// cancelled message cannot be resent.
+//
 // MessageService contains methods and other services that help with interacting
 // with the Sent API.
 //
@@ -74,10 +79,11 @@ func (r *MessageService) GetActivities(ctx context.Context, id string, query Mes
 
 // Retrieves the current status and details of a message by ID. Includes delivery
 // status, timestamps, and error information if applicable. A message that is or
-// was held for a later time (a send you scheduled with scheduled_at, or a
-// quiet-hours hold) is returned as a ScheduledMessageResponse: the same fields
-// plus scheduled_at, the release instant in UTC. A message sent immediately has no
-// scheduled_at key.
+// was held for a later time (a send you scheduled with scheduled_at, a quiet-hours
+// hold, or a message you cancelled while it was held) is returned as a
+// ScheduledMessageResponse: the same fields plus scheduled_at, the instant it is
+// held for in UTC — or, on a CANCELLED message, the instant that was called off. A
+// message sent immediately has no scheduled_at key.
 func (r *MessageService) GetStatus(ctx context.Context, id string, query MessageGetStatusParams, opts ...option.RequestOption) (res *MessageGetStatusResponse, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
@@ -203,10 +209,12 @@ type MessageGetActivitiesResponseDataActivity struct {
 	// rather than on reason: the code is stable, the wording may be improved. Same
 	// wire name and vocabulary as on the message and the webhook.
 	ReasonCode string `json:"reason_code" api:"nullable"`
-	// SCHEDULED activities only: when the held message will be released for delivery,
-	// in UTC. Same wire name as on the send response, the message and the webhook.
-	// Omitted on every other activity. A message that quiet hours moved at release has
-	// two SCHEDULED entries, each carrying the instant as it stood at that moment.
+	// SCHEDULED and CANCELLED activities only, in UTC: on a SCHEDULED entry, when the
+	// held message will be released for delivery; on a CANCELLED entry, the instant
+	// that was called off. Same wire name as on the send response, the message and the
+	// webhook. Omitted on every other activity. A message that quiet hours moved at
+	// release has two SCHEDULED entries, each carrying the instant as it stood at that
+	// moment.
 	ScheduledAt time.Time `json:"scheduled_at" api:"nullable" format:"date-time"`
 	// Activity status. Outbound: QUEUED, PROCESSED, ROUTED, SCHEDULED, SENT,
 	// DELIVERED, READ, FAILED. Inbound (from contact): RECEIVED (terminal).

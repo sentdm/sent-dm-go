@@ -1068,10 +1068,15 @@ type MessageEventPayload struct {
 	ReasonCode string `json:"reason_code" api:"nullable"`
 	// message.scheduled only: why the message is held, either because you scheduled it
 	// or because the recipient is inside a protected quiet-hours window. Omitted on
-	// every other event.
+	// every other event, including message.cancelled — that is a property of the hold,
+	// not of the cancellation, and repeating it there would read as "why was this
+	// cancelled", which it does not answer.
 	ScheduleReason string `json:"schedule_reason" api:"nullable"`
-	// message.scheduled only: when the held message will be released for delivery, in
-	// UTC (yyyy-MM-ddTHH:mm:ssZ). Omitted on every other event.
+	// message.scheduled and message.cancelled only, in UTC (yyyy-MM-ddTHH:mm:ssZ): on
+	// message.scheduled it is when the held message will be released for delivery, on
+	// message.cancelled the release instant that was called off — the same instant,
+	// before and after. A consumer that recorded a future send from the first event
+	// has what it needs to un-record it from the second. Omitted on every other event.
 	ScheduledAt string `json:"scheduled_at" api:"nullable"`
 	// The template the message was sent from, when it was sent from one.
 	TemplateID string `json:"template_id" api:"nullable" format:"uuid"`
