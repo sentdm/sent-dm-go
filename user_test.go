@@ -81,7 +81,6 @@ func TestUserInviteWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Users.Invite(context.TODO(), sentdm.UserInviteParams{
-		APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		Email:          sentdm.String("newuser@example.com"),
 		Name:           sentdm.String("New User"),
 		Role:           sentdm.String("developer"),
@@ -116,7 +115,6 @@ func TestUserRemoveWithOptionalParams(t *testing.T) {
 		"aa0e8400-e29b-41d4-a716-446655440005",
 		sentdm.UserRemoveParams{
 			MutationRequest: sentdm.MutationRequestParam{
-				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -148,7 +146,6 @@ func TestUserUpdateRoleWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"aa0e8400-e29b-41d4-a716-446655440005",
 		sentdm.UserUpdateRoleParams{
-			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Role:           sentdm.String("billing"),
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),

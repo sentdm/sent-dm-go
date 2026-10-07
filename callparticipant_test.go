@@ -31,7 +31,6 @@ func TestCallParticipantUpdateWithOptionalParams(t *testing.T) {
 		"call_9f2ab000-0000-4000-8000-000000000002",
 		sentdm.CallParticipantUpdateParams{
 			ID:             "call_9f2ab000-0000-4000-8000-000000000001",
-			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Muted:          sentdm.Bool(true),
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
@@ -93,7 +92,6 @@ func TestCallParticipantAddWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"call_9f2ab000-0000-4000-8000-000000000001",
 		sentdm.CallParticipantAddParams{
-			APIKey:   sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			CallerID: sentdm.String("+12025550123"),
 			Sandbox:  sentdm.Bool(false),
 			To: sentdm.CallParticipantTargetParam{
@@ -132,7 +130,6 @@ func TestCallParticipantRemoveWithOptionalParams(t *testing.T) {
 		sentdm.CallParticipantRemoveParams{
 			ID: "call_9f2ab000-0000-4000-8000-000000000001",
 			MutationRequest: sentdm.MutationRequestParam{
-				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -165,7 +162,6 @@ func TestCallParticipantRemoveAllWithOptionalParams(t *testing.T) {
 		"call_9f2ab000-0000-4000-8000-000000000001",
 		sentdm.CallParticipantRemoveAllParams{
 			MutationRequest: sentdm.MutationRequestParam{
-				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),

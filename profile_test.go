@@ -30,7 +30,6 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 	_, err := client.Profiles.New(context.TODO(), sentdm.ProfileNewParams{
 		AllowContactSharing:  param.Null[bool](),
 		AllowTemplateSharing: param.Null[bool](),
-		APIKey:               sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		BillingContact: sentdm.BillingContactInfoParam{
 			Email:   "billing@acmecorp.com",
 			Name:    "Acme Corp",
@@ -153,7 +152,6 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 			AllowContactSharing:               param.Null[bool](),
 			AllowNumberChangeDuringOnboarding: param.Null[bool](),
 			AllowTemplateSharing:              param.Null[bool](),
-			APIKey:                            sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			BillingContact: sentdm.BillingContactInfoParam{
 				Email:   "dev@stainless.com",
 				Name:    "x",
@@ -270,7 +268,6 @@ func TestProfileDeleteWithOptionalParams(t *testing.T) {
 		"770e8400-e29b-41d4-a716-446655440002",
 		sentdm.ProfileDeleteParams{
 			MutationRequest: sentdm.MutationRequestParam{
-				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -303,7 +300,6 @@ func TestProfileCompleteWithOptionalParams(t *testing.T) {
 		"660e8400-e29b-41d4-a716-446655440000",
 		sentdm.ProfileCompleteParams{
 			WebHookURL:     "https://your-app.com/webhook/profile-complete",
-			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),

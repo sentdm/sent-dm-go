@@ -28,7 +28,6 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Templates.New(context.TODO(), sentdm.TemplateNewParams{
-		APIKey:          sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		AutoCreateForSp: sentdm.Bool(false),
 		Category:        sentdm.String("MARKETING"),
 		CreationSource:  param.Null[string](),
@@ -288,7 +287,6 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.TemplateUpdateParams{
-			APIKey:   sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Category: sentdm.String("MARKETING"),
 			Definition: sentdm.TemplateDefinitionParam{
 				Body: sentdm.TemplateBodyParam{
@@ -537,7 +535,6 @@ func TestTemplateDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"7ba7b820-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.TemplateDeleteParams{
-			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			DeleteFromMeta: sentdm.Bool(false),
 			Sandbox:        sentdm.Bool(false),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),

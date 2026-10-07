@@ -506,14 +506,6 @@ type CallListRecordingsParams struct {
 type CallRecordParams struct {
 	// start to begin recording, stop to end it
 	Action param.Opt[string] `json:"action,omitzero"`
-	// API key from the x-api-key header, or empty when the caller sent it as
-	// Authorization: Bearer instead.
-	//
-	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
-	// header, and [FromHeader] is required by default, so a Bearer-only request would
-	// authenticate and then be refused with a 400 for a header it never needed.
-	// Endpoints read the customer from the CustomerId claim, not from this value.
-	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
