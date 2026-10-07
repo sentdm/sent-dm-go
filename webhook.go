@@ -127,9 +127,9 @@ func (r *WebhookService) ListAutoPaging(ctx context.Context, params WebhookListP
 }
 
 // Deletes a webhook for the authenticated customer.
-func (r *WebhookService) Delete(ctx context.Context, id string, body WebhookDeleteParams, opts ...option.RequestOption) (err error) {
-	if !param.IsOmitted(body.XProfileID) {
-		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", body.XProfileID.Value)))
+func (r *WebhookService) Delete(ctx context.Context, id string, params WebhookDeleteParams, opts ...option.RequestOption) (err error) {
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
@@ -138,7 +138,7 @@ func (r *WebhookService) Delete(ctx context.Context, id string, body WebhookDele
 		return err
 	}
 	path := fmt.Sprintf("v3/webhooks/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
 
@@ -1113,6 +1113,14 @@ func (r *MessageEventPayload) UnmarshalJSON(data []byte) error {
 }
 
 type MutationRequestParam struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
@@ -1986,6 +1994,14 @@ func (r *WebhookTestResponseData) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookNewParams struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey      param.Opt[string] `json:"apiKey,omitzero"`
 	DisplayName param.Opt[string] `json:"display_name,omitzero"`
 	EndpointURL param.Opt[string] `json:"endpoint_url,omitzero"`
 	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
@@ -2033,6 +2049,14 @@ type WebhookGetParams struct {
 }
 
 type WebhookUpdateParams struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey      param.Opt[string] `json:"apiKey,omitzero"`
 	DisplayName param.Opt[string] `json:"display_name,omitzero"`
 	EndpointURL param.Opt[string] `json:"endpoint_url,omitzero"`
 	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
@@ -2092,8 +2116,24 @@ func (r WebhookListParams) URLQuery() (v url.Values, err error) {
 }
 
 type WebhookDeleteParams struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey     param.Opt[string] `json:"apiKey,omitzero"`
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
+}
+
+func (r WebhookDeleteParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookDeleteParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookDeleteParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type WebhookListEventTypesParams struct {
@@ -2133,6 +2173,14 @@ func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookTestParams struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey    param.Opt[string] `json:"apiKey,omitzero"`
 	EventType param.Opt[string] `json:"event_type,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
@@ -2151,7 +2199,15 @@ func (r *WebhookTestParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookToggleStatusParams struct {
-	IsActive param.Opt[bool] `json:"is_active,omitzero"`
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey   param.Opt[string] `json:"apiKey,omitzero"`
+	IsActive param.Opt[bool]   `json:"is_active,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`

@@ -1059,6 +1059,14 @@ type ProfileNewParams struct {
 	// only letters, numbers, and spaces, and include at least one letter. Example:
 	// "SALES", "Mkt 2", "Support1".
 	ShortName param.Opt[string] `json:"short_name,omitzero"`
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Profile name (required)
 	Name param.Opt[string] `json:"name,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
@@ -1191,6 +1199,14 @@ type ProfileUpdateParams struct {
 	ShortName param.Opt[string] `json:"short_name,omitzero"`
 	// Direct phone number for WhatsApp sending (optional)
 	WhatsappPhoneNumber param.Opt[string] `json:"whatsapp_phone_number,omitzero"`
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
@@ -1237,6 +1253,14 @@ func (r *ProfileDeleteParams) UnmarshalJSON(data []byte) error {
 type ProfileCompleteParams struct {
 	// Webhook URL to call when profile completion finishes (success or failure)
 	WebHookURL string `json:"webHookUrl" api:"required" format:"uri"`
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`

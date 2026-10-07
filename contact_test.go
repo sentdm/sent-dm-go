@@ -28,6 +28,7 @@ func TestContactNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Contacts.New(context.TODO(), sentdm.ContactNewParams{
 		PhoneNumber:    "+1234567890",
+		APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		Sandbox:        sentdm.Bool(false),
 		IdempotencyKey: sentdm.String("req_abc123_retry1"),
 		XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -87,6 +88,7 @@ func TestContactUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.ContactUpdateParams{
+			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			DefaultChannel: sentdm.String("whatsapp"),
 			OptOut:         sentdm.Bool(false),
 			Sandbox:        sentdm.Bool(false),
@@ -151,6 +153,7 @@ func TestContactDeleteWithOptionalParams(t *testing.T) {
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 		sentdm.ContactDeleteParams{
 			MutationRequest: sentdm.MutationRequestParam{
+				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),

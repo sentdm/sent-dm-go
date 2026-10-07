@@ -257,6 +257,14 @@ type UserListParams struct {
 }
 
 type UserInviteParams struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// User email address (required)
 	Email param.Opt[string] `json:"email,omitzero" format:"email"`
 	// User full name (required)
@@ -293,6 +301,14 @@ func (r *UserRemoveParams) UnmarshalJSON(data []byte) error {
 }
 
 type UserUpdateRoleParams struct {
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// User role: admin, billing, or developer (required)
 	Role param.Opt[string] `json:"role,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful

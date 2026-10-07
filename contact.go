@@ -345,6 +345,14 @@ func (r *ContactResponse) UnmarshalJSON(data []byte) error {
 type ContactNewParams struct {
 	// Phone number of the contact to create
 	PhoneNumber string `json:"phone_number" api:"required"`
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
@@ -372,6 +380,14 @@ type ContactUpdateParams struct {
 	// Whether the contact has opted out of messaging. Single source of truth — opt-out
 	// is per-contact, not per-channel.
 	OptOut param.Opt[bool] `json:"opt_out,omitzero"`
+	// API key from the x-api-key header, or empty when the caller sent it as
+	// Authorization: Bearer instead.
+	//
+	// Optional on purpose. CustomerV3AuthenticationHandler accepts the key in either
+	// header, and [FromHeader] is required by default, so a Bearer-only request would
+	// authenticate and then be refused with a 400 for a header it never needed.
+	// Endpoints read the customer from the CustomerId claim, not from this value.
+	APIKey param.Opt[string] `json:"apiKey,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`

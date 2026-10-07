@@ -93,6 +93,7 @@ func TestCallHangupWithOptionalParams(t *testing.T) {
 		"call_9f2ab000-0000-4000-8000-000000000001",
 		sentdm.CallHangupParams{
 			MutationRequest: sentdm.MutationRequestParam{
+				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
@@ -155,6 +156,7 @@ func TestCallRecordWithOptionalParams(t *testing.T) {
 		"call_9f2ab000-0000-4000-8000-000000000001",
 		sentdm.CallRecordParams{
 			Action:         sentdm.String("start"),
+			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
