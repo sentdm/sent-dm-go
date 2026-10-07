@@ -29,6 +29,7 @@ func TestChannelVoiceNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Channels.Voice.New(context.TODO(), sentdm.ChannelVoiceNewParams{
 		CallbackURL:        "https://example.com/voice",
+		APIKey:             sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		AreaCode:           param.Null[string](),
 		DefaultForAppCalls: sentdm.Bool(false),
 		Number:             sentdm.String("+12125550100"),
@@ -91,6 +92,7 @@ func TestChannelVoiceUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"+12125550100",
 		sentdm.ChannelVoiceUpdateParams{
+			APIKey:             sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			CallbackURL:        sentdm.String("https://example.com/voice"),
 			DefaultForAppCalls: sentdm.Bool(true),
 			Sandbox:            sentdm.Bool(false),
@@ -147,6 +149,7 @@ func TestChannelVoiceNewTokenWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Channels.Voice.NewToken(context.TODO(), sentdm.ChannelVoiceNewTokenParams{
+		APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		Identity:       sentdm.String("agent-42"),
 		Number:         sentdm.String("+12025550123"),
 		Sandbox:        sentdm.Bool(false),
@@ -181,6 +184,7 @@ func TestChannelVoiceRotateSecretWithOptionalParams(t *testing.T) {
 		"+12125550100",
 		sentdm.ChannelVoiceRotateSecretParams{
 			MutationRequest: sentdm.MutationRequestParam{
+				APIKey:  sentdm.String("sntdm_live_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
@@ -214,6 +218,7 @@ func TestChannelVoiceTestWithOptionalParams(t *testing.T) {
 		"+12025550123",
 		sentdm.ChannelVoiceTestParams{
 			MutationRequest: sentdm.MutationRequestParam{
+				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),

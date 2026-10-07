@@ -87,6 +87,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
+		APIKey:      sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 		Channel:     []string{"sms", "whatsapp"},
 		MediaURLs:   []string{"string"},
 		Sandbox:     sentdm.Bool(false),

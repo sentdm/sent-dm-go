@@ -49,6 +49,7 @@ func TestProfileCampaignNewWithOptionalParams(t *testing.T) {
 				TermsAndConditionsLink: sentdm.String("https://acmecorp.com/terms"),
 				Volume:                 sentdm.String("volume"),
 			},
+			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -100,6 +101,7 @@ func TestProfileCampaignUpdateWithOptionalParams(t *testing.T) {
 				TermsAndConditionsLink: sentdm.String("https://example.com"),
 				Volume:                 sentdm.String("volume"),
 			},
+			APIKey:         sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 			Sandbox:        sentdm.Bool(false),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),
 			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -162,6 +164,7 @@ func TestProfileCampaignDeleteWithOptionalParams(t *testing.T) {
 		sentdm.ProfileCampaignDeleteParams{
 			ProfileID: "770e8400-e29b-41d4-a716-446655440002",
 			MutationRequest: sentdm.MutationRequestParam{
+				APIKey:  sentdm.String("sntdm_test_xxxxxxxxxxxx"),
 				Sandbox: sentdm.Bool(false),
 			},
 			XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
