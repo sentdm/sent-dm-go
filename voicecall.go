@@ -24,8 +24,8 @@ import (
 // Phone calls from the numbers you hold, driven by your own callback URL.
 //
 // `POST /v3/channels/voice` enables a number for calls, with the callback URL Sent
-// asks what to do with each call on it, and `POST /v3/channels/voice/tokens` mints
-// a short-lived token that lets a user of your app place and receive calls as that
+// asks what to do with each call on it, and `POST /v3/voice/tokens` mints a
+// short-lived token that lets a user of your app place and receive calls as that
 // number. When a call arrives or a caller presses a key, a signed question is
 // POSTed to the callback URL and the answer decides the call;
 // `POST /v3/channels/voice/{number}/test` checks the URL answers the way we need
@@ -34,24 +34,24 @@ import (
 // The call events themselves (`call.completed` and the rest) arrive through your
 // webhooks.
 //
-// Every call is a record under `/v3/calls`: read it, list its recordings once one
-// is ready, hang it up, start or stop recording, and add, mute or remove
+// Every call is a record under `/v3/voice/calls`: read it, list its recordings
+// once one is ready, hang it up, start or stop recording, and add, mute or remove
 // conference participants while it is live. A leg to a phone number runs for at
 // most what your balance affords at the destination's rate.
 //
-// CallService contains methods and other services that help with interacting with
-// the Sent API.
+// VoiceCallService contains methods and other services that help with interacting
+// with the Sent API.
 //
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
-// the [NewCallService] method instead.
-type CallService struct {
+// the [NewVoiceCallService] method instead.
+type VoiceCallService struct {
 	Options []option.RequestOption
 	// Phone calls from the numbers you hold, driven by your own callback URL.
 	//
 	// `POST /v3/channels/voice` enables a number for calls, with the callback URL Sent
-	// asks what to do with each call on it, and `POST /v3/channels/voice/tokens` mints
-	// a short-lived token that lets a user of your app place and receive calls as that
+	// asks what to do with each call on it, and `POST /v3/voice/tokens` mints a
+	// short-lived token that lets a user of your app place and receive calls as that
 	// number. When a call arrives or a caller presses a key, a signed question is
 	// POSTed to the callback URL and the answer decides the call;
 	// `POST /v3/channels/voice/{number}/test` checks the URL answers the way we need
@@ -60,27 +60,27 @@ type CallService struct {
 	// The call events themselves (`call.completed` and the rest) arrive through your
 	// webhooks.
 	//
-	// Every call is a record under `/v3/calls`: read it, list its recordings once one
-	// is ready, hang it up, start or stop recording, and add, mute or remove
+	// Every call is a record under `/v3/voice/calls`: read it, list its recordings
+	// once one is ready, hang it up, start or stop recording, and add, mute or remove
 	// conference participants while it is live. A leg to a phone number runs for at
 	// most what your balance affords at the destination's rate.
-	Participants CallParticipantService
+	Participants VoiceCallParticipantService
 }
 
-// NewCallService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewCallService(opts ...option.RequestOption) (r CallService) {
-	r = CallService{}
+// NewVoiceCallService generates a new service that applies the given options to
+// each request. These options are applied after the parent client's options (if
+// there is one), and before any request-specific options.
+func NewVoiceCallService(opts ...option.RequestOption) (r VoiceCallService) {
+	r = VoiceCallService{}
 	r.Options = opts
-	r.Participants = NewCallParticipantService(opts...)
+	r.Participants = NewVoiceCallParticipantService(opts...)
 	return
 }
 
 // Retrieves one of your calls by id: the parties, the owning number, the current
 // status with its failure reason, duration, price, recording availability, and a
 // timeline of when the call entered each status.
-func (r *CallService) Get(ctx context.Context, id string, query CallGetParams, opts ...option.RequestOption) (res *APIResponseOfCall, err error) {
+func (r *VoiceCallService) Get(ctx context.Context, id string, query VoiceCallGetParams, opts ...option.RequestOption) (res *APIResponseOfCall, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -89,7 +89,7 @@ func (r *CallService) Get(ctx context.Context, id string, query CallGetParams, o
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/calls/%s", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -98,14 +98,14 @@ func (r *CallService) Get(ctx context.Context, id string, query CallGetParams, o
 // direction, status, the owning number, and the time the call started (from and to
 // are inclusive). Use the call webhooks for real-time updates; this list is for
 // looking calls up afterwards.
-func (r *CallService) List(ctx context.Context, params CallListParams, opts ...option.RequestOption) (res *pagination.CallsPage[Call], err error) {
+func (r *VoiceCallService) List(ctx context.Context, params VoiceCallListParams, opts ...option.RequestOption) (res *pagination.CallsPage[Call], err error) {
 	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	path := "v3/calls"
+	path := "v3/voice/calls"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func (r *CallService) List(ctx context.Context, params CallListParams, opts ...o
 // direction, status, the owning number, and the time the call started (from and to
 // are inclusive). Use the call webhooks for real-time updates; this list is for
 // looking calls up afterwards.
-func (r *CallService) ListAutoPaging(ctx context.Context, params CallListParams, opts ...option.RequestOption) *pagination.CallsPageAutoPager[Call] {
+func (r *VoiceCallService) ListAutoPaging(ctx context.Context, params VoiceCallListParams, opts ...option.RequestOption) *pagination.CallsPageAutoPager[Call] {
 	return pagination.NewCallsPageAutoPager(r.List(ctx, params, opts...))
 }
 
@@ -131,7 +131,7 @@ func (r *CallService) ListAutoPaging(ctx context.Context, params CallListParams,
 // call still ringing as NO_ANSWER, REJECTED or FAILED with call.failed. A call
 // that has already ended answers 409, and so does a call with no phone leg, such
 // as one between two app users.
-func (r *CallService) Hangup(ctx context.Context, id string, params CallHangupParams, opts ...option.RequestOption) (err error) {
+func (r *VoiceCallService) Hangup(ctx context.Context, id string, params VoiceCallHangupParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -144,7 +144,7 @@ func (r *CallService) Hangup(ctx context.Context, id string, params CallHangupPa
 		err = errors.New("missing required id parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/calls/%s/hangup", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s/hangup", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, nil, opts...)
 	return err
 }
@@ -156,7 +156,7 @@ func (r *CallService) Hangup(ctx context.Context, id string, params CallHangupPa
 // a call that was never recorded, the list is empty. A call recorded more than
 // once lists every recording, oldest first, each under the recording_id its
 // call.recording_ready webhook carried.
-func (r *CallService) ListRecordings(ctx context.Context, id string, query CallListRecordingsParams, opts ...option.RequestOption) (res *APIResponseOfCallRecordings, err error) {
+func (r *VoiceCallService) ListRecordings(ctx context.Context, id string, query VoiceCallListRecordingsParams, opts ...option.RequestOption) (res *APIResponseOfCallRecordings, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -165,7 +165,7 @@ func (r *CallService) ListRecordings(ctx context.Context, id string, query CallL
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/calls/%s/recordings", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s/recordings", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -175,7 +175,7 @@ func (r *CallService) ListRecordings(ctx context.Context, id string, query CallL
 // connect answer with record set. A call that has already ended answers 409, and
 // so does a call with no phone leg, such as one between two app users, which can't
 // be recorded.
-func (r *CallService) Record(ctx context.Context, id string, params CallRecordParams, opts ...option.RequestOption) (err error) {
+func (r *VoiceCallService) Record(ctx context.Context, id string, params VoiceCallRecordParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -188,7 +188,7 @@ func (r *CallService) Record(ctx context.Context, id string, params CallRecordPa
 		err = errors.New("missing required id parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/calls/%s/recordings", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s/recordings", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, nil, opts...)
 	return err
 }
@@ -296,6 +296,9 @@ type Call struct {
 	FailureReason string `json:"failure_reason" api:"nullable"`
 	// One end of a call
 	From CallParty `json:"from"`
+	// The calling mode: inapp for a call between people in your app and phone numbers,
+	// routed by your number's callback URL
+	Mode string `json:"mode"`
 	// Your number that owns the call, in E.164 format: the dialed number for an
 	// inbound call, the caller's bound number for a call placed from your app
 	Number string `json:"number"`
@@ -321,6 +324,7 @@ type Call struct {
 		EndedAt            respjson.Field
 		FailureReason      respjson.Field
 		From               respjson.Field
+		Mode               respjson.Field
 		Number             respjson.Field
 		Price              respjson.Field
 		RecordingAvailable respjson.Field
@@ -449,12 +453,12 @@ func (r *CallsList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type CallGetParams struct {
+type VoiceCallGetParams struct {
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
-type CallListParams struct {
+type VoiceCallListParams struct {
 	// Optional direction filter: outbound for calls placed from your app, inbound for
 	// calls to one of your numbers
 	Direction param.Opt[string] `query:"direction,omitzero" json:"-"`
@@ -476,34 +480,34 @@ type CallListParams struct {
 	paramObj
 }
 
-// URLQuery serializes [CallListParams]'s query parameters as `url.Values`.
-func (r CallListParams) URLQuery() (v url.Values, err error) {
+// URLQuery serializes [VoiceCallListParams]'s query parameters as `url.Values`.
+func (r VoiceCallListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
 
-type CallHangupParams struct {
+type VoiceCallHangupParams struct {
 	MutationRequest MutationRequestParam
 	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
-func (r CallHangupParams) MarshalJSON() (data []byte, err error) {
+func (r VoiceCallHangupParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.MutationRequest)
 }
-func (r *CallHangupParams) UnmarshalJSON(data []byte) error {
+func (r *VoiceCallHangupParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type CallListRecordingsParams struct {
+type VoiceCallListRecordingsParams struct {
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
-type CallRecordParams struct {
+type VoiceCallRecordParams struct {
 	// start to begin recording, stop to end it
 	Action param.Opt[string] `json:"action,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
@@ -514,10 +518,10 @@ type CallRecordParams struct {
 	paramObj
 }
 
-func (r CallRecordParams) MarshalJSON() (data []byte, err error) {
-	type shadow CallRecordParams
+func (r VoiceCallRecordParams) MarshalJSON() (data []byte, err error) {
+	type shadow VoiceCallRecordParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *CallRecordParams) UnmarshalJSON(data []byte) error {
+func (r *VoiceCallRecordParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }

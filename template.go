@@ -238,17 +238,18 @@ type Template struct {
 	// Template category: MARKETING, UTILITY, AUTHENTICATION
 	Category string `json:"category"`
 	// The channels this template's definition can render on, in canonical order: sms,
-	// whatsapp, rcs.
+	// whatsapp, rcs, mms.
 	//
 	// Derived from the definition's body, mirroring each channel's send-time fallback
 	// chain, so a channel is listed only when a real body would be produced for it:
 	// SMS reads sms ?? multiChannel, WhatsApp reads whatsapp ?? multiChannel, and RCS
-	// reads rcs ?? multiChannel ?? sms. A multiChannel body therefore reports all
-	// three, and the extra SMS fallback on RCS is why an sms/whatsapp pair reports RCS
-	// too.
+	// and MMS read rcs ?? multiChannel ?? sms and mms ?? multiChannel ?? sms. A
+	// multiChannel body therefore reports all four, and the extra SMS fallback is why
+	// an sms/whatsapp pair reports RCS and MMS too.
 	//
 	// This says what the content can render on, not what may be sent: sending also
-	// needs the template approved for that channel.
+	// needs the template approved for that channel, and MMS needs an attachment, from
+	// media_urls or the template's mms body.
 	Channels []string `json:"channels" api:"nullable"`
 	// When the template was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
@@ -304,10 +305,10 @@ type TemplateBodyParam struct {
 	// MMS-specific content — subject, text and attachments.
 	//
 	// Like Rcs, an override that cannot stand on its own: a template still needs a
-	// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Unlike
-	// Rcs, it has no fallback at send time — MMS with no media is a more expensive
-	// SMS, so a template without this slot is deliberately not MMS-capable and never
-	// produces an MMS route candidate.
+	// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Without
+	// this slot MMS renders the shared or SMS body, so it is only needed for
+	// MMS-specific copy, a subject or attachments. When present it replaces that body
+	// on MMS rather than adding to it.
 	Mms TemplateBodyMmsParam `json:"mms,omitzero"`
 	// The shared body, used for every channel. One half of the choice described above.
 	MultiChannel TemplateBodyContentParam `json:"multiChannel,omitzero"`
@@ -333,10 +334,10 @@ func (r *TemplateBodyParam) UnmarshalJSON(data []byte) error {
 // MMS-specific content — subject, text and attachments.
 //
 // Like Rcs, an override that cannot stand on its own: a template still needs a
-// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Unlike
-// Rcs, it has no fallback at send time — MMS with no media is a more expensive
-// SMS, so a template without this slot is deliberately not MMS-capable and never
-// produces an MMS route candidate.
+// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Without
+// this slot MMS renders the shared or SMS body, so it is only needed for
+// MMS-specific copy, a subject or attachments. When present it replaces that body
+// on MMS rather than adding to it.
 type TemplateBodyMmsParam struct {
 	// Attachments carried by every send on this template, in order. A per-send
 	// media_urls on the request replaces this list rather than adding to it, so a

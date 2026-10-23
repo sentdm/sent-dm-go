@@ -21,8 +21,8 @@ import (
 // Phone calls from the numbers you hold, driven by your own callback URL.
 //
 // `POST /v3/channels/voice` enables a number for calls, with the callback URL Sent
-// asks what to do with each call on it, and `POST /v3/channels/voice/tokens` mints
-// a short-lived token that lets a user of your app place and receive calls as that
+// asks what to do with each call on it, and `POST /v3/voice/tokens` mints a
+// short-lived token that lets a user of your app place and receive calls as that
 // number. When a call arrives or a caller presses a key, a signed question is
 // POSTed to the callback URL and the answer decides the call;
 // `POST /v3/channels/voice/{number}/test` checks the URL answers the way we need
@@ -31,26 +31,26 @@ import (
 // The call events themselves (`call.completed` and the rest) arrive through your
 // webhooks.
 //
-// Every call is a record under `/v3/calls`: read it, list its recordings once one
-// is ready, hang it up, start or stop recording, and add, mute or remove
+// Every call is a record under `/v3/voice/calls`: read it, list its recordings
+// once one is ready, hang it up, start or stop recording, and add, mute or remove
 // conference participants while it is live. A leg to a phone number runs for at
 // most what your balance affords at the destination's rate.
 //
-// CallParticipantService contains methods and other services that help with
+// VoiceCallParticipantService contains methods and other services that help with
 // interacting with the Sent API.
 //
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
-// the [NewCallParticipantService] method instead.
-type CallParticipantService struct {
+// the [NewVoiceCallParticipantService] method instead.
+type VoiceCallParticipantService struct {
 	Options []option.RequestOption
 }
 
-// NewCallParticipantService generates a new service that applies the given options
-// to each request. These options are applied after the parent client's options (if
-// there is one), and before any request-specific options.
-func NewCallParticipantService(opts ...option.RequestOption) (r CallParticipantService) {
-	r = CallParticipantService{}
+// NewVoiceCallParticipantService generates a new service that applies the given
+// options to each request. These options are applied after the parent client's
+// options (if there is one), and before any request-specific options.
+func NewVoiceCallParticipantService(opts ...option.RequestOption) (r VoiceCallParticipantService) {
+	r = VoiceCallParticipantService{}
 	r.Options = opts
 	return
 }
@@ -61,7 +61,7 @@ func NewCallParticipantService(opts ...option.RequestOption) (r CallParticipantS
 // is already muted succeeds, as does unmuting one who is not. A participant who is
 // not in this call's room answers 404. A call that has ended answers 409, as does
 // a call that is not in a conference.
-func (r *CallParticipantService) Update(ctx context.Context, participantID string, params CallParticipantUpdateParams, opts ...option.RequestOption) (err error) {
+func (r *VoiceCallParticipantService) Update(ctx context.Context, participantID string, params VoiceCallParticipantUpdateParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -78,7 +78,7 @@ func (r *CallParticipantService) Update(ctx context.Context, participantID strin
 		err = errors.New("missing required participantId parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/calls/%s/participants/%s", url.PathEscape(params.ID), url.PathEscape(participantID))
+	path := fmt.Sprintf("v3/voice/calls/%s/participants/%s", url.PathEscape(params.ID), url.PathEscape(participantID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, nil, opts...)
 	return err
 }
@@ -87,9 +87,9 @@ func (r *CallParticipantService) Update(ctx context.Context, participantID strin
 // participant's own call id, who they are, whether the room mutes them, and how
 // long they have been connected. The call itself is one of the participants. Use a
 // participant's id to mute or remove them; it is also a call id, so GET
-// /v3/calls/{id} accepts it. A call that has ended answers 409, as does a call
-// that is not in a conference.
-func (r *CallParticipantService) List(ctx context.Context, id string, query CallParticipantListParams, opts ...option.RequestOption) (res *APIResponseOfListOfCallParticipant, err error) {
+// /v3/voice/calls/{id} accepts it. A call that has ended answers 409, as does a
+// call that is not in a conference.
+func (r *VoiceCallParticipantService) List(ctx context.Context, id string, query VoiceCallParticipantListParams, opts ...option.RequestOption) (res *APIResponseOfListOfCallParticipant, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -98,7 +98,7 @@ func (r *CallParticipantService) List(ctx context.Context, id string, query Call
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/calls/%s/participants", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s/participants", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -112,7 +112,7 @@ func (r *CallParticipantService) List(ctx context.Context, id string, query Call
 // owning number when omitted, and needs a destination you may call. Only a call
 // your answer connected to a conference can take participants: a call connected to
 // a user or a number answers 409.
-func (r *CallParticipantService) Add(ctx context.Context, id string, params CallParticipantAddParams, opts ...option.RequestOption) (res *APIResponseOfCall, err error) {
+func (r *VoiceCallParticipantService) Add(ctx context.Context, id string, params VoiceCallParticipantAddParams, opts ...option.RequestOption) (res *APIResponseOfCall, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -124,7 +124,7 @@ func (r *CallParticipantService) Add(ctx context.Context, id string, params Call
 		err = errors.New("missing required id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/calls/%s/participants", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s/participants", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
 }
@@ -134,7 +134,7 @@ func (r *CallParticipantService) Add(ctx context.Context, id string, params Call
 // reported through call.completed like any other call; everyone else stays
 // connected. A participant who is not in this call's room answers 404. A call that
 // has ended answers 409, as does a call that is not in a conference.
-func (r *CallParticipantService) Remove(ctx context.Context, participantID string, params CallParticipantRemoveParams, opts ...option.RequestOption) (err error) {
+func (r *VoiceCallParticipantService) Remove(ctx context.Context, participantID string, params VoiceCallParticipantRemoveParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
@@ -148,7 +148,7 @@ func (r *CallParticipantService) Remove(ctx context.Context, participantID strin
 		err = errors.New("missing required participantId parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/calls/%s/participants/%s", url.PathEscape(params.ID), url.PathEscape(participantID))
+	path := fmt.Sprintf("v3/voice/calls/%s/participants/%s", url.PathEscape(params.ID), url.PathEscape(participantID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
@@ -157,7 +157,7 @@ func (r *CallParticipantService) Remove(ctx context.Context, participantID strin
 // itself included. Every leg ends and is reported through call.completed like any
 // other call. A room that is already empty answers 204 as well. A call that has
 // ended answers 409, as does a call that is not in a conference.
-func (r *CallParticipantService) RemoveAll(ctx context.Context, id string, params CallParticipantRemoveAllParams, opts ...option.RequestOption) (err error) {
+func (r *VoiceCallParticipantService) RemoveAll(ctx context.Context, id string, params VoiceCallParticipantRemoveAllParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
@@ -167,7 +167,7 @@ func (r *CallParticipantService) RemoveAll(ctx context.Context, id string, param
 		err = errors.New("missing required id parameter")
 		return err
 	}
-	path := fmt.Sprintf("v3/calls/%s/participants", url.PathEscape(id))
+	path := fmt.Sprintf("v3/voice/calls/%s/participants", url.PathEscape(id))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, nil, opts...)
 	return err
 }
@@ -202,7 +202,7 @@ func (r *APIResponseOfListOfCallParticipant) UnmarshalJSON(data []byte) error {
 // A participant of a conference call
 type CallParticipant struct {
 	// The participant's own call id: what the mute and remove endpoints take, and what
-	// GET /v3/calls/{id} accepts
+	// GET /v3/voice/calls/{id} accepts
 	ID string `json:"id"`
 	// How long the participant has been connected to the room, in seconds
 	DurationSeconds int64 `json:"duration_seconds"`
@@ -249,7 +249,7 @@ func (r *CallParticipantTargetParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type CallParticipantUpdateParams struct {
+type VoiceCallParticipantUpdateParams struct {
 	ID string `path:"id" api:"required" json:"-"`
 	// true to mute the participant, false to unmute them
 	Muted param.Opt[bool] `json:"muted,omitzero"`
@@ -261,20 +261,20 @@ type CallParticipantUpdateParams struct {
 	paramObj
 }
 
-func (r CallParticipantUpdateParams) MarshalJSON() (data []byte, err error) {
-	type shadow CallParticipantUpdateParams
+func (r VoiceCallParticipantUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow VoiceCallParticipantUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *CallParticipantUpdateParams) UnmarshalJSON(data []byte) error {
+func (r *VoiceCallParticipantUpdateParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type CallParticipantListParams struct {
+type VoiceCallParticipantListParams struct {
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
-type CallParticipantAddParams struct {
+type VoiceCallParticipantAddParams struct {
 	// The number shown to a phone participant as the caller, in E.164 format. Must be
 	// one of your numbers. The call's owning number when omitted
 	CallerID param.Opt[string] `json:"caller_id,omitzero"`
@@ -288,37 +288,37 @@ type CallParticipantAddParams struct {
 	paramObj
 }
 
-func (r CallParticipantAddParams) MarshalJSON() (data []byte, err error) {
-	type shadow CallParticipantAddParams
+func (r VoiceCallParticipantAddParams) MarshalJSON() (data []byte, err error) {
+	type shadow VoiceCallParticipantAddParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *CallParticipantAddParams) UnmarshalJSON(data []byte) error {
+func (r *VoiceCallParticipantAddParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type CallParticipantRemoveParams struct {
+type VoiceCallParticipantRemoveParams struct {
 	ID              string `path:"id" api:"required" json:"-"`
 	MutationRequest MutationRequestParam
 	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
-func (r CallParticipantRemoveParams) MarshalJSON() (data []byte, err error) {
+func (r VoiceCallParticipantRemoveParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.MutationRequest)
 }
-func (r *CallParticipantRemoveParams) UnmarshalJSON(data []byte) error {
+func (r *VoiceCallParticipantRemoveParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type CallParticipantRemoveAllParams struct {
+type VoiceCallParticipantRemoveAllParams struct {
 	MutationRequest MutationRequestParam
 	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
-func (r CallParticipantRemoveAllParams) MarshalJSON() (data []byte, err error) {
+func (r VoiceCallParticipantRemoveAllParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.MutationRequest)
 }
-func (r *CallParticipantRemoveAllParams) UnmarshalJSON(data []byte) error {
+func (r *VoiceCallParticipantRemoveAllParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
