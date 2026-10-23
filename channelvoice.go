@@ -28,8 +28,8 @@ import (
 // number**: each number you hold can carry phone calls on its own
 // (`POST /v3/channels/voice`), each with the callback URL Sent asks what to do
 // with its calls, one of them is the default line for calls placed from your app,
-// and voice tokens are minted under `POST /v3/channels/voice/tokens`. Read your
-// voice numbers with `GET /v3/channels/voice` and change one with
+// and voice tokens are minted with `POST /v3/voice/tokens`. Read your voice
+// numbers with `GET /v3/channels/voice` and change one with
 // `PATCH /v3/channels/voice/{number}`.
 //
 // ## Compliance lives on the market
@@ -131,18 +131,22 @@ func (r *ChannelVoiceService) Get(ctx context.Context, number string, query Chan
 //
 // ## What it changes
 //
-// | Body                                          | Effect                                                                                                                                                     |
-// | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-// | `"status": "ACTIVE"`                          | turns calls on again for a number you turned off; the callback URL and the secret it had are kept                                                          |
-// | `"status": "INACTIVE"`                        | turns calls off; the callback URL and the secret stay on the number                                                                                        |
-// | `"default_for_app_calls": true`               | makes this the line app-originated calls are placed from when a voice token names no number                                                                |
-// | `"callback_url": "https://example.com/voice"` | replaces where Sent asks what to do with each call on the number; the signing secret is kept, and a number that was waiting for its first URL is turned on |
-// | key omitted                                   | left exactly as it is                                                                                                                                      |
+// | Body                                          | Effect                                                                                                       |
+// | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+// | `"status": "ACTIVE"`                          | turns calls on again for a number you turned off; the callback URL and the secret it had are kept            |
+// | `"status": "INACTIVE"`                        | turns calls off; the callback URL and the secret stay on the number                                          |
+// | `"default_for_app_calls": true`               | makes this the line app-originated calls are placed from when a voice token names no number                  |
+// | `"callback_url": "https://example.com/voice"` | replaces where Sent asks what to do with each call on the number; the signing secret and the status are kept |
+// | key omitted                                   | left exactly as it is                                                                                        |
 //
 // `status` is matched ignoring case. Any combination is accepted:
 // `status: "ACTIVE"` with `default_for_app_calls: true` turns a number on as the
 // new default, and a `callback_url` sent with either status is written too. A body
 // that names none of the three is refused.
+//
+// A number can be on without a callback URL: calls placed from your app then
+// connect straight to the number or user they dial, and calls to the number are
+// declined.
 //
 // ## What it will refuse
 //
@@ -156,11 +160,6 @@ func (r *ChannelVoiceService) Get(ctx context.Context, number string, query Chan
 //
 // **Making an inactive number the default is `400`.** Send `status: "ACTIVE"` in
 // the same call.
-//
-// A number added without a `callback_url` is `INACTIVE` for that one reason, so
-// sending it a `callback_url` turns it on by itself, and it becomes your default
-// line if you have no other active voice number. A number you turned off while it
-// had a URL stays off.
 //
 // **A number you never turned voice on for is `404`.** Add it with
 // `POST /v3/channels/voice`.
@@ -204,25 +203,6 @@ func (r *ChannelVoiceService) List(ctx context.Context, query ChannelVoiceListPa
 	opts = slices.Concat(r.Options, opts)
 	path := "v3/channels/voice"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return res, err
-}
-
-// Mints a short-lived token for one of your app users. Call this from your backend
-// and return the token to your app, which passes it to the voice client SDK to
-// register. The identity is bound to the given number, or to your default app-call
-// number when omitted, and calls placed by that identity are routed through the
-// bound number. Minting again re-binds the identity, so an identity can move
-// between numbers.
-func (r *ChannelVoiceService) NewToken(ctx context.Context, params ChannelVoiceNewTokenParams, opts ...option.RequestOption) (res *APIResponseOfVoiceToken, err error) {
-	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
-	}
-	if !param.IsOmitted(params.XProfileID) {
-		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
-	}
-	opts = slices.Concat(r.Options, opts)
-	path := "v3/channels/voice/tokens"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
 }
 
@@ -414,33 +394,6 @@ func (r *APIResponseOfVoiceSecret) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Standard API response envelope for all v3 endpoints
-type APIResponseOfVoiceToken struct {
-	// A short-lived token your app passes to the voice client SDK to register
-	Data VoiceToken `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r APIResponseOfVoiceToken) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseOfVoiceToken) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The verdict of a test question sent to your callback URL
 type VoiceCallbackTest struct {
 	// Your answer as Sent read it, with numbers in E.164 and a missing caller id
@@ -627,33 +580,6 @@ func (r *VoiceSecret) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A short-lived token your app passes to the voice client SDK to register
-type VoiceToken struct {
-	// The signed token. Hand it to the client SDK unchanged.
-	Token string `json:"token"`
-	// When the token expires (UTC)
-	ExpiresAt time.Time `json:"expires_at" format:"date-time"`
-	// The identity the token was minted for
-	Identity string `json:"identity"`
-	// The phone number this identity is now bound to, in E.164 format
-	Number string `json:"number"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Token       respjson.Field
-		ExpiresAt   respjson.Field
-		Identity    respjson.Field
-		Number      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r VoiceToken) RawJSON() string { return r.JSON.raw }
-func (r *VoiceToken) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type ChannelVoiceNewParams struct {
 	// Where Sent asks what to do with each call on this number: an absolute HTTP or
 	// HTTPS URL on a public host. A signed question is POSTed here when a call arrives
@@ -740,32 +666,6 @@ const (
 type ChannelVoiceListParams struct {
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
-}
-
-type ChannelVoiceNewTokenParams struct {
-	// One of your voice-enabled phone numbers in E.164 format. Calls placed by this
-	// identity are routed through that number. Omit to use your default app-call
-	// number.
-	Number param.Opt[string] `json:"number,omitzero"`
-	// Token lifetime in seconds. Defaults to 600 and cannot exceed 3600.
-	Ttl param.Opt[int64] `json:"ttl,omitzero"`
-	// Your identifier for the app user, such as an agent or account id. Letters,
-	// digits, hyphens and underscores only, up to 200 characters.
-	Identity param.Opt[string] `json:"identity,omitzero"`
-	// Sandbox flag - when true, the operation is simulated without side effects Useful
-	// for testing integrations without actual execution
-	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	paramObj
-}
-
-func (r ChannelVoiceNewTokenParams) MarshalJSON() (data []byte, err error) {
-	type shadow ChannelVoiceNewTokenParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ChannelVoiceNewTokenParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type ChannelVoiceRotateSecretParams struct {
