@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.43.0](https://github.com/sentdm/sent-dm-go/compare/v0.42.0...v0.43.0) (2026-10-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** move calls and voice tokens under the voice resource
+
+### Features
+
+* **api:** move calls and voice tokens under the voice resource ([037f276](https://github.com/sentdm/sent-dm-go/commit/037f2767a7fd3a68b442ec97dd804b9c784aeccc))
+
 ## [0.42.0](https://github.com/sentdm/sent-dm-go/compare/v0.41.0...v0.42.0) (2026-10-20)
 
 
