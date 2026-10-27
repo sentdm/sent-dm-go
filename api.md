@@ -249,6 +249,10 @@ Methods:
 
 - <code title="post /v3/voice/tokens">client.Voice.Tokens.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceTokenService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceTokenNewParams">VoiceTokenNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceToken">APIResponseOfVoiceToken</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Agents
+
+## Voices
+
 # Channels
 
 ## Voice

@@ -50,6 +50,8 @@ type VoiceService struct {
 	// conference participants while it is live. A leg to a phone number runs for at
 	// most what your balance affords at the destination's rate.
 	Tokens VoiceTokenService
+	Agents VoiceAgentService
+	Voices VoiceVoiceService
 }
 
 // NewVoiceService generates a new service that applies the given options to each
@@ -60,5 +62,7 @@ func NewVoiceService(opts ...option.RequestOption) (r VoiceService) {
 	r.Options = opts
 	r.Calls = NewVoiceCallService(opts...)
 	r.Tokens = NewVoiceTokenService(opts...)
+	r.Agents = NewVoiceAgentService(opts...)
+	r.Voices = NewVoiceVoiceService(opts...)
 	return
 }
