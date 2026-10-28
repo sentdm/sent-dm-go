@@ -39,6 +39,17 @@ import (
 // conference participants while it is live. A leg to a phone number runs for at
 // most what your balance affords at the destination's rate.
 //
+// **Voice agents.** `POST /v3/voice/agents` creates an agent that answers calls
+// through the Sent Voice Gateway: `session_type` says whether Sent carries the
+// call as text (speech recognised and spoken for the agent) or as audio,
+// `websocket_url` is where the gateway dials the agent for each call (leave it out
+// and the agent dials in with your API key), and `tools`, `transfer_targets`,
+// `fallback` and `limits` say what it may do on a call. The agent's
+// `signing_secret` is shown on create and on
+// `POST /v3/voice/agents/{id}/rotate-secret` only. Voices and languages for text
+// sessions come from `GET /v3/voice/voices`. A number takes calls to an agent once
+// it is bound to it on `/v3/channels/voice`.
+//
 // VoiceCallService contains methods and other services that help with interacting
 // with the Sent API.
 //
@@ -64,6 +75,17 @@ type VoiceCallService struct {
 	// once one is ready, hang it up, start or stop recording, and add, mute or remove
 	// conference participants while it is live. A leg to a phone number runs for at
 	// most what your balance affords at the destination's rate.
+	//
+	// **Voice agents.** `POST /v3/voice/agents` creates an agent that answers calls
+	// through the Sent Voice Gateway: `session_type` says whether Sent carries the
+	// call as text (speech recognised and spoken for the agent) or as audio,
+	// `websocket_url` is where the gateway dials the agent for each call (leave it out
+	// and the agent dials in with your API key), and `tools`, `transfer_targets`,
+	// `fallback` and `limits` say what it may do on a call. The agent's
+	// `signing_secret` is shown on create and on
+	// `POST /v3/voice/agents/{id}/rotate-secret` only. Voices and languages for text
+	// sessions come from `GET /v3/voice/voices`. A number takes calls to an agent once
+	// it is bound to it on `/v3/channels/voice`.
 	Participants VoiceCallParticipantService
 }
 
@@ -77,9 +99,11 @@ func NewVoiceCallService(opts ...option.RequestOption) (r VoiceCallService) {
 	return
 }
 
-// Retrieves one of your calls by id: the parties, the owning number, the current
-// status with its failure reason, duration, price, recording availability, and a
-// timeline of when the call entered each status.
+// Retrieves one of your calls by id: the parties, the owning number, the phone
+// number the call was connected to and the caller id it showed, the current status
+// with its failure reason, duration, price with the billed legs and what each
+// cost, recording availability, and a timeline of when the call entered each
+// status.
 func (r *VoiceCallService) Get(ctx context.Context, id string, query VoiceCallGetParams, opts ...option.RequestOption) (res *APIResponseOfCall, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
@@ -95,9 +119,12 @@ func (r *VoiceCallService) Get(ctx context.Context, id string, query VoiceCallGe
 }
 
 // Retrieves a paginated list of your calls, most recent first. Filter by
-// direction, status, the owning number, and the time the call started (from and to
-// are inclusive). Use the call webhooks for real-time updates; this list is for
-// looking calls up afterwards.
+// direction, status, the owning number, the mode (inapp, or agent for calls your
+// voice agents answered), the agent that answered, and the time the call started
+// (from and to are inclusive). Each call carries the phone number it was connected
+// to, the caller id it showed, and the billed legs with what each cost. Use the
+// call webhooks for real-time updates; this list is for looking calls up
+// afterwards.
 func (r *VoiceCallService) List(ctx context.Context, params VoiceCallListParams, opts ...option.RequestOption) (res *pagination.CallsPage[Call], err error) {
 	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
@@ -119,9 +146,12 @@ func (r *VoiceCallService) List(ctx context.Context, params VoiceCallListParams,
 }
 
 // Retrieves a paginated list of your calls, most recent first. Filter by
-// direction, status, the owning number, and the time the call started (from and to
-// are inclusive). Use the call webhooks for real-time updates; this list is for
-// looking calls up afterwards.
+// direction, status, the owning number, the mode (inapp, or agent for calls your
+// voice agents answered), the agent that answered, and the time the call started
+// (from and to are inclusive). Each call carries the phone number it was connected
+// to, the caller id it showed, and the billed legs with what each cost. Use the
+// call webhooks for real-time updates; this list is for looking calls up
+// afterwards.
 func (r *VoiceCallService) ListAutoPaging(ctx context.Context, params VoiceCallListParams, opts ...option.RequestOption) *pagination.CallsPageAutoPager[Call] {
 	return pagination.NewCallsPageAutoPager(r.List(ctx, params, opts...))
 }
@@ -129,8 +159,8 @@ func (r *VoiceCallService) ListAutoPaging(ctx context.Context, params VoiceCallL
 // Ends one of your live calls. The call then ends the way any other call does once
 // the disconnect is reported: an answered call as COMPLETED with call.completed, a
 // call still ringing as NO_ANSWER, REJECTED or FAILED with call.failed. A call
-// that has already ended answers 409, and so does a call with no phone leg, such
-// as one between two app users.
+// that has already ended answers 409, as do a call with no phone leg, such as one
+// between two app users, and a call one of your voice agents answers.
 func (r *VoiceCallService) Hangup(ctx context.Context, id string, params VoiceCallHangupParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -172,9 +202,9 @@ func (r *VoiceCallService) ListRecordings(ctx context.Context, id string, query 
 
 // Starts or stops recording one of your live calls. Use start to begin recording
 // mid-call, or stop to end a recording, whether it was started here or by a
-// connect answer with record set. A call that has already ended answers 409, and
-// so does a call with no phone leg, such as one between two app users, which can't
-// be recorded.
+// connect answer with record set. A call that has already ended answers 409, as do
+// a call with no phone leg, such as one between two app users, and a call one of
+// your voice agents answers, neither of which can be recorded this way.
 func (r *VoiceCallService) Record(ctx context.Context, id string, params VoiceCallRecordParams, opts ...option.RequestOption) (err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -279,9 +309,20 @@ type Call struct {
 	// The call id, the same one carried by the call.request question and every call
 	// webhook
 	ID string `json:"id"`
+	// The voice agent that answered the call, such as
+	// agent_9f2ab000-0000-4000-8000-000000000001. Null for an inapp call
+	AgentID string `json:"agent_id" api:"nullable"`
 	// When the call was answered (UTC). Null until then, and always null for a call
 	// between two of your app users
 	AnsweredAt time.Time `json:"answered_at" api:"nullable" format:"date-time"`
+	// The caller id shown on the phone leg, in E.164 format: the one your answer
+	// chose, or the owning number when it chose none. Null for a call with no phone
+	// leg
+	CallerIDUsed string `json:"caller_id_used" api:"nullable"`
+	// The phone number the call was connected to, in E.164 format: the number your
+	// answer dialed, or the fallback number a call to one of your voice agents
+	// reached. Null when the call was not connected to a phone number
+	ConnectedNumber string `json:"connected_number" api:"nullable"`
 	// outbound for a call placed from your app, inbound for a call to one of your
 	// numbers
 	Direction string `json:"direction"`
@@ -290,14 +331,20 @@ type Call struct {
 	// When the call ended (UTC). Null while the call is live
 	EndedAt time.Time `json:"ended_at" api:"nullable" format:"date-time"`
 	// Why the call did not complete: callback_timeout, invalid_answer,
-	// insufficient_balance, destination_blocked, callback_not_configured, rejected or
-	// no_answer. Null while the call is live, when it completed, and when it failed
-	// without a recorded reason
+	// insufficient_balance, destination_blocked, callback_not_configured, rejected,
+	// no_answer, or for an agent call agent_busy or agent_unreachable. Null while the
+	// call is live, when it completed, and when it failed without a recorded reason
 	FailureReason string `json:"failure_reason" api:"nullable"`
 	// One end of a call
 	From CallParty `json:"from"`
+	// The legs the price covers, one entry per billed leg, each with its own cost: a
+	// call your answer connected to a phone number ran the caller's leg to your number
+	// and the leg to the connected number at once, and both are billed. Null until the
+	// call has been priced
+	Legs []CallLeg `json:"legs" api:"nullable"`
 	// The calling mode: inapp for a call between people in your app and phone numbers,
-	// routed by your number's callback URL
+	// routed by your number's callback URL; agent for a call one of your voice agents
+	// answered
 	Mode string `json:"mode"`
 	// Your number that owns the call, in E.164 format: the dialed number for an
 	// inbound call, the caller's bound number for a call placed from your app
@@ -318,12 +365,16 @@ type Call struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                 respjson.Field
+		AgentID            respjson.Field
 		AnsweredAt         respjson.Field
+		CallerIDUsed       respjson.Field
+		ConnectedNumber    respjson.Field
 		Direction          respjson.Field
 		DurationSeconds    respjson.Field
 		EndedAt            respjson.Field
 		FailureReason      respjson.Field
 		From               respjson.Field
+		Legs               respjson.Field
 		Mode               respjson.Field
 		Number             respjson.Field
 		Price              respjson.Field
@@ -340,6 +391,39 @@ type Call struct {
 // Returns the unmodified JSON received from the API
 func (r Call) RawJSON() string { return r.JSON.raw }
 func (r *Call) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One leg of a call the price covers
+type CallLeg struct {
+	// The whole minutes the leg was billed for
+	BilledMinutes int64 `json:"billed_minutes"`
+	// What the leg cost, in the same unit as the call's price
+	Cost float64 `json:"cost" format:"decimal"`
+	// The currency of the cost: USD
+	Currency string `json:"currency"`
+	// inbound for the caller's leg to your number, outbound for a leg placed on your
+	// behalf
+	Direction string `json:"direction"`
+	// The phone number the leg reached, in E.164 format: your number for the inbound
+	// leg, the number dialed for an outbound one. Null for a leg to one of your app
+	// users or a room
+	Number string `json:"number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BilledMinutes respjson.Field
+		Cost          respjson.Field
+		Currency      respjson.Field
+		Direction     respjson.Field
+		Number        respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CallLeg) RawJSON() string { return r.JSON.raw }
+func (r *CallLeg) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -459,11 +543,17 @@ type VoiceCallGetParams struct {
 }
 
 type VoiceCallListParams struct {
+	// Optional filter on the voice agent that answered the call, such as
+	// agent_9f2ab000-0000-4000-8000-000000000001
+	AgentID param.Opt[string] `query:"agent_id,omitzero" json:"-"`
 	// Optional direction filter: outbound for calls placed from your app, inbound for
 	// calls to one of your numbers
 	Direction param.Opt[string] `query:"direction,omitzero" json:"-"`
 	// Only calls started at or after this time (ISO 8601)
 	From param.Opt[time.Time] `query:"from,omitzero" format:"date-time" json:"-"`
+	// Optional mode filter: inapp for calls routed by your number's callback URL,
+	// agent for calls one of your voice agents answered
+	Mode param.Opt[string] `query:"mode,omitzero" json:"-"`
 	// Optional filter on the number that owns the call, one of your voice-enabled
 	// numbers in E.164 format
 	Number param.Opt[string] `query:"number,omitzero" json:"-"`
