@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.44.0](https://github.com/sentdm/sent-dm-go/compare/v0.43.0...v0.44.0) (2026-10-28)
+
+
+### Features
+
+* **api:** add voice agents, the voice catalogue and agent_id ([670f785](https://github.com/sentdm/sent-dm-go/commit/670f785cfe3e81aadf9b3b4b64ddadacd71ca71a))
+* **api:** sync OpenAPI spec from production ([ebf436a](https://github.com/sentdm/sent-dm-go/commit/ebf436a95bc19c292465ab89de69c9200d764744))
+
 ## [0.43.0](https://github.com/sentdm/sent-dm-go/compare/v0.42.0...v0.43.0) (2026-10-23)
 
 
