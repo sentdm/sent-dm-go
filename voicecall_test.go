@@ -57,8 +57,10 @@ func TestVoiceCallListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Voice.Calls.List(context.TODO(), sentdm.VoiceCallListParams{
+		AgentID:    sentdm.String("agent_id"),
 		Direction:  sentdm.String("direction"),
 		From:       sentdm.Time(time.Now()),
+		Mode:       sentdm.String("mode"),
 		Number:     sentdm.String("number"),
 		Page:       sentdm.Int(0),
 		PageSize:   sentdm.Int(0),
