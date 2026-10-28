@@ -44,21 +44,21 @@ import (
 // sessions come from `GET /v3/voice/voices`. A number takes calls to an agent once
 // it is bound to it on `/v3/channels/voice`.
 //
-// VoiceVoiceService contains methods and other services that help with interacting
-// with the Sent API.
+// VoiceCatalogueService contains methods and other services that help with
+// interacting with the Sent API.
 //
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
-// the [NewVoiceVoiceService] method instead.
-type VoiceVoiceService struct {
+// the [NewVoiceCatalogueService] method instead.
+type VoiceCatalogueService struct {
 	Options []option.RequestOption
 }
 
-// NewVoiceVoiceService generates a new service that applies the given options to
-// each request. These options are applied after the parent client's options (if
+// NewVoiceCatalogueService generates a new service that applies the given options
+// to each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewVoiceVoiceService(opts ...option.RequestOption) (r VoiceVoiceService) {
-	r = VoiceVoiceService{}
+func NewVoiceCatalogueService(opts ...option.RequestOption) (r VoiceCatalogueService) {
+	r = VoiceCatalogueService{}
 	r.Options = opts
 	return
 }
@@ -66,7 +66,7 @@ func NewVoiceVoiceService(opts ...option.RequestOption) (r VoiceVoiceService) {
 // The names a voice agent's `speech.voice` and `speech.language` accept, with the
 // default marked. The list grows as voices are added; a name is never removed
 // without notice.
-func (r *VoiceVoiceService) List(ctx context.Context, query VoiceVoiceListParams, opts ...option.RequestOption) (res *APIResponseOfVoiceCatalogue, err error) {
+func (r *VoiceCatalogueService) List(ctx context.Context, query VoiceCatalogueListParams, opts ...option.RequestOption) (res *APIResponseOfVoiceCatalogue, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -150,7 +150,7 @@ func (r *VoiceCatalogueVoice) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type VoiceVoiceListParams struct {
+type VoiceCatalogueListParams struct {
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/sentdm/sent-dm-go/option"
 )
 
-func TestVoiceVoiceListWithOptionalParams(t *testing.T) {
+func TestVoiceCatalogueListWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -26,7 +26,7 @@ func TestVoiceVoiceListWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Voice.Voices.List(context.TODO(), sentdm.VoiceVoiceListParams{
+	_, err := client.Voice.Catalogue.List(context.TODO(), sentdm.VoiceCatalogueListParams{
 		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 	})
 	if err != nil {

@@ -129,7 +129,7 @@ type VoiceService struct {
 	// `POST /v3/voice/agents/{id}/rotate-secret` only. Voices and languages for text
 	// sessions come from `GET /v3/voice/voices`. A number takes calls to an agent once
 	// it is bound to it on `/v3/channels/voice`.
-	Voices VoiceVoiceService
+	Catalogue VoiceCatalogueService
 }
 
 // NewVoiceService generates a new service that applies the given options to each
@@ -141,6 +141,6 @@ func NewVoiceService(opts ...option.RequestOption) (r VoiceService) {
 	r.Calls = NewVoiceCallService(opts...)
 	r.Tokens = NewVoiceTokenService(opts...)
 	r.Agents = NewVoiceAgentService(opts...)
-	r.Voices = NewVoiceVoiceService(opts...)
+	r.Catalogue = NewVoiceCatalogueService(opts...)
 	return
 }
