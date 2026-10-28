@@ -249,6 +249,51 @@ Methods:
 
 - <code title="post /v3/voice/tokens">client.Voice.Tokens.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceTokenService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceTokenNewParams">VoiceTokenNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceToken">APIResponseOfVoiceToken</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Agents
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentAudioSpecParam">VoiceAgentAudioSpecParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentLimitsSpecParam">VoiceAgentLimitsSpecParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentPartySpecParam">VoiceAgentPartySpecParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentSpeechSpecParam">VoiceAgentSpeechSpecParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentTranscriptsSpecParam">VoiceAgentTranscriptsSpecParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgent">APIResponseOfVoiceAgent</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgentSecret">APIResponseOfVoiceAgentSecret</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgentsList">APIResponseOfVoiceAgentsList</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgent">VoiceAgent</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentAudio">VoiceAgentAudio</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentLimits">VoiceAgentLimits</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentParty">VoiceAgentParty</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentSecret">VoiceAgentSecret</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentSpeech">VoiceAgentSpeech</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentTranscripts">VoiceAgentTranscripts</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentsList">VoiceAgentsList</a>
+
+Methods:
+
+- <code title="post /v3/voice/agents">client.Voice.Agents.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentNewParams">VoiceAgentNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgent">APIResponseOfVoiceAgent</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/voice/agents/{id}">client.Voice.Agents.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentGetParams">VoiceAgentGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgent">APIResponseOfVoiceAgent</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="patch /v3/voice/agents/{id}">client.Voice.Agents.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentUpdateParams">VoiceAgentUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgent">APIResponseOfVoiceAgent</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/voice/agents">client.Voice.Agents.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentListParams">VoiceAgentListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination#VoiceAgentsPage">VoiceAgentsPage</a>[<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgent">VoiceAgent</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /v3/voice/agents/{id}">client.Voice.Agents.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentDeleteParams">VoiceAgentDeleteParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="post /v3/voice/agents/{id}/rotate-secret">client.Voice.Agents.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentService.RotateSecret">RotateSecret</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceAgentRotateSecretParams">VoiceAgentRotateSecretParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceAgentSecret">APIResponseOfVoiceAgentSecret</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Voices
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceCatalogue">APIResponseOfVoiceCatalogue</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCatalogue">VoiceCatalogue</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCatalogueVoice">VoiceCatalogueVoice</a>
+
+Methods:
+
+- <code title="get /v3/voice/voices">client.Voice.Voices.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceVoiceService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceVoiceListParams">VoiceVoiceListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceCatalogue">APIResponseOfVoiceCatalogue</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # Channels
 
 ## Voice
