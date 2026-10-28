@@ -53,7 +53,15 @@ func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 	return
 }
 
-// Creates a new webhook endpoint for the authenticated customer.
+// Creates a new webhook endpoint for the authenticated customer. A webhook is
+// version 2 unless the request sets webhook_version to 1: Svix delivers it, signed
+// with the webhook-id, webhook-timestamp and webhook-signature headers, and
+// retries it on its own schedule, so retry_count and timeout_seconds apply to
+// version 1 only. sender_profile applies to version 1 only and is ignored on
+// version 2; is_inheritable applies to version 2 only. A version 1 webhook's
+// response returns its sender_profile selection, with an empty event_types when it
+// is not cloned onto sender profiles; a version 2 webhook's response leaves
+// sender_profile out.
 func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -67,7 +75,8 @@ func (r *WebhookService) New(ctx context.Context, params WebhookNewParams, opts 
 	return res, err
 }
 
-// Retrieves a single webhook by ID for the authenticated customer.
+// Retrieves a single webhook by ID for the authenticated customer. A version 1
+// webhook includes its sender_profile selection.
 func (r *WebhookService) Get(ctx context.Context, id string, query WebhookGetParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
@@ -82,7 +91,11 @@ func (r *WebhookService) Get(ctx context.Context, id string, query WebhookGetPar
 	return res, err
 }
 
-// Updates an existing webhook for the authenticated customer.
+// Updates an existing webhook for the authenticated customer. Its version does not
+// change. sender_profile applies to a version 1 webhook and is_inheritable to a
+// version 2 one; retry_count and timeout_seconds apply to version 1 only. A
+// version 1 webhook's response returns its sender_profile selection as saved; a
+// version 2 webhook's response leaves sender_profile out.
 func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUpdateParams, opts ...option.RequestOption) (res *APIResponseWebhook, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -100,7 +113,8 @@ func (r *WebhookService) Update(ctx context.Context, id string, params WebhookUp
 	return res, err
 }
 
-// Retrieves a paginated list of webhooks for the authenticated customer.
+// Retrieves a paginated list of webhooks for the authenticated customer. Each
+// version 1 webhook includes its sender_profile selection.
 func (r *WebhookService) List(ctx context.Context, params WebhookListParams, opts ...option.RequestOption) (res *pagination.WebhooksPage[WebhookResponse], err error) {
 	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
@@ -121,7 +135,8 @@ func (r *WebhookService) List(ctx context.Context, params WebhookListParams, opt
 	return res, nil
 }
 
-// Retrieves a paginated list of webhooks for the authenticated customer.
+// Retrieves a paginated list of webhooks for the authenticated customer. Each
+// version 1 webhook includes its sender_profile selection.
 func (r *WebhookService) ListAutoPaging(ctx context.Context, params WebhookListParams, opts ...option.RequestOption) *pagination.WebhooksPageAutoPager[WebhookResponse] {
 	return pagination.NewWebhooksPageAutoPager(r.List(ctx, params, opts...))
 }
@@ -153,9 +168,11 @@ func (r *WebhookService) ListEventTypes(ctx context.Context, query WebhookListEv
 	return res, err
 }
 
-// Retrieves a paginated list of delivery events for the specified webhook. If the
-// webhook is cloned onto your sender profiles, the list includes what those clones
-// received; read payload.account_id to tell whose event it is.
+// Retrieves a paginated list of delivery events for the specified webhook, newest
+// first. If the webhook is cloned onto your sender profiles (version 1) or
+// inheritable by them (version 2, is_inheritable), the list includes their events;
+// read payload.account_id to tell whose event it is. A sender profile may read its
+// organization's inheritable webhook too, and gets the events about itself.
 func (r *WebhookService) ListEvents(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) (res *pagination.WebhookEventsPage[WebhookListEventsResponse], err error) {
 	var raw *http.Response
 	if !param.IsOmitted(params.XProfileID) {
@@ -180,15 +197,20 @@ func (r *WebhookService) ListEvents(ctx context.Context, id string, params Webho
 	return res, nil
 }
 
-// Retrieves a paginated list of delivery events for the specified webhook. If the
-// webhook is cloned onto your sender profiles, the list includes what those clones
-// received; read payload.account_id to tell whose event it is.
+// Retrieves a paginated list of delivery events for the specified webhook, newest
+// first. If the webhook is cloned onto your sender profiles (version 1) or
+// inheritable by them (version 2, is_inheritable), the list includes their events;
+// read payload.account_id to tell whose event it is. A sender profile may read its
+// organization's inheritable webhook too, and gets the events about itself.
 func (r *WebhookService) ListEventsAutoPaging(ctx context.Context, id string, params WebhookListEventsParams, opts ...option.RequestOption) *pagination.WebhookEventsPageAutoPager[WebhookListEventsResponse] {
 	return pagination.NewWebhookEventsPageAutoPager(r.ListEvents(ctx, id, params, opts...))
 }
 
-// Generates a new signing secret for the specified webhook. The old secret is
-// immediately invalidated.
+// Generates a new signing secret for the specified webhook. A version 1 webhook's
+// old secret stops verifying at once. A version 2 webhook's deliveries are signed
+// with the new secret at once, and with the old one as well for the next 24 hours,
+// so a receiver can switch over without rejecting any; after that the old secret
+// no longer verifies.
 func (r *WebhookService) RotateSecret(ctx context.Context, id string, params WebhookRotateSecretParams, opts ...option.RequestOption) (res *WebhookRotateSecretResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -206,7 +228,10 @@ func (r *WebhookService) RotateSecret(ctx context.Context, id string, params Web
 	return res, err
 }
 
-// Sends a test event to the specified webhook endpoint to verify connectivity.
+// Sends a test event to the specified webhook endpoint to verify connectivity. A
+// version 1 webhook is tested at once and the answer says whether it was
+// delivered; a version 2 webhook's test is queued with Svix, which delivers it
+// right after, and the answer says it was queued.
 func (r *WebhookService) Test(ctx context.Context, id string, params WebhookTestParams, opts ...option.RequestOption) (res *WebhookTestResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -303,15 +328,17 @@ type CallEvent struct {
 	// The event family, for example message, templates or contact. Route on this
 	// first, then on event for the specific change.
 	Field string `json:"field"`
-	// Body of a call.initiated, call.answered, call.completed, call.failed or
-	// call.recording_ready event. Which of them occurred is the envelope's event.
+	// Body of a call.initiated, call.answered, call.agent_connected, call.completed,
+	// call.failed or call.recording_ready event. Which of them occurred is the
+	// envelope's event.
 	//
 	// Shaped like the message, inbound, template and channel payloads: account_id
 	// names the account the event is about, channel names the channel, and updated_at
 	// is when the change happened on the call, in the same yyyy-MM-ddTHH:mm:ssZ form.
-	// duration_seconds and price are added on call.completed, reason on call.failed
-	// and recording_id on call.recording_ready; each is omitted rather than sent as
-	// null when it does not apply.
+	// Every event says how the call is handled in mode, and an agent call names its
+	// agent in agent_id. duration_seconds and price are added on call.completed,
+	// reason on call.failed and recording_id on call.recording_ready; each is omitted
+	// rather than sent as null when it does not apply.
 	//
 	// Casing is snake_case because these ride the same webhook stream customers
 	// already parse message_id from; the question/answer contract is a separate
@@ -342,15 +369,17 @@ func (r *CallEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Body of a call.initiated, call.answered, call.completed, call.failed or
-// call.recording_ready event. Which of them occurred is the envelope's event.
+// Body of a call.initiated, call.answered, call.agent_connected, call.completed,
+// call.failed or call.recording_ready event. Which of them occurred is the
+// envelope's event.
 //
 // Shaped like the message, inbound, template and channel payloads: account_id
 // names the account the event is about, channel names the channel, and updated_at
 // is when the change happened on the call, in the same yyyy-MM-ddTHH:mm:ssZ form.
-// duration_seconds and price are added on call.completed, reason on call.failed
-// and recording_id on call.recording_ready; each is omitted rather than sent as
-// null when it does not apply.
+// Every event says how the call is handled in mode, and an agent call names its
+// agent in agent_id. duration_seconds and price are added on call.completed,
+// reason on call.failed and recording_id on call.recording_ready; each is omitted
+// rather than sent as null when it does not apply.
 //
 // Casing is snake_case because these ride the same webhook stream customers
 // already parse message_id from; the question/answer contract is a separate
@@ -362,10 +391,15 @@ type CallEventPayload struct {
 	// The account the call belongs to: the key's own customer, or the sender profile
 	// it acted as.
 	AccountID string `json:"account_id" format:"uuid"`
+	// The voice agent that answers the call, agent\_…. Only on an agent call.
+	AgentID string `json:"agent_id" api:"nullable"`
 	// Always voice.
 	Channel string `json:"channel"`
 	// How long the call lasted. Only on call.completed.
 	DurationSeconds int64 `json:"duration_seconds" api:"nullable"`
+	// inapp, a call routed by the number's callback URL, or agent, a call one of the
+	// account's voice agents answers. The same value GET /v3/voice/calls returns.
+	Mode string `json:"mode"`
 	// The customer number that owns the call, in E.164 format.
 	Number string `json:"number"`
 	// What the call was charged. Only on call.completed, and omitted there until
@@ -384,8 +418,10 @@ type CallEventPayload struct {
 	JSON struct {
 		CallID          respjson.Field
 		AccountID       respjson.Field
+		AgentID         respjson.Field
 		Channel         respjson.Field
 		DurationSeconds respjson.Field
+		Mode            respjson.Field
 		Number          respjson.Field
 		Price           respjson.Field
 		Reason          respjson.Field
@@ -1328,23 +1364,42 @@ func (r *WebhookEventType) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookResponse struct {
-	ID                  string    `json:"id" format:"uuid"`
+	ID string `json:"id" format:"uuid"`
+	// Failed attempts since the last success. Version 1 only: always 0 on a version 2
+	// webhook, whose deliveries are in its events (GET /v3/webhooks/{id}/events).
 	ConsecutiveFailures int64     `json:"consecutive_failures"`
 	CreatedAt           time.Time `json:"created_at" format:"date-time"`
 	// Which customer owns this — the key's own, or the profile named in x-profile-id.
 	// Says whose resource this is, which the resource's own id does not.
-	CustomerID               string              `json:"customer_id" format:"uuid"`
-	DisplayName              string              `json:"display_name"`
-	EndpointURL              string              `json:"endpoint_url"`
-	EventFilters             map[string][]string `json:"event_filters" api:"nullable"`
-	EventTypes               []string            `json:"event_types"`
-	IsActive                 bool                `json:"is_active"`
-	LastDeliveryAttemptAt    time.Time           `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
-	LastSuccessfulDeliveryAt time.Time           `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
-	RetryCount               int64               `json:"retry_count"`
-	SigningSecret            string              `json:"signing_secret" api:"nullable"`
-	TimeoutSeconds           int64               `json:"timeout_seconds"`
-	UpdatedAt                time.Time           `json:"updated_at" api:"nullable" format:"date-time"`
+	CustomerID   string              `json:"customer_id" format:"uuid"`
+	DisplayName  string              `json:"display_name"`
+	EndpointURL  string              `json:"endpoint_url"`
+	EventFilters map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes   []string            `json:"event_types"`
+	IsActive     bool                `json:"is_active"`
+	// Whether the webhook also receives its organization's sender profiles' events,
+	// and each profile sees it and reads the events about itself. Always false on a
+	// version 1 webhook.
+	IsInheritable bool `json:"is_inheritable"`
+	// When the webhook was last attempted. Version 1 only: always null on a version 2
+	// webhook.
+	LastDeliveryAttemptAt time.Time `json:"last_delivery_attempt_at" api:"nullable" format:"date-time"`
+	// When the webhook last received an event. Version 1 only: always null on a
+	// version 2 webhook.
+	LastSuccessfulDeliveryAt time.Time `json:"last_successful_delivery_at" api:"nullable" format:"date-time"`
+	RetryCount               int64     `json:"retry_count"`
+	// The events a version 1 webhook's sender profile clones receive, as a response
+	// reports them.
+	//
+	// Its own type, field for field the same as the request's sender_profile. A
+	// response is not a request, whatever it carries.
+	SenderProfile  WebhookResponseSenderProfile `json:"sender_profile" api:"nullable"`
+	SigningSecret  string                       `json:"signing_secret" api:"nullable"`
+	TimeoutSeconds int64                        `json:"timeout_seconds"`
+	UpdatedAt      time.Time                    `json:"updated_at" api:"nullable" format:"date-time"`
+	// Who delivers the webhook: 1 the older delivery, which will be retired, or 2
+	// Svix. A webhook is created as version 2 unless the request asks for 1.
+	WebhookVersion int64 `json:"webhook_version"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
@@ -1356,12 +1411,15 @@ type WebhookResponse struct {
 		EventFilters             respjson.Field
 		EventTypes               respjson.Field
 		IsActive                 respjson.Field
+		IsInheritable            respjson.Field
 		LastDeliveryAttemptAt    respjson.Field
 		LastSuccessfulDeliveryAt respjson.Field
 		RetryCount               respjson.Field
+		SenderProfile            respjson.Field
 		SigningSecret            respjson.Field
 		TimeoutSeconds           respjson.Field
 		UpdatedAt                respjson.Field
+		WebhookVersion           respjson.Field
 		ExtraFields              map[string]respjson.Field
 		raw                      string
 	} `json:"-"`
@@ -1370,6 +1428,29 @@ type WebhookResponse struct {
 // Returns the unmodified JSON received from the API
 func (r WebhookResponse) RawJSON() string { return r.JSON.raw }
 func (r *WebhookResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The events a version 1 webhook's sender profile clones receive, as a response
+// reports them.
+//
+// Its own type, field for field the same as the request's sender_profile. A
+// response is not a request, whatever it carries.
+type WebhookResponseSenderProfile struct {
+	EventFilters map[string][]string `json:"event_filters" api:"nullable"`
+	EventTypes   []string            `json:"event_types"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventFilters respjson.Field
+		EventTypes   respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookResponseSenderProfile) RawJSON() string { return r.JSON.raw }
+func (r *WebhookResponseSenderProfile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1655,6 +1736,8 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 	// This field is from variant [CallEventPayload].
 	DurationSeconds int64 `json:"duration_seconds"`
 	// This field is from variant [CallEventPayload].
+	Mode string `json:"mode"`
+	// This field is from variant [CallEventPayload].
 	Number string `json:"number"`
 	// This field is from variant [CallEventPayload].
 	Price float64 `json:"price"`
@@ -1711,6 +1794,7 @@ type WebhookListEventsResponseEventDataUnionPayload struct {
 		TrafficClass       respjson.Field
 		CallID             respjson.Field
 		DurationSeconds    respjson.Field
+		Mode               respjson.Field
 		Number             respjson.Field
 		Price              respjson.Field
 		RecordingID        respjson.Field
@@ -2001,18 +2085,31 @@ func (r *WebhookTestResponseData) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookNewParams struct {
-	DisplayName param.Opt[string] `json:"display_name,omitzero"`
-	EndpointURL param.Opt[string] `json:"endpoint_url,omitzero"`
-	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
+	// Who delivers the webhook: 2, the default, is delivered by Svix and signed with
+	// the webhook-id, webhook-timestamp and webhook-signature headers; 1 is the older
+	// delivery, signed with the X-Webhook-\* headers, which will be retired.
+	WebhookVersion param.Opt[int64]  `json:"webhook_version,omitzero"`
+	DisplayName    param.Opt[string] `json:"display_name,omitzero"`
+	EndpointURL    param.Opt[string] `json:"endpoint_url,omitzero"`
+	// Also delivers every sender profile's events to this webhook, at the same URL and
+	// with the same signing secret, and lets each profile see the webhook and read the
+	// events about itself. Off by default: the organization's own events only. Only an
+	// organization's version 2 webhook can set it.
+	IsInheritable param.Opt[bool] `json:"is_inheritable,omitzero"`
+	// Delivery retries. Applies to version 1 only: Svix retries a version 2 webhook on
+	// its own schedule.
+	RetryCount param.Opt[int64] `json:"retry_count,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
-	Sandbox        param.Opt[bool]     `json:"sandbox,omitzero"`
+	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
+	// Delivery timeout. Applies to version 1 only.
 	TimeoutSeconds param.Opt[int64]    `json:"timeout_seconds,omitzero"`
 	IdempotencyKey param.Opt[string]   `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventFilters   map[string][]string `json:"event_filters,omitzero"`
 	// Request-only: the events an organization webhook's sender profile clones
-	// receive, one clone per existing and future profile. Responses never return it.
+	// receive, one clone per existing and future profile. A version 1 webhook's
+	// responses report it as WebhookSenderProfileV3Response.
 	SenderProfile WebhookNewParamsSenderProfile `json:"sender_profile,omitzero"`
 	EventTypes    []string                      `json:"event_types,omitzero"`
 	paramObj
@@ -2027,7 +2124,8 @@ func (r *WebhookNewParams) UnmarshalJSON(data []byte) error {
 }
 
 // Request-only: the events an organization webhook's sender profile clones
-// receive, one clone per existing and future profile. Responses never return it.
+// receive, one clone per existing and future profile. A version 1 webhook's
+// responses report it as WebhookSenderProfileV3Response.
 type WebhookNewParamsSenderProfile struct {
 	EventFilters map[string][]string `json:"event_filters,omitzero"`
 	EventTypes   []string            `json:"event_types,omitzero"`
@@ -2048,9 +2146,13 @@ type WebhookGetParams struct {
 }
 
 type WebhookUpdateParams struct {
-	DisplayName param.Opt[string] `json:"display_name,omitzero"`
-	EndpointURL param.Opt[string] `json:"endpoint_url,omitzero"`
-	RetryCount  param.Opt[int64]  `json:"retry_count,omitzero"`
+	// Makes this webhook inheritable by the organization's sender profiles (see
+	// create), or stops it being inheritable. Omit or pass null to keep it as it is.
+	// Only a version 2 webhook can be inheritable.
+	IsInheritable param.Opt[bool]   `json:"is_inheritable,omitzero"`
+	DisplayName   param.Opt[string] `json:"display_name,omitzero"`
+	EndpointURL   param.Opt[string] `json:"endpoint_url,omitzero"`
+	RetryCount    param.Opt[int64]  `json:"retry_count,omitzero"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
 	Sandbox        param.Opt[bool]     `json:"sandbox,omitzero"`
@@ -2059,7 +2161,8 @@ type WebhookUpdateParams struct {
 	XProfileID     param.Opt[string]   `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	EventFilters   map[string][]string `json:"event_filters,omitzero"`
 	// Request-only: the events an organization webhook's sender profile clones
-	// receive, one clone per existing and future profile. Responses never return it.
+	// receive, one clone per existing and future profile. A version 1 webhook's
+	// responses report it as WebhookSenderProfileV3Response.
 	SenderProfile WebhookUpdateParamsSenderProfile `json:"sender_profile,omitzero"`
 	EventTypes    []string                         `json:"event_types,omitzero"`
 	paramObj
@@ -2074,7 +2177,8 @@ func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 // Request-only: the events an organization webhook's sender profile clones
-// receive, one clone per existing and future profile. Responses never return it.
+// receive, one clone per existing and future profile. A version 1 webhook's
+// responses report it as WebhookSenderProfileV3Response.
 type WebhookUpdateParamsSenderProfile struct {
 	EventFilters map[string][]string `json:"event_filters,omitzero"`
 	EventTypes   []string            `json:"event_types,omitzero"`
