@@ -195,9 +195,59 @@ Methods:
 - <code title="get /v3/conversations">client.Conversations.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ConversationService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ConversationListParams">ConversationListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination#ConversationsPage">ConversationsPage</a>[<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ConversationMessagesListMessage">ConversationMessagesListMessage</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /v3/conversations/{id}">client.Conversations.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ConversationService.ListMessages">ListMessages</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ConversationListMessagesParams">ConversationListMessagesParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination#ConversationsPage">ConversationsPage</a>[<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ConversationMessagesListMessage">ConversationMessagesListMessage</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
-# Calls
+# Voice
 
-## Participants
+## Calls
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfCall">APIResponseOfCall</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfCallRecordings">APIResponseOfCallRecordings</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfCallsList">APIResponseOfCallsList</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#Call">Call</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallParty">CallParty</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallRecording">CallRecording</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallRecordings">CallRecordings</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallTimelineEntry">CallTimelineEntry</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallsList">CallsList</a>
+
+Methods:
+
+- <code title="get /v3/voice/calls/{id}">client.Voice.Calls.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallGetParams">VoiceCallGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfCall">APIResponseOfCall</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/voice/calls">client.Voice.Calls.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallListParams">VoiceCallListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination#CallsPage">CallsPage</a>[<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#Call">Call</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/voice/calls/{id}/hangup">client.Voice.Calls.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallService.Hangup">Hangup</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallHangupParams">VoiceCallHangupParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="get /v3/voice/calls/{id}/recordings">client.Voice.Calls.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallService.ListRecordings">ListRecordings</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallListRecordingsParams">VoiceCallListRecordingsParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfCallRecordings">APIResponseOfCallRecordings</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/voice/calls/{id}/recordings">client.Voice.Calls.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallService.Record">Record</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallRecordParams">VoiceCallRecordParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+
+### Participants
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallParticipantTargetParam">CallParticipantTargetParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfCallParticipant">APIResponseOfListOfCallParticipant</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#CallParticipant">CallParticipant</a>
+
+Methods:
+
+- <code title="patch /v3/voice/calls/{id}/participants/{participantId}">client.Voice.Calls.Participants.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, participantID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantUpdateParams">VoiceCallParticipantUpdateParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="get /v3/voice/calls/{id}/participants">client.Voice.Calls.Participants.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantListParams">VoiceCallParticipantListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfCallParticipant">APIResponseOfListOfCallParticipant</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/voice/calls/{id}/participants">client.Voice.Calls.Participants.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantService.Add">Add</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantAddParams">VoiceCallParticipantAddParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfCall">APIResponseOfCall</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /v3/voice/calls/{id}/participants/{participantId}">client.Voice.Calls.Participants.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantService.Remove">Remove</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, participantID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantRemoveParams">VoiceCallParticipantRemoveParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="delete /v3/voice/calls/{id}/participants">client.Voice.Calls.Participants.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantService.RemoveAll">RemoveAll</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceCallParticipantRemoveAllParams">VoiceCallParticipantRemoveAllParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+
+## Tokens
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceToken">APIResponseOfVoiceToken</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceToken">VoiceToken</a>
+
+Methods:
+
+- <code title="post /v3/voice/tokens">client.Voice.Tokens.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceTokenService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#VoiceTokenNewParams">VoiceTokenNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceToken">APIResponseOfVoiceToken</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Channels
 

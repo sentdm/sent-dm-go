@@ -102,7 +102,7 @@ type Client struct {
 	// Read-only. Sending is **Messages**; a reply arrives here and through your
 	// webhooks.
 	Conversations ConversationService
-	Calls         CallService
+	Voice         VoiceService
 	Channels      ChannelService
 	// Who the current key is.
 	//
@@ -151,7 +151,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Messages = NewMessageService(opts...)
 	r.Contacts = NewContactService(opts...)
 	r.Conversations = NewConversationService(opts...)
-	r.Calls = NewCallService(opts...)
+	r.Voice = NewVoiceService(opts...)
 	r.Channels = NewChannelService(opts...)
 	r.Me = NewMeService(opts...)
 

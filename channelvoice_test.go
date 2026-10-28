@@ -28,8 +28,9 @@ func TestChannelVoiceNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Channels.Voice.New(context.TODO(), sentdm.ChannelVoiceNewParams{
-		CallbackURL:        "https://example.com/voice",
+		AgentID:            param.Null[string](),
 		AreaCode:           param.Null[string](),
+		CallbackURL:        sentdm.String("https://example.com/voice"),
 		DefaultForAppCalls: sentdm.Bool(false),
 		Number:             sentdm.String("+12125550100"),
 		Sandbox:            sentdm.Bool(false),
@@ -89,9 +90,10 @@ func TestChannelVoiceUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Channels.Voice.Update(
 		context.TODO(),
-		"+12125550100",
+		"number",
 		sentdm.ChannelVoiceUpdateParams{
-			CallbackURL:        sentdm.String("https://example.com/voice"),
+			AgentID:            sentdm.String("agent_id"),
+			CallbackURL:        sentdm.String("callback_url"),
 			DefaultForAppCalls: sentdm.Bool(true),
 			Sandbox:            sentdm.Bool(false),
 			Status:             sentdm.ChannelVoiceUpdateParamsStatusActive,
