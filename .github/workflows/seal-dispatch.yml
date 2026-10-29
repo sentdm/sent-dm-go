@@ -14,7 +14,7 @@ name: Seal custom code (dispatch)
 # across regenerations. If you would rather keep things simple, drop this file
 # and rely on the config repo's scheduled `stlc-sync-tracking.yml` poll alone.
 #
-# Lives in the repo stlc builds from, which is this one. Requires CONFIG_DISPATCH_TOKEN — a token that can
+# Runs only in this repository (see the job's `if:` guard). Requires CONFIG_DISPATCH_TOKEN — a token that can
 # send a repository_dispatch to the config repo.
 on:
   push:
