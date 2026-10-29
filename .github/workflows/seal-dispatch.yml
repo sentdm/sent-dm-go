@@ -14,7 +14,8 @@ name: Seal custom code (dispatch)
 # across regenerations. If you would rather keep things simple, drop this file
 # and rely on the config repo's scheduled tracking-sync poll alone.
 #
-# Requires CONFIG_DISPATCH_TOKEN — a token that can
+# Requires the GitHub App secrets (SDK_APP_ID, SDK_APP_PRIVATE_KEY) or, as a
+# fallback, CONFIG_DISPATCH_TOKEN — a token that can
 # send a repository_dispatch to the config repo.
 on:
   push:
@@ -34,10 +35,21 @@ jobs:
     if: github.repository == 'sentdm/sent-dm-go'
     env:
       CONFIG_REPO: sentdm/sent-dm-sdk-pipeline
+      HAS_APP: ${{ secrets.SDK_APP_ID != '' && secrets.SDK_APP_PRIVATE_KEY != '' }}
     steps:
+      - name: Mint a pipeline token from the GitHub App
+        id: app
+        if: env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v3.3.0
+        with:
+          app-id: ${{ secrets.SDK_APP_ID }}
+          private-key: ${{ secrets.SDK_APP_PRIVATE_KEY }}
+          owner: sentdm
+          repositories: sent-dm-sdk-pipeline
+
       - name: Loop-guard and send reseal dispatch
         env:
-          DISPATCH_TOKEN: ${{ secrets.CONFIG_DISPATCH_TOKEN }}
+          DISPATCH_TOKEN: ${{ steps.app.outputs.token || secrets.CONFIG_DISPATCH_TOKEN }}
           HEAD_MSG: ${{ github.event.head_commit.message }}
           HEAD_AUTHOR_NAME: ${{ github.event.head_commit.author.name }}
           SHA: ${{ github.sha }}
