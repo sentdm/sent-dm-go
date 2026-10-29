@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.45.0](https://github.com/sentdm/sent-dm-go/compare/v0.44.0...v0.45.0) (2026-10-29)
+
+
+### Features
+
+* **api:** sync generated SDKs from the committed spec ([74fb707](https://github.com/sentdm/sent-dm-go/commit/74fb7074a1f393ab11e1f2006f0e9ed76cdb182f))
+
+
+### Chores
+
+* **repo:** add the contributor contract and review rubric ([ff22cfe](https://github.com/sentdm/sent-dm-go/commit/ff22cfea24a064ed4916a152d7fc5047c876ffa7))
+* **repo:** add the contributor contract and the review workflow ([59f53ac](https://github.com/sentdm/sent-dm-go/commit/59f53acb0562613d1d6f78c80f2d5bbd3de47be7))
+* **repo:** rely on the managed Claude Code Review, drop the workflow ([bc55549](https://github.com/sentdm/sent-dm-go/commit/bc55549c021fd87266d035628c575fa70e8bdbac))
+* **repo:** restore the contributor contract and review rubric ([4186890](https://github.com/sentdm/sent-dm-go/commit/4186890776aba3b55b27884adcac42a3235275a0))
+* **repo:** restore the contributor contract and review rubric ([4887f6b](https://github.com/sentdm/sent-dm-go/commit/4887f6ba0b2ee561ff29b4d8369c277fb0cff780))
+
 ## [0.44.0](https://github.com/sentdm/sent-dm-go/compare/v0.43.0...v0.44.0) (2026-10-28)
 
 
