@@ -5,20 +5,20 @@ name: Seal custom code (dispatch)
 # When genuine out-of-band custom code is merged to this SDK repo's `main`
 # (a direct staging commit, or a contribution pulled back from production),
 # notify the config repo to reseal so the custom-code tracking JSON absorbs it
-# promptly instead of waiting for the config repo's poll. stlc-authored commits
+# promptly instead of waiting for the config repo's poll. generator-authored commits
 # are skipped by the loop guards below, so the bot's own pushes (the "Build SDK"
 # squash commit and any regen commit) cannot trigger a reseal loop.
 #
 # This workflow is itself custom code on the SDK repo: seal it once with
-# `stlc build --commit` to bootstrap, after which scaffold preservation keeps it
+# the generator's commit step to bootstrap, after which scaffold preservation keeps it
 # across regenerations. If you would rather keep things simple, drop this file
-# and rely on the config repo's scheduled `stlc-sync-tracking.yml` poll alone.
+# and rely on the config repo's scheduled tracking-sync poll alone.
 #
-# Lives in the STAGING repo. Requires CONFIG_DISPATCH_TOKEN — a token that can
+# Requires CONFIG_DISPATCH_TOKEN — a token that can
 # send a repository_dispatch to the config repo.
 on:
   push:
-    # main only. stlc preview/integrated/codegen branches never push to main.
+    # main only. the generator's preview, integrated and codegen branches never push to main.
     branches: [main]
 
 concurrency:
@@ -31,7 +31,7 @@ permissions:
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    if: github.repository == 'sentdm/sent-dm-go-staging'
+    if: github.repository == 'sentdm/sent-dm-go'
     env:
       CONFIG_REPO: sentdm/sent-dm-sdk-pipeline
     steps:
@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Loop guard 1: skip the stlc "Build SDK" squash commit (it carries
+          # Loop guard 1: skip the generator's "Build SDK" squash commit (it carries
           # the Stainless-Generated-From trailer in its message).
           if printf '%s' "$HEAD_MSG" | grep -q 'Stainless-Generated-From'; then
             echo "Head commit is an stlc build — skipping reseal dispatch."
