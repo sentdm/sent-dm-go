@@ -17,9 +17,14 @@ release-please from the commit history on `main`.
 - **Everything is generated unless this file says otherwise.** There is no
   hand-written directory, and generated files carry no marker comment.
 - **Generator-owned, so don't edit them here**: `.stats.yml`,
-  `.github/workflows/ci.yml`, the publish, release and sync workflows,
+  `.github/workflows/ci.yml`, the publish and release workflows,
   `scripts/`, and `release-please-config.json`. The next generated commit
   rewrites them, and an edit conflicts.
+- **Sealed custom code, not generated**: `.github/workflows/seal-dispatch.yml`
+  and, while a repository runs the two-repo topology, the promote, back-sync
+  and trunk-lock workflows. The generator never writes them; the pipeline
+  carries them across regenerations as a patch, so they are added and
+  removed by hand.
 - **release-please-owned**: `CHANGELOG.md`, `.release-please-manifest.json`
   and the version constant. They are rewritten in each release PR.
 - **Hand-written and kept across regenerations**: this file, `REVIEW.md`
