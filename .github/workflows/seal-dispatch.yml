@@ -14,7 +14,7 @@ name: Seal custom code (dispatch)
 # across regenerations. If you would rather keep things simple, drop this file
 # and rely on the config repo's scheduled `stlc-sync-tracking.yml` poll alone.
 #
-# Lives in the STAGING repo. Requires CONFIG_DISPATCH_TOKEN — a token that can
+# Lives in the repo stlc builds from, which is this one. Requires CONFIG_DISPATCH_TOKEN — a token that can
 # send a repository_dispatch to the config repo.
 on:
   push:
@@ -31,7 +31,7 @@ permissions:
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    if: github.repository == 'sentdm/sent-dm-go-staging'
+    if: github.repository == 'sentdm/sent-dm-go'
     env:
       CONFIG_REPO: sentdm/sent-dm-sdk-pipeline
     steps:
