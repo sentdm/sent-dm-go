@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.46.0](https://github.com/sentdm/sent-dm-go/compare/v0.45.0...v0.46.0) (2026-10-29)
+
+
+### Features
+
+* **api:** sync generated SDKs from the committed spec ([dcbaf4b](https://github.com/sentdm/sent-dm-go/commit/dcbaf4b13fb952f0b26acf50efad27c12072f06b))
+
+
+### Documentation
+
+* **repo:** say which workflows are sealed custom code, not generated ([4baa1ed](https://github.com/sentdm/sent-dm-go/commit/4baa1ed2c25d96f433d23e1bba5a6fbcf467cb01))
+
 ## [0.45.0](https://github.com/sentdm/sent-dm-go/compare/v0.44.0...v0.45.0) (2026-10-29)
 
 
