@@ -408,9 +408,9 @@ type TemplateBodyContentParam struct {
 	// you on board." — two variables, so at least five words are required, and the
 	// copy after the final variable contains letters.
 	Template string `json:"template" api:"required"`
-	// The type of body content — send "text". It is dropped from the stored definition
-	// when null, so a body posted without it is saved with no type key at all and the
-	// template editor has nothing to render the block from.
+	// The type of body content. Defaults to "text" when omitted, which also fills it
+	// in when reading stored bodies saved without it; the template editor refuses to
+	// load a body with no type.
 	Type param.Opt[string] `json:"type,omitzero"`
 	// The variables referenced by the body copy, one entry per {{index:variable}}
 	// placeholder.
