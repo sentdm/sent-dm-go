@@ -141,16 +141,6 @@ Methods:
 - <code title="get /v3/profiles/{profileId}/campaigns">client.Profiles.Campaigns.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, profileID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignListParams">ProfileCampaignListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfBrandCampaign">APIResponseOfListOfBrandCampaign</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="delete /v3/profiles/{profileId}/campaigns/{campaignId}">client.Profiles.Campaigns.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, campaignID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignDeleteParams">ProfileCampaignDeleteParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
 
-# Numbers
-
-Response Types:
-
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#NumberLookupResponse">NumberLookupResponse</a>
-
-Methods:
-
-- <code title="get /v3/numbers/lookup/{phoneNumber}">client.Numbers.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#NumberService.Lookup">Lookup</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, phoneNumber <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#NumberLookupParams">NumberLookupParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#NumberLookupResponse">NumberLookupResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-
 # Messages
 
 Response Types:
