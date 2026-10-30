@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.1](https://github.com/sentdm/sent-dm-go/compare/v0.46.0...v0.46.1) (2026-10-30)
+
+
+### Documentation
+
+* **api:** describe the default body type on template bodies ([7f9b02b](https://github.com/sentdm/sent-dm-go/commit/7f9b02bb4d8560f0f98a9b34a0ca3dd3d4581d47))
+
 ## [0.46.0](https://github.com/sentdm/sent-dm-go/compare/v0.45.0...v0.46.0) (2026-10-29)
 
 
