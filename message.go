@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/sentdm/sent-dm-go/internal/apijson"
+	shimjson "github.com/sentdm/sent-dm-go/internal/encoding/json"
 	"github.com/sentdm/sent-dm-go/internal/requestconfig"
 	"github.com/sentdm/sent-dm-go/option"
 	"github.com/sentdm/sent-dm-go/packages/param"
@@ -57,6 +58,52 @@ func NewMessageService(opts ...option.RequestOption) (r MessageService) {
 	r = MessageService{}
 	r.Options = opts
 	return
+}
+
+// Resends a message you already sent, on the same message id, without rebuilding
+// the request. The typical use is recovering a BLOCKED message — for example one
+// refused for insufficient balance — after the account has been topped up.
+//
+// **A resend bills again.** Each accepted resend is a new delivery attempt and
+// records a new charge against the same message id; a client that resends on every
+// failure is charged on every loop.
+//
+// **Every policy runs again.** The resend goes back through the full send pipeline
+// — consent, balance, KYC and channel quota, template approval, quiet hours and
+// channel health — so it can land on BLOCKED, FILTERED or SCHEDULED again rather
+// than being sent, exactly as a fresh send would. Status webhooks (message.sent,
+// message.blocked, message.filtered, message.failed) fire again for the same
+// message id, so consumers keyed on the id will see repeated transitions.
+//
+// **What can be resent.** A message in a terminal state — DELIVERED, FAILED, READ
+// or BLOCKED — or one stuck at SENT for more than 15 minutes. A FILTERED message
+// can never be resent: the recipient opted out or a routing rule refused the send.
+// A message still in flight (QUEUED, PROCESSED, ROUTED), held for quiet hours
+// (SCHEDULED), or SENT less than 15 minutes ago returns 409. Two concurrent
+// resends of one id are serialised: one is accepted, the other gets 409.
+//
+// The resend keeps the channel the message was originally requested on; the
+// channel cannot be changed on a resend — send a new message instead.
+// `Idempotency-Key` is honoured, so a retried request replays the first accepted
+// response instead of resending twice.
+//
+// The response has the same shape as `POST /v3/messages`: `recipients` has a
+// single entry whose `message_id` is the id you resent.
+func (r *MessageService) Resend(ctx context.Context, id string, params MessageResendParams, opts ...option.RequestOption) (res *MessageResendResponse, err error) {
+	if !param.IsOmitted(params.IdempotencyKey) {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
+	opts = slices.Concat(r.Options, opts)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("v3/messages/%s/resend", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	return res, err
 }
 
 // Retrieves the activity log for a specific message. Activities track the message
@@ -143,6 +190,109 @@ func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opt
 	path := "v3/messages"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
+}
+
+// The result of a multi-recipient send.
+//
+// Declared here rather than in the service layer. POST /v3/messages used to
+// publish MessageSendResult — a type in Common.Services.Messaging.Contracts — so
+// the public contract was whatever the send service happened to return, and
+// changing that service for an internal reason changed the API. The service keeps
+// its result; this is what a caller sees, and the mapping between them is a
+// decision the endpoint makes.
+//
+// The shape of an immediate send: it never has a scheduled_at key. A send that
+// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
+// which of the two to answer with. From always returns this type.
+type MessageResendResponseData struct {
+	Recipients []MessageResendResponseDataRecipient `json:"recipients"`
+	// QUEUED: the batch is accepted. A request that carried scheduled_at is QUEUED
+	// here too; each message moves to SCHEDULED once it is held, as GET
+	// /v3/messages/{id} and the message.scheduled webhook report.
+	Status       string `json:"status"`
+	TemplateID   string `json:"template_id" format:"uuid"`
+	TemplateName string `json:"template_name"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Recipients   respjson.Field
+		Status       respjson.Field
+		TemplateID   respjson.Field
+		TemplateName respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageResendResponseData) RawJSON() string { return r.JSON.raw }
+func (r *MessageResendResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// What one recipient of a send got, as the API reports it.
+type MessageResendResponseDataRecipient struct {
+	// Resolved template body for this recipient's channel, or null when the channel is
+	// auto-detected.
+	Body string `json:"body" api:"nullable"`
+	// Channel this message will be sent on — sms, whatsapp — or null to auto-detect.
+	Channel string `json:"channel" api:"nullable"`
+	// Identifier for tracking this recipient's message.
+	MessageID string `json:"message_id" format:"uuid"`
+	// Phone number in E.164 format.
+	To string `json:"to"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Body        respjson.Field
+		Channel     respjson.Field
+		MessageID   respjson.Field
+		To          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageResendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
+func (r *MessageResendResponseDataRecipient) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type MessageResendResponse struct {
+	// The result of a multi-recipient send.
+	//
+	// Declared here rather than in the service layer. POST /v3/messages used to
+	// publish MessageSendResult — a type in Common.Services.Messaging.Contracts — so
+	// the public contract was whatever the send service happened to return, and
+	// changing that service for an internal reason changed the API. The service keeps
+	// its result; this is what a caller sees, and the mapping between them is a
+	// decision the endpoint makes.
+	//
+	// The shape of an immediate send: it never has a scheduled_at key. A send that
+	// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
+	// which of the two to answer with. From always returns this type.
+	Data MessageResendResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageResendResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageResendResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Standard API response envelope for all v3 endpoints
@@ -636,6 +786,20 @@ type MessageSendResponseDataRecipient struct {
 // Returns the unmodified JSON received from the API
 func (r MessageSendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
 func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type MessageResendParams struct {
+	MutationRequest MutationRequestParam
+	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
+func (r MessageResendParams) MarshalJSON() (data []byte, err error) {
+	return shimjson.Marshal(r.MutationRequest)
+}
+func (r *MessageResendParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
