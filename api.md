@@ -155,7 +155,6 @@ Methods:
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageResendResponseData">MessageResendResponseData</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageResendResponse">MessageResendResponse</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetActivitiesResponse">MessageGetActivitiesResponse</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetStatusResponse">MessageGetStatusResponse</a>
