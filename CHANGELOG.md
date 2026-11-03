@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.47.0](https://github.com/sentdm/sent-dm-go/compare/v0.46.1...v0.47.0) (2026-11-03)
+
+
+### Features
+
+* **api:** add messages.resend to resend a message on its id ([3affd22](https://github.com/sentdm/sent-dm-go/commit/3affd22ddfd49e326b13755bd9e7c5882ab5feef))
+
 ## [0.46.1](https://github.com/sentdm/sent-dm-go/compare/v0.46.0...v0.46.1) (2026-10-30)
 
 
