@@ -192,44 +192,6 @@ func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opt
 	return res, err
 }
 
-// Standard API response envelope for all v3 endpoints
-type MessageResendResponse struct {
-	// The result of a multi-recipient send.
-	//
-	// Declared here rather than in the service layer. POST /v3/messages used to
-	// publish MessageSendResult — a type in Common.Services.Messaging.Contracts — so
-	// the public contract was whatever the send service happened to return, and
-	// changing that service for an internal reason changed the API. The service keeps
-	// its result; this is what a caller sees, and the mapping between them is a
-	// decision the endpoint makes.
-	//
-	// The shape of an immediate send: it never has a scheduled_at key. A send that
-	// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
-	// which of the two to answer with. From always returns this type.
-	Data MessageResendResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageResendResponse) RawJSON() string { return r.JSON.raw }
-func (r *MessageResendResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The result of a multi-recipient send.
 //
 // Declared here rather than in the service layer. POST /v3/messages used to
@@ -292,6 +254,44 @@ type MessageResendResponseDataRecipient struct {
 // Returns the unmodified JSON received from the API
 func (r MessageResendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
 func (r *MessageResendResponseDataRecipient) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type MessageResendResponse struct {
+	// The result of a multi-recipient send.
+	//
+	// Declared here rather than in the service layer. POST /v3/messages used to
+	// publish MessageSendResult — a type in Common.Services.Messaging.Contracts — so
+	// the public contract was whatever the send service happened to return, and
+	// changing that service for an internal reason changed the API. The service keeps
+	// its result; this is what a caller sees, and the mapping between them is a
+	// decision the endpoint makes.
+	//
+	// The shape of an immediate send: it never has a scheduled_at key. A send that
+	// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
+	// which of the two to answer with. From always returns this type.
+	Data MessageResendResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageResendResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageResendResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
