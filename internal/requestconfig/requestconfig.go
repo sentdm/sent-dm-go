@@ -372,7 +372,7 @@ func retryDelay(res *http.Response, retryCount int) time.Duration {
 		delay = maxDelay
 	}
 
-	jitter := rand.Int63n(int64(delay / 4))
+	jitter := rand.Int63n(int64(delay / 4)) // #nosec G404 -- retry jitter, not a secret
 	delay -= time.Duration(jitter)
 	return delay
 }
