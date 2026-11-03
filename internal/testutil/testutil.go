@@ -8,6 +8,7 @@ import (
 )
 
 func CheckTestServer(t *testing.T, url string) bool {
+	// #nosec G107 -- probes the local mock server
 	if _, err := http.Get(url); err != nil {
 		const SKIP_MOCK_TESTS = "SKIP_MOCK_TESTS"
 		if str, ok := os.LookupEnv(SKIP_MOCK_TESTS); ok {
