@@ -89,7 +89,7 @@ func NewMessageService(opts ...option.RequestOption) (r MessageService) {
 //
 // The response has the same shape as `POST /v3/messages`: `recipients` has a
 // single entry whose `message_id` is the id you resent.
-func (r *MessageService) Resend(ctx context.Context, id string, params MessageResendParams, opts ...option.RequestOption) (res *MessageResendResponse, err error) {
+func (r *MessageService) Resend(ctx context.Context, id string, params MessageResendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -193,7 +193,7 @@ func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opt
 }
 
 // Standard API response envelope for all v3 endpoints
-type MessageResendResponse struct {
+type MessageSendResponse struct {
 	// The result of a multi-recipient send.
 	//
 	// Declared here rather than in the service layer. POST /v3/messages used to
@@ -206,7 +206,7 @@ type MessageResendResponse struct {
 	// The shape of an immediate send: it never has a scheduled_at key. A send that
 	// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
 	// which of the two to answer with. From always returns this type.
-	Data MessageResendResponseData `json:"data" api:"nullable"`
+	Data MessageSendResponseData `json:"data" api:"nullable"`
 	// Error information
 	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
@@ -225,8 +225,8 @@ type MessageResendResponse struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageResendResponse) RawJSON() string { return r.JSON.raw }
-func (r *MessageResendResponse) UnmarshalJSON(data []byte) error {
+func (r MessageSendResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -242,8 +242,8 @@ func (r *MessageResendResponse) UnmarshalJSON(data []byte) error {
 // The shape of an immediate send: it never has a scheduled_at key. A send that
 // carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
 // which of the two to answer with. From always returns this type.
-type MessageResendResponseData struct {
-	Recipients []MessageResendResponseDataRecipient `json:"recipients"`
+type MessageSendResponseData struct {
+	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
 	// QUEUED: the batch is accepted. A request that carried scheduled_at is QUEUED
 	// here too; each message moves to SCHEDULED once it is held, as GET
 	// /v3/messages/{id} and the message.scheduled webhook report.
@@ -262,13 +262,13 @@ type MessageResendResponseData struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageResendResponseData) RawJSON() string { return r.JSON.raw }
-func (r *MessageResendResponseData) UnmarshalJSON(data []byte) error {
+func (r MessageSendResponseData) RawJSON() string { return r.JSON.raw }
+func (r *MessageSendResponseData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // What one recipient of a send got, as the API reports it.
-type MessageResendResponseDataRecipient struct {
+type MessageSendResponseDataRecipient struct {
 	// Resolved template body for this recipient's channel, or null when the channel is
 	// auto-detected.
 	Body string `json:"body" api:"nullable"`
@@ -290,8 +290,8 @@ type MessageResendResponseDataRecipient struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageResendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
-func (r *MessageResendResponseDataRecipient) UnmarshalJSON(data []byte) error {
+func (r MessageSendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
+func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -683,109 +683,6 @@ type MessageGetStatusResponseDataMessageBodyMedia struct {
 // Returns the unmodified JSON received from the API
 func (r MessageGetStatusResponseDataMessageBodyMedia) RawJSON() string { return r.JSON.raw }
 func (r *MessageGetStatusResponseDataMessageBodyMedia) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type MessageSendResponse struct {
-	// The result of a multi-recipient send.
-	//
-	// Declared here rather than in the service layer. POST /v3/messages used to
-	// publish MessageSendResult — a type in Common.Services.Messaging.Contracts — so
-	// the public contract was whatever the send service happened to return, and
-	// changing that service for an internal reason changed the API. The service keeps
-	// its result; this is what a caller sees, and the mapping between them is a
-	// decision the endpoint makes.
-	//
-	// The shape of an immediate send: it never has a scheduled_at key. A send that
-	// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
-	// which of the two to answer with. From always returns this type.
-	Data MessageSendResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageSendResponse) RawJSON() string { return r.JSON.raw }
-func (r *MessageSendResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The result of a multi-recipient send.
-//
-// Declared here rather than in the service layer. POST /v3/messages used to
-// publish MessageSendResult — a type in Common.Services.Messaging.Contracts — so
-// the public contract was whatever the send service happened to return, and
-// changing that service for an internal reason changed the API. The service keeps
-// its result; this is what a caller sees, and the mapping between them is a
-// decision the endpoint makes.
-//
-// The shape of an immediate send: it never has a scheduled_at key. A send that
-// carried scheduled_at is a ScheduledSendMessageResponse, and the endpoint decides
-// which of the two to answer with. From always returns this type.
-type MessageSendResponseData struct {
-	Recipients []MessageSendResponseDataRecipient `json:"recipients"`
-	// QUEUED: the batch is accepted. A request that carried scheduled_at is QUEUED
-	// here too; each message moves to SCHEDULED once it is held, as GET
-	// /v3/messages/{id} and the message.scheduled webhook report.
-	Status       string `json:"status"`
-	TemplateID   string `json:"template_id" format:"uuid"`
-	TemplateName string `json:"template_name"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Recipients   respjson.Field
-		Status       respjson.Field
-		TemplateID   respjson.Field
-		TemplateName respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageSendResponseData) RawJSON() string { return r.JSON.raw }
-func (r *MessageSendResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// What one recipient of a send got, as the API reports it.
-type MessageSendResponseDataRecipient struct {
-	// Resolved template body for this recipient's channel, or null when the channel is
-	// auto-detected.
-	Body string `json:"body" api:"nullable"`
-	// Channel this message will be sent on — sms, whatsapp — or null to auto-detect.
-	Channel string `json:"channel" api:"nullable"`
-	// Identifier for tracking this recipient's message.
-	MessageID string `json:"message_id" format:"uuid"`
-	// Phone number in E.164 format.
-	To string `json:"to"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Body        respjson.Field
-		Channel     respjson.Field
-		MessageID   respjson.Field
-		To          respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MessageSendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
-func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
