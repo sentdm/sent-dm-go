@@ -25,7 +25,7 @@ func TestUsage(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	response, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
+	messageSendResponse, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 		Channel: []string{"sms", "whatsapp"},
 		Template: sentdm.MessageSendParamsTemplate{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
@@ -40,5 +40,5 @@ func TestUsage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
-	t.Logf("%+v\n", response.Data)
+	t.Logf("%+v\n", messageSendResponse.Data)
 }
