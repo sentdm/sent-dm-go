@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.0](https://github.com/sentdm/sent-dm-go/compare/v0.47.0...v0.48.0) (2026-11-04)
+
+
+### Features
+
+* **pagination:** expose page, page_size, total_count and total_pages on every page model ([32341b1](https://github.com/sentdm/sent-dm-go/commit/32341b18bff3205ee29dd8b2e39894483ce0631c))
+
 ## [0.47.0](https://github.com/sentdm/sent-dm-go/compare/v0.46.1...v0.47.0) (2026-11-03)
 
 
