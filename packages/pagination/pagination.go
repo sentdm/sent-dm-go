@@ -39,10 +39,18 @@ func (r *ContactsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type ContactsPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -175,10 +183,18 @@ func (r *ConversationsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type ConversationsPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -311,10 +327,18 @@ func (r *TemplatesPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type TemplatesPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -447,10 +471,18 @@ func (r *WebhooksPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type WebhooksPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -583,10 +615,18 @@ func (r *WebhookEventsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookEventsPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -719,10 +759,18 @@ func (r *CallsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type CallsPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -855,10 +903,18 @@ func (r *VoiceAgentsPageData[T]) UnmarshalJSON(data []byte) error {
 }
 
 type VoiceAgentsPageDataPagination struct {
-	HasMore bool `json:"has_more"`
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
