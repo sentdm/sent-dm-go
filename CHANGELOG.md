@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.0](https://github.com/sentdm/sent-dm-go/compare/v0.48.0...v0.49.0) (2026-11-05)
+
+
+### Features
+
+* **api:** sync OpenAPI spec from production ([b2f6d7e](https://github.com/sentdm/sent-dm-go/commit/b2f6d7e3ffbfcc6d6dadbdfa8243ef5f837c9512))
+
 ## [0.48.0](https://github.com/sentdm/sent-dm-go/compare/v0.47.0...v0.48.0) (2026-11-04)
 
 
