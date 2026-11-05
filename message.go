@@ -178,7 +178,8 @@ func (r *MessageService) GetStatus(ctx context.Context, id string, query Message
 // accepted: if the time falls inside a legally protected quiet-hours window for a
 // recipient, that message is moved to the next allowed time at release and a
 // second message.scheduled webhook reports the new scheduled_at. An account may
-// hold at most 1,000,000 scheduled messages at once (429 LIMIT_001).
+// hold at most 1,000,000 scheduled messages at once: a message scheduled past that
+// is reported as BLOCKED (LIMIT_001) instead of being held.
 func (r *MessageService) Send(ctx context.Context, params MessageSendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
