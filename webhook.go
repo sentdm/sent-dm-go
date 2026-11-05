@@ -1131,7 +1131,8 @@ type MessageEventPayload struct {
 	// Name of the template the message was sent from. Omitted when the message wasn't
 	// template-based.
 	TemplateName string `json:"template_name" api:"nullable"`
-	// When the message reached MessageStatus, in UTC (yyyy-MM-ddTHH:mm:ssZ).
+	// When the message reached the status this event reports, in UTC
+	// (yyyy-MM-ddTHH:mm:ssZ).
 	UpdatedAt string `json:"updated_at"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
