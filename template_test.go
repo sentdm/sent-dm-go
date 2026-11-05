@@ -227,6 +227,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 			},
 		},
 		Language:        sentdm.String("en_US"),
+		Name:            sentdm.String("Welcome Message"),
 		Sandbox:         sentdm.Bool(false),
 		SubmitForReview: sentdm.Bool(false),
 		IdempotencyKey:  sentdm.String("req_abc123_retry1"),
