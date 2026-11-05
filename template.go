@@ -49,8 +49,8 @@ func NewTemplateService(opts ...option.RequestOption) (r TemplateService) {
 
 // Creates a new message template with header, body, footer, and buttons. The
 // template can be submitted for review immediately or saved as draft for later
-// submission. There is no `name` field on create — the display name is derived
-// from the template's content and can be changed afterwards with
+// submission. `name` is optional: when omitted or blank, a name is generated from
+// the template's content. It can be changed afterwards with
 // `PUT /v3/templates/{id}`.
 func (r *TemplateService) New(ctx context.Context, params TemplateNewParams, opts ...option.RequestOption) (res *APIResponseTemplate, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
@@ -693,6 +693,10 @@ type TemplateNewParams struct {
 	CreationSource param.Opt[string] `json:"creation_source,omitzero"`
 	// Template language code (e.g., en_US) (optional, auto-detected if not provided)
 	Language param.Opt[string] `json:"language,omitzero"`
+	// Template display name (optional). When omitted or blank, a name is generated
+	// from the template's content. It can be changed afterwards with PUT
+	// /v3/templates/{id}.
+	Name param.Opt[string] `json:"name,omitzero"`
 	// Create this template automatically on every sender profile of the organization,
 	// now and in future (default: false). Accepted only from an organization that has
 	// been enabled for it, and only at creation — it cannot be changed afterwards.
