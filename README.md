@@ -28,7 +28,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.46.1'
+go get -u 'github.com/sentdm/sent-dm-go@v0.48.0'
 ```
 
 <!-- x-release-please-end -->
@@ -56,7 +56,7 @@ func main() {
 	client := sentdm.NewClient(
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("SENT_DM_API_KEY")
 	)
-	response, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
+	messageSendResponse, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 		Channel: []string{"sms", "whatsapp"},
 		Template: sentdm.MessageSendParamsTemplate{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
@@ -71,7 +71,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Printf("%+v\n", response.Data)
+	fmt.Printf("%+v\n", messageSendResponse.Data)
 }
 
 ```
@@ -442,7 +442,7 @@ you need to examine response headers, status codes, or other details.
 ```go
 // Create a variable to store the HTTP response
 var response *http.Response
-response, err := client.Messages.Send(
+messageSendResponse, err := client.Messages.Send(
 	context.TODO(),
 	sentdm.MessageSendParams{
 		Channel: []string{"sms"},
@@ -461,7 +461,7 @@ response, err := client.Messages.Send(
 if err != nil {
 	// handle error
 }
-fmt.Printf("%+v\n", response)
+fmt.Printf("%+v\n", messageSendResponse)
 
 fmt.Printf("Status Code: %d\n", response.StatusCode)
 fmt.Printf("Headers: %+#v\n", response.Header)
