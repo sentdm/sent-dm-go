@@ -141,6 +141,32 @@ Methods:
 - <code title="get /v3/profiles/{profileId}/campaigns">client.Profiles.Campaigns.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, profileID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignListParams">ProfileCampaignListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfBrandCampaign">APIResponseOfListOfBrandCampaign</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="delete /v3/profiles/{profileId}/campaigns/{campaignId}">client.Profiles.Campaigns.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, campaignID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ProfileCampaignDeleteParams">ProfileCampaignDeleteParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
 
+# SenderProfiles
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileBillingRequestParam">SenderProfileBillingRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileChannelsParam">SenderProfileChannelsParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileRcsParam">SenderProfileRcsParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileSMSParam">SenderProfileSMSParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileWhatsappParam">SenderProfileWhatsappParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSenderProfile">APIResponseOfSenderProfile</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSenderProfilesList">APIResponseOfSenderProfilesList</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfile">SenderProfile</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileBilling">SenderProfileBilling</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfilesList">SenderProfilesList</a>
+
+Methods:
+
+- <code title="post /v3/sender-profiles">client.SenderProfiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileNewParams">SenderProfileNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSenderProfile">APIResponseOfSenderProfile</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/sender-profiles/{id}">client.SenderProfiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSenderProfile">APIResponseOfSenderProfile</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="patch /v3/sender-profiles/{id}">client.SenderProfiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileUpdateParams">SenderProfileUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSenderProfile">APIResponseOfSenderProfile</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/sender-profiles">client.SenderProfiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileListParams">SenderProfileListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go/packages/pagination#SenderProfilesPage">SenderProfilesPage</a>[<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfile">SenderProfile</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /v3/sender-profiles/{id}">client.SenderProfiles.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SenderProfileService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+
 # Numbers
 
 Response Types:
@@ -156,11 +182,13 @@ Methods:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageSendResponse">MessageSendResponse</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageCancelResponse">MessageCancelResponse</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetActivitiesResponse">MessageGetActivitiesResponse</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetStatusResponse">MessageGetStatusResponse</a>
 
 Methods:
 
+- <code title="post /v3/messages/{id}/cancel">client.Messages.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageService.Cancel">Cancel</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageCancelParams">MessageCancelParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageCancelResponse">MessageCancelResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /v3/messages/{id}/resend">client.Messages.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageService.Resend">Resend</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageResendParams">MessageResendParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageSendResponse">MessageSendResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /v3/messages/{id}/activities">client.Messages.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageService.GetActivities">GetActivities</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetActivitiesParams">MessageGetActivitiesParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetActivitiesResponse">MessageGetActivitiesResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /v3/messages/{id}">client.Messages.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageService.GetStatus">GetStatus</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetStatusParams">MessageGetStatusParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MessageGetStatusResponse">MessageGetStatusResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
@@ -297,6 +325,64 @@ Methods:
 
 # Channels
 
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelsState">APIResponseOfChannelsState</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelsState">ChannelsState</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MmsMarket">MmsMarket</a>
+
+Methods:
+
+- <code title="get /v3/channels">client.Channels.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelListParams">ChannelListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelsState">APIResponseOfChannelsState</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## SMS
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MarketComplianceParam">MarketComplianceParam</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SMSNumberRequestParam">SMSNumberRequestParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfSMSMarket">APIResponseOfListOfSMSMarket</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SMSMarket">SMSMarket</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SMSNumber">SMSNumber</a>
+
+Methods:
+
+- <code title="post /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewParams">ChannelSMSNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/channels/sms/{country}/{type}">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSGetParams">ChannelSMSGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="patch /v3/channels/sms/{country}/{type}">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSUpdateParams">ChannelSMSUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSListParams">ChannelSMSListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfSMSMarket">APIResponseOfListOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Rcs
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#RcsAddressParam">RcsAddressParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfRcsAgent">APIResponseOfRcsAgent</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#RcsAddress">RcsAddress</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#RcsAgent">RcsAgent</a>
+
+Methods:
+
+- <code title="post /v3/channels/rcs">client.Channels.Rcs.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelRcService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelRcNewParams">ChannelRcNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfRcsAgent">APIResponseOfRcsAgent</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Whatsapp
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfWhatsappChannel">APIResponseOfWhatsappChannel</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#WhatsappChannel">WhatsappChannel</a>
+
+Methods:
+
+- <code title="post /v3/channels/whatsapp">client.Channels.Whatsapp.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelWhatsappService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelWhatsappNewParams">ChannelWhatsappNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfWhatsappChannel">APIResponseOfWhatsappChannel</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## Voice
 
 Response Types:
@@ -322,6 +408,20 @@ Methods:
 - <code title="get /v3/channels/voice">client.Channels.Voice.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelVoiceService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelVoiceListParams">ChannelVoiceListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfVoiceNumber">APIResponseOfListOfVoiceNumber</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /v3/channels/voice/{number}/rotate-secret">client.Channels.Voice.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelVoiceService.RotateSecret">RotateSecret</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, number <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelVoiceRotateSecretParams">ChannelVoiceRotateSecretParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceSecret">APIResponseOfVoiceSecret</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /v3/channels/voice/{number}/test">client.Channels.Voice.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelVoiceService.Test">Test</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, number <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelVoiceTestParams">ChannelVoiceTestParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfVoiceCallbackTest">APIResponseOfVoiceCallbackTest</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+# Compliance
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfComplianceRequirements">APIResponseOfComplianceRequirements</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ComplianceAttachmentTemplate">ComplianceAttachmentTemplate</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ComplianceRequirement">ComplianceRequirement</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ComplianceRequirements">ComplianceRequirements</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ComplianceSetupStep">ComplianceSetupStep</a>
+
+Methods:
+
+- <code title="get /v3/compliance/requirements">client.Compliance.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ComplianceService.GetRequirements">GetRequirements</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ComplianceGetRequirementsParams">ComplianceGetRequirementsParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfComplianceRequirements">APIResponseOfComplianceRequirements</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Me
 
