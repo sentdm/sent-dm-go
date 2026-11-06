@@ -154,7 +154,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 		Channel: []string{"sms", "whatsapp"},
-		Channels: map[string][]sentdm.MessageSendParamsChannel{
+		Channels: map[string][]sentdm.MessageChannelOptionsParam{
 			"foo": {{
 				Country:  sentdm.String("country"),
 				From:     []string{"string"},
@@ -165,7 +165,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 		Sandbox:     sentdm.Bool(false),
 		ScheduledAt: param.Null[time.Time](),
 		Subject:     param.Null[string](),
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{

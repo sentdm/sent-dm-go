@@ -542,10 +542,10 @@ type SenderProfile struct {
 	// fetched; empty says the market has been given none. The parent object is null
 	// only when the market registers with nobody and compliance was not computed —
 	// nothing to show at all.
-	Compliance  SenderProfileCompliance `json:"compliance" api:"nullable"`
-	CreatedAt   time.Time               `json:"created_at" format:"date-time"`
-	Description string                  `json:"description" api:"nullable"`
-	Name        string                  `json:"name"`
+	Compliance  SuppliedCompliance `json:"compliance" api:"nullable"`
+	CreatedAt   time.Time          `json:"created_at" format:"date-time"`
+	Description string             `json:"description" api:"nullable"`
+	Name        string             `json:"name"`
 	// Who is notified about this profile's events: ORGANIZATION, SENDER_PROFILE, or
 	// ORGANIZATION_AND_SENDER_PROFILE. Always present — a profile that never chose
 	// reports as ORGANIZATION, the value a create would send to get the default
@@ -574,101 +574,6 @@ type SenderProfile struct {
 // Returns the unmodified JSON received from the API
 func (r SenderProfile) RawJSON() string { return r.JSON.raw }
 func (r *SenderProfile) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// What a market has been given: the identity it registers under, its programme,
-// and any documents attached.
-//
-// What it does not carry is what the market asks for. That is the subject of GET
-// /v3/compliance/requirements, and it is the same answer for every caller — a
-// description of what a compliance regime wants, not a record of one customer's
-// progress through it. It was reported here as well for a while, which put the
-// same array in six response shapes and left a caller deciding which of two
-// sources to believe.
-//
-// Present on a list read for markets that register (carrying brand and campaign),
-// but with documents absent — documents are not fetched for a list, because a
-// catalog lookup and a document read per market would multiply across a page.
-// Absent documents is distinct from an empty list: absent says they were not
-// fetched; empty says the market has been given none. The parent object is null
-// only when the market registers with nobody and compliance was not computed —
-// nothing to show at all.
-type SenderProfileCompliance struct {
-	// The identity this market registers under, with inherit saying whose it is.
-	//
-	// Reported here rather than on the profile because it belongs to the registration
-	// this market files, and only one market files one. It was a top-level block for a
-	// while, which put a per-registration value beside a list of markets and left a
-	// caller to work out which market it belonged to.
-	//
-	// Absent for a market that registers with nobody — such a market asks for no
-	// identity, so there is none to report. Absent and null mean different things:
-	// absent says this market does not ask, null would say it asks and nothing was
-	// supplied.
-	//
-	// Untyped, like the request side, because its members are declared by the market's
-	// own schema rather than by a C# class. A typed pair here would be a second
-	// definition of what a market wants, free to drift from the one that validates.
-	Brand map[string]any `json:"brand" api:"nullable"`
-	// The programme this market registers, with inherit saying whose it is.
-	//
-	// One, not a list. TcrCampaigns permits several and an account built on the admin
-	// side may hold them, but this surface offers one — which is what lets the
-	// market's PATCH be an upsert rather than a collection with an addressable create
-	// behind it. An account holding several is reported as its first and refused on
-	// write, rather than half-edited.
-	//
-	// Carries no id. Nothing addresses a campaign, and an undeclared key would be
-	// refused if the caller sent this object back — which it is meant to be able to
-	// do.
-	Campaign map[string]any `json:"campaign" api:"nullable"`
-	// What has been supplied for this market.
-	//
-	// Files, not values — the declared halves above carry the values. A document
-	// cannot be a JSON value, so it is sent as multipart on the channel call and
-	// reported here as a reference.
-	//
-	// Absent on a list read, which fetches identity but does not compute compliance
-	// documents per market. Absent and empty mean different things: absent says the
-	// documents were not fetched; empty says the market has been given none.
-	Documents []SenderProfileComplianceDocument `json:"documents" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Brand       respjson.Field
-		Campaign    respjson.Field
-		Documents   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r SenderProfileCompliance) RawJSON() string { return r.JSON.raw }
-func (r *SenderProfileCompliance) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A document a market asked for and has been given.
-type SenderProfileComplianceDocument struct {
-	// Identifier of the upload, for fetching it back through the documents endpoints.
-	DocumentID string `json:"document_id" api:"nullable" format:"uuid"`
-	FileName   string `json:"file_name" api:"nullable"`
-	// The catalog's name for this document, matching the requirement it satisfies.
-	Key string `json:"key"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		DocumentID  respjson.Field
-		FileName    respjson.Field
-		Key         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r SenderProfileComplianceDocument) RawJSON() string { return r.JSON.raw }
-func (r *SenderProfileComplianceDocument) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
