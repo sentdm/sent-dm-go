@@ -63,7 +63,7 @@ func (r *UserService) Get(ctx context.Context, userID string, query UserGetParam
 // Retrieves all users who have access to the organization or profile identified by
 // the API key, including their roles and status. Shows invited users (pending
 // acceptance) and active users. Requires developer role or higher.
-func (r *UserService) List(ctx context.Context, query UserListParams, opts ...option.RequestOption) (res *UserListResponse, err error) {
+func (r *UserService) List(ctx context.Context, query UserListParams, opts ...option.RequestOption) (res *APIResponseOfUsersList, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -152,6 +152,33 @@ func (r *APIResponseOfUser) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Standard API response envelope for all v3 endpoints
+type APIResponseOfUsersList struct {
+	// The users in the organization.
+	Data UsersList `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseOfUsersList) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfUsersList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // User response for v3 API
 type UserResponse struct {
 	// User unique identifier
@@ -198,35 +225,8 @@ func (r *UserResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Standard API response envelope for all v3 endpoints
-type UserListResponse struct {
-	// The users in the organization.
-	Data UserListResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r UserListResponse) RawJSON() string { return r.JSON.raw }
-func (r *UserListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The users in the organization.
-type UserListResponseData struct {
+type UsersList struct {
 	// Pagination metadata for list responses
 	Pagination PaginationMeta `json:"pagination"`
 	// The users on this page.
@@ -241,8 +241,8 @@ type UserListResponseData struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r UserListResponseData) RawJSON() string { return r.JSON.raw }
-func (r *UserListResponseData) UnmarshalJSON(data []byte) error {
+func (r UsersList) RawJSON() string { return r.JSON.raw }
+func (r *UsersList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

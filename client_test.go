@@ -40,7 +40,7 @@ func TestUserAgentHeader(t *testing.T) {
 	)
 	_, _ = client.Messages.Send(context.Background(), sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -75,7 +75,7 @@ func TestRetryAfter(t *testing.T) {
 	)
 	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -121,7 +121,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	)
 	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -162,7 +162,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	)
 	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -202,7 +202,7 @@ func TestRetryAfterMs(t *testing.T) {
 	)
 	_, err := client.Messages.Send(context.Background(), sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -236,7 +236,7 @@ func TestContextCancel(t *testing.T) {
 	cancel()
 	_, err := client.Messages.Send(cancelCtx, sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -267,7 +267,7 @@ func TestContextCancelDelay(t *testing.T) {
 	defer cancel()
 	_, err := client.Messages.Send(cancelCtx, sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -304,7 +304,7 @@ func TestContextDeadline(t *testing.T) {
 		)
 		_, err := client.Messages.Send(deadlineCtx, sentdm.MessageSendParams{
 			Channel: []string{"sms"},
-			Template: sentdm.MessageSendParamsTemplate{
+			Template: sentdm.TemplateRefParam{
 				ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 				Name: sentdm.String("order_confirmation"),
 				Parameters: map[string]string{

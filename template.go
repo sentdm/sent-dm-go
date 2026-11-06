@@ -170,6 +170,33 @@ func (r *TemplateService) Delete(ctx context.Context, id string, params Template
 }
 
 // Standard API response envelope for all v3 endpoints
+type APIResponseOfTemplatesList struct {
+	// A paginated list of templates.
+	Data TemplatesList `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseOfTemplatesList) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfTemplatesList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
 type APIResponseTemplate struct {
 	// Template response for v3 API
 	Data Template `json:"data" api:"nullable"`
@@ -309,7 +336,7 @@ type TemplateBodyParam struct {
 	// this slot MMS renders the shared or SMS body, so it is only needed for
 	// MMS-specific copy, a subject or attachments. When present it replaces that body
 	// on MMS rather than adding to it.
-	Mms TemplateBodyMmsParam `json:"mms,omitzero"`
+	Mms TemplateMmsBodyContentParam `json:"mms,omitzero"`
 	// The shared body, used for every channel. One half of the choice described above.
 	MultiChannel TemplateBodyContentParam `json:"multiChannel,omitzero"`
 	// RCS-specific copy that overrides the chosen strategy for RCS only. The one true
@@ -328,58 +355,6 @@ func (r TemplateBodyParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateBodyParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// MMS-specific content — subject, text and attachments.
-//
-// Like Rcs, an override that cannot stand on its own: a template still needs a
-// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Without
-// this slot MMS renders the shared or SMS body, so it is only needed for
-// MMS-specific copy, a subject or attachments. When present it replaces that body
-// on MMS rather than adding to it.
-type TemplateBodyMmsParam struct {
-	// Attachments carried by every send on this template, in order. A per-send
-	// media_urls on the request replaces this list rather than adding to it, so a
-	// template can hold a default creative and a caller can still send something
-	// recipient-specific.
-	Media []TemplateBodyMmsMediaParam `json:"media,omitzero"`
-	// MMS subject line. Optional — most handsets render it above the body, some ignore
-	// it entirely. Deliberately its own field rather than riding TemplateHeader: the
-	// header is authored once and shared across every channel, and carries Meta's
-	// 60-character cap plus its no-newline, no-emoji text rules, none of which
-	// describe an MMS subject.
-	Subject param.Opt[string] `json:"subject,omitzero"`
-	TemplateBodyContentParam
-}
-
-func (r TemplateBodyMmsParam) MarshalJSON() (data []byte, err error) {
-	type shadow struct {
-		*TemplateBodyMmsParam
-		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
-	}
-	return param.MarshalObject(r, shadow{&r, false})
-}
-
-// One attachment on an MMS template body.
-type TemplateBodyMmsMediaParam struct {
-	// One of MmsMediaTypes. Advisory: the carrier reads the Content-Type off the
-	// fetched object, not this field. It exists so an authoring UI can render the
-	// right preview and so a reviewer can see what was intended.
-	MediaType param.Opt[string] `json:"mediaType,omitzero"`
-	// Publicly fetchable https URL. The carrier's MMSC fetches this at send time, so
-	// it has to stay reachable and unauthenticated for the life of the send —
-	// including retries and a DLQ replay — which is why a presigned URL is not a valid
-	// value here.
-	URL param.Opt[string] `json:"url,omitzero"`
-	paramObj
-}
-
-func (r TemplateBodyMmsMediaParam) MarshalJSON() (data []byte, err error) {
-	type shadow TemplateBodyMmsMediaParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *TemplateBodyMmsMediaParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -592,13 +567,13 @@ type TemplateHeaderParam struct {
 	// Upload work, alongside the code that lets such a template be approved in the
 	// first place.
 	StaticResource param.Opt[bool] `json:"static_resource,omitzero"`
+	// List of variables used in the header template
+	Variables []TemplateVariableParam `json:"variables,omitzero"`
 	// The map pin a location header drops. Meta wants none of this at creation — the
 	// component is just {"type":"header","format":"location"} — so these values exist
 	// for Sent: a preview, and the default a StaticResource header falls back to at
 	// send.
 	Location TemplateHeaderLocationParam `json:"location,omitzero"`
-	// List of variables used in the header template
-	Variables []TemplateVariableParam `json:"variables,omitzero"`
 	paramObj
 }
 
@@ -629,6 +604,98 @@ func (r TemplateHeaderLocationParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateHeaderLocationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One attachment on an MMS template body.
+type TemplateMediaItemParam struct {
+	// One of MmsMediaTypes. Advisory: the carrier reads the Content-Type off the
+	// fetched object, not this field. It exists so an authoring UI can render the
+	// right preview and so a reviewer can see what was intended.
+	MediaType param.Opt[string] `json:"mediaType,omitzero"`
+	// Publicly fetchable https URL. The carrier's MMSC fetches this at send time, so
+	// it has to stay reachable and unauthenticated for the life of the send —
+	// including retries and a DLQ replay — which is why a presigned URL is not a valid
+	// value here.
+	URL param.Opt[string] `json:"url,omitzero"`
+	paramObj
+}
+
+func (r TemplateMediaItemParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateMediaItemParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateMediaItemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// MMS-specific body content.
+//
+// Why MMS needs its own type when the other channels share one: it is the only
+// channel with a subject line and the only one with attachments. Every other
+// channel's body is text and variables, which is exactly what TemplateBodyContent
+// already is. Putting Subject and Media on the shared type instead would give sms,
+// whatsapp and rcs two members none of them can ever use.
+//
+// Derives from TemplateBodyContent so that every existing consumer of a body slot
+// — MessageUtils.ConvertVariableToReadable,
+// TemplateDefinition.GetRequiredVariables,
+// TemplateDefinitionValidator.ApplyBodyContentRules — reads it with no change. The
+// two extra members are what the MMS strategy and the provider request need on
+// top.
+type TemplateMmsBodyContentParam struct {
+	// Attachments carried by every send on this template, in order. A per-send
+	// media_urls on the request replaces this list rather than adding to it, so a
+	// template can hold a default creative and a caller can still send something
+	// recipient-specific.
+	Media []TemplateMediaItemParam `json:"media,omitzero"`
+	// MMS subject line. Optional — most handsets render it above the body, some ignore
+	// it entirely. Deliberately its own field rather than riding TemplateHeader: the
+	// header is authored once and shared across every channel, and carries Meta's
+	// 60-character cap plus its no-newline, no-emoji text rules, none of which
+	// describe an MMS subject.
+	Subject param.Opt[string] `json:"subject,omitzero"`
+	TemplateBodyContentParam
+}
+
+func (r TemplateMmsBodyContentParam) MarshalJSON() (data []byte, err error) {
+	type shadow struct {
+		*TemplateMmsBodyContentParam
+		MarshalJSON bool `json:"-"` // Prevent inheriting [json.Marshaler] from the embedded field
+	}
+	return param.MarshalObject(r, shadow{&r, false})
+}
+
+// SDK-style template reference: resolve by ID or by name, with optional
+// parameters.
+type TemplateRefParam struct {
+	// Template ID (mutually exclusive with name)
+	ID param.Opt[string] `json:"id,omitzero" format:"uuid"`
+	// Template name (mutually exclusive with id)
+	Name param.Opt[string] `json:"name,omitzero"`
+	// Template variable parameters for personalization, keyed by variable name.
+	//
+	// Every variable the template declares is required; GET /v3/templates/{id} lists
+	// them. Supplying a key the template does not declare is ignored.
+	//
+	// Media headers. A template whose header is an image (designed in WhatsApp Manager
+	// and imported into Sent) declares a reserved header_image key. Its value is a
+	// publicly reachable https URL that Meta fetches at send time — Sent does not host
+	// the asset, and the sample approved with the template is not reused. The key is
+	// derived from the header's media type, so header_video and header_document follow
+	// the same shape when those formats ship.
+	//
+	// "parameters": { "header_image": "https://cdn.example.com/banner.jpg", "name":
+	// "John Doe" }
+	Parameters map[string]string `json:"parameters,omitzero"`
+	paramObj
+}
+
+func (r TemplateRefParam) MarshalJSON() (data []byte, err error) {
+	type shadow TemplateRefParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TemplateRefParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -682,6 +749,27 @@ func (r TemplateVariablePropsParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *TemplateVariablePropsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A paginated list of templates.
+type TemplatesList struct {
+	// Pagination metadata for list responses
+	Pagination PaginationMeta `json:"pagination"`
+	// The templates on this page.
+	Templates []Template `json:"templates"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Pagination  respjson.Field
+		Templates   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplatesList) RawJSON() string { return r.JSON.raw }
+func (r *TemplatesList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -227,33 +227,34 @@ func (r *APIResponseOfContactMessageSummary) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ContactMessageSummary struct {
-	ChannelScores  []ContactMessageSummaryChannelScore `json:"channel_scores"`
-	ChannelsUsed   []string                            `json:"channels_used"`
-	ContactID      string                              `json:"contact_id" format:"uuid"`
-	FirstMessageAt time.Time                           `json:"first_message_at" api:"nullable" format:"date-time"`
-	LastMessageAt  time.Time                           `json:"last_message_at" api:"nullable" format:"date-time"`
-	MessageCount   int64                               `json:"message_count"`
+// Standard API response envelope for all v3 endpoints
+type APIResponseOfContactsList struct {
+	// A paginated list of contacts.
+	Data ContactsList `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ChannelScores  respjson.Field
-		ChannelsUsed   respjson.Field
-		ContactID      respjson.Field
-		FirstMessageAt respjson.Field
-		LastMessageAt  respjson.Field
-		MessageCount   respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactMessageSummary) RawJSON() string { return r.JSON.raw }
-func (r *ContactMessageSummary) UnmarshalJSON(data []byte) error {
+func (r APIResponseOfContactsList) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfContactsList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ContactMessageSummaryChannelScore struct {
+type ChannelScore struct {
 	Channel string `json:"channel"`
 	// Percentage (0-100) of messages on this channel that ended in FAILED.
 	FailScore int64 `json:"fail_score"`
@@ -271,8 +272,34 @@ type ContactMessageSummaryChannelScore struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ContactMessageSummaryChannelScore) RawJSON() string { return r.JSON.raw }
-func (r *ContactMessageSummaryChannelScore) UnmarshalJSON(data []byte) error {
+func (r ChannelScore) RawJSON() string { return r.JSON.raw }
+func (r *ChannelScore) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ContactMessageSummary struct {
+	ChannelScores  []ChannelScore `json:"channel_scores"`
+	ChannelsUsed   []string       `json:"channels_used"`
+	ContactID      string         `json:"contact_id" format:"uuid"`
+	FirstMessageAt time.Time      `json:"first_message_at" api:"nullable" format:"date-time"`
+	LastMessageAt  time.Time      `json:"last_message_at" api:"nullable" format:"date-time"`
+	MessageCount   int64          `json:"message_count"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ChannelScores  respjson.Field
+		ChannelsUsed   respjson.Field
+		ContactID      respjson.Field
+		FirstMessageAt respjson.Field
+		LastMessageAt  respjson.Field
+		MessageCount   respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContactMessageSummary) RawJSON() string { return r.JSON.raw }
+func (r *ContactMessageSummary) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -339,6 +366,27 @@ type ContactResponse struct {
 // Returns the unmodified JSON received from the API
 func (r ContactResponse) RawJSON() string { return r.JSON.raw }
 func (r *ContactResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A paginated list of contacts.
+type ContactsList struct {
+	// The contacts on this page.
+	Contacts []ContactResponse `json:"contacts"`
+	// Pagination metadata for list responses
+	Pagination PaginationMeta `json:"pagination"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Contacts    respjson.Field
+		Pagination  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContactsList) RawJSON() string { return r.JSON.raw }
+func (r *ContactsList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

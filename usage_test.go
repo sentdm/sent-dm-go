@@ -27,7 +27,7 @@ func TestUsage(t *testing.T) {
 	)
 	messageSendResponse, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 		Channel: []string{"sms", "whatsapp"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
