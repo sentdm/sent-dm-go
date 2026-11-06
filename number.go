@@ -46,7 +46,7 @@ func NewNumberService(opts ...option.RequestOption) (r NumberService) {
 // Retrieves detailed information about a phone number including carrier, line
 // type, porting status, and VoIP detection. Uses the customer's messaging provider
 // for rich data, with fallback to the internal index.
-func (r *NumberService) Lookup(ctx context.Context, phoneNumber string, query NumberLookupParams, opts ...option.RequestOption) (res *NumberLookupResponse, err error) {
+func (r *NumberService) Lookup(ctx context.Context, phoneNumber string, query NumberLookupParams, opts ...option.RequestOption) (res *APIResponseOfNumberLookupResult, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -61,9 +61,9 @@ func (r *NumberService) Lookup(ctx context.Context, phoneNumber string, query Nu
 }
 
 // Standard API response envelope for all v3 endpoints
-type NumberLookupResponse struct {
+type APIResponseOfNumberLookupResult struct {
 	// The response data (null if error)
-	Data NumberLookupResponseData `json:"data" api:"nullable"`
+	Data NumberLookupResult `json:"data" api:"nullable"`
 	// Error information
 	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
@@ -82,13 +82,12 @@ type NumberLookupResponse struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r NumberLookupResponse) RawJSON() string { return r.JSON.raw }
-func (r *NumberLookupResponse) UnmarshalJSON(data []byte) error {
+func (r APIResponseOfNumberLookupResult) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfNumberLookupResult) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The response data (null if error)
-type NumberLookupResponseData struct {
+type NumberLookupResult struct {
 	CarrierName       string `json:"carrier_name" api:"nullable"`
 	CountryCode       string `json:"country_code" api:"nullable"`
 	IsPorted          bool   `json:"is_ported" api:"nullable"`
@@ -115,8 +114,8 @@ type NumberLookupResponseData struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r NumberLookupResponseData) RawJSON() string { return r.JSON.raw }
-func (r *NumberLookupResponseData) UnmarshalJSON(data []byte) error {
+func (r NumberLookupResult) RawJSON() string { return r.JSON.raw }
+func (r *NumberLookupResult) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

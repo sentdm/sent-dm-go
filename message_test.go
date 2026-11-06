@@ -15,6 +15,39 @@ import (
 	"github.com/sentdm/sent-dm-go/packages/param"
 )
 
+func TestMessageCancelWithOptionalParams(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := sentdm.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Messages.Cancel(
+		context.TODO(),
+		"8ba7b830-9dad-11d1-80b4-00c04fd430c8",
+		sentdm.MessageCancelParams{
+			MutationRequest: sentdm.MutationRequestParam{
+				Sandbox: sentdm.Bool(false),
+			},
+			IdempotencyKey: sentdm.String("req_abc123_retry1"),
+			XProfileID:     sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+		},
+	)
+	if err != nil {
+		var apierr *sentdm.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
 func TestMessageResendWithOptionalParams(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
@@ -121,7 +154,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 		Channel: []string{"sms", "whatsapp"},
-		Channels: map[string][]sentdm.MessageSendParamsChannel{
+		Channels: map[string][]sentdm.MessageChannelOptionsParam{
 			"foo": {{
 				Country:  sentdm.String("country"),
 				From:     []string{"string"},
@@ -132,7 +165,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 		Sandbox:     sentdm.Bool(false),
 		ScheduledAt: param.Null[time.Time](),
 		Subject:     param.Null[string](),
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
