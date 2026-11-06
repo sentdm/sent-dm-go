@@ -38,7 +38,7 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 		IsInheritable: sentdm.Bool(false),
 		RetryCount:    sentdm.Int(3),
 		Sandbox:       sentdm.Bool(false),
-		SenderProfile: sentdm.WebhookNewParamsSenderProfile{
+		SenderProfile: sentdm.WebhookSenderProfileConfigParam{
 			EventFilters: map[string][]string{
 				"foo": {"string"},
 			},
@@ -113,7 +113,7 @@ func TestWebhookUpdateWithOptionalParams(t *testing.T) {
 			IsInheritable: param.Null[bool](),
 			RetryCount:    sentdm.Int(5),
 			Sandbox:       sentdm.Bool(false),
-			SenderProfile: sentdm.WebhookUpdateParamsSenderProfile{
+			SenderProfile: sentdm.WebhookSenderProfileConfigParam{
 				EventFilters: map[string][]string{
 					"foo": {"string"},
 				},
