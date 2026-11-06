@@ -73,7 +73,7 @@ func NewMeService(opts ...option.RequestOption) (r MeService) {
 // whether this account may mark a template for automatic creation on its sender
 // profiles. It is granted by Sent and off by default. A `profile` reports `false`,
 // having no sender profiles of its own to create anything on.
-func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.RequestOption) (res *MeGetResponse, err error) {
+func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.RequestOption) (res *APIResponseOfAccount, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -83,96 +83,15 @@ func (r *MeService) Get(ctx context.Context, query MeGetParams, opts ...option.R
 	return res, err
 }
 
-// Profile configuration settings
-type ProfileSettings struct {
-	// Always false. A profile no longer shares contacts with sibling profiles — it
-	// sees only what it owns. Retained so existing v3 clients reading
-	// allow_contact_sharing keep deserializing; it carries no information.
-	//
-	// Deprecated: deprecated
-	AllowContactSharing bool `json:"allow_contact_sharing" api:"nullable"`
-	// Always false. A profile no longer shares templates with sibling profiles.
-	// Retained so existing v3 clients reading allow_template_sharing keep
-	// deserializing; it carries no information.
-	//
-	// Deprecated: deprecated
-	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
-	// Billing model: profile, organization, or profile_and_organization
-	BillingModel string `json:"billing_model" api:"nullable"`
-	// Always false. A profile no longer inherits its organization's contacts. Retained
-	// so existing v3 clients reading inherit_contacts keep deserializing; it carries
-	// no information.
-	//
-	// Deprecated: deprecated
-	InheritContacts bool `json:"inherit_contacts" api:"nullable"`
-	// Whether this profile inherits TCR brand from the organization
-	InheritTcrBrand bool `json:"inherit_tcr_brand" api:"nullable"`
-	// Whether this profile inherits TCR campaign from the organization
-	InheritTcrCampaign bool `json:"inherit_tcr_campaign" api:"nullable"`
-	// Always false. A profile no longer inherits its organization's templates.
-	// Retained so existing v3 clients reading inherit_templates keep deserializing; it
-	// carries no information.
-	//
-	// Deprecated: deprecated
-	InheritTemplates bool `json:"inherit_templates" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		AllowContactSharing  respjson.Field
-		AllowTemplateSharing respjson.Field
-		BillingModel         respjson.Field
-		InheritContacts      respjson.Field
-		InheritTcrBrand      respjson.Field
-		InheritTcrCampaign   respjson.Field
-		InheritTemplates     respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileSettings) RawJSON() string { return r.JSON.raw }
-func (r *ProfileSettings) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type MeGetResponse struct {
-	// Account response for GET /v3/me endpoint. Returns organization (with profiles),
-	// user (standalone), or profile (child of an organization) data depending on the
-	// API key type. Always includes messaging channel configuration.
-	Data MeGetResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponse) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Account response for GET /v3/me endpoint. Returns organization (with profiles),
 // user (standalone), or profile (child of an organization) data depending on the
 // API key type. Always includes messaging channel configuration.
-type MeGetResponseData struct {
+type Account struct {
 	// Customer ID (organization, account, or profile)
 	ID string `json:"id" format:"uuid"`
 	// Messaging channel configuration. All three channels are always present. Each
 	// channel has a "configured" flag; configured channels expose additional details.
-	Channels MeGetResponseDataChannels `json:"channels"`
+	Channels AccountChannels `json:"channels"`
 	// When the account was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Account description
@@ -201,7 +120,7 @@ type MeGetResponseData struct {
 	OrganizationID string `json:"organization_id" api:"nullable" format:"uuid"`
 	// List of profiles (populated for organization type, empty for user and profile
 	// types)
-	Profiles []MeGetResponseDataProfile `json:"profiles"`
+	Profiles []AccountProfile `json:"profiles"`
 	// The SMS sender this account sends from in the United States, in E.164 form. Null
 	// when the account has no US SMS sender.
 	//
@@ -254,21 +173,21 @@ type MeGetResponseData struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MeGetResponseData) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseData) UnmarshalJSON(data []byte) error {
+func (r Account) RawJSON() string { return r.JSON.raw }
+func (r *Account) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Messaging channel configuration. All three channels are always present. Each
 // channel has a "configured" flag; configured channels expose additional details.
-type MeGetResponseDataChannels struct {
+type AccountChannels struct {
 	// RCS channel configuration. When configured, includes the RCS phone number.
-	Rcs MeGetResponseDataChannelsRcs `json:"rcs"`
+	Rcs AccountRcsChannel `json:"rcs"`
 	// SMS channel configuration. When configured, includes the sending phone number.
-	SMS MeGetResponseDataChannelsSMS `json:"sms"`
+	SMS AccountSMSChannel `json:"sms"`
 	// WhatsApp Business channel configuration. When configured, includes the WhatsApp
 	// phone number and business name.
-	Whatsapp MeGetResponseDataChannelsWhatsapp `json:"whatsapp"`
+	Whatsapp AccountWhatsappChannel `json:"whatsapp"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Rcs         respjson.Field
@@ -280,80 +199,13 @@ type MeGetResponseDataChannels struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MeGetResponseDataChannels) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataChannels) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// RCS channel configuration. When configured, includes the RCS phone number.
-type MeGetResponseDataChannelsRcs struct {
-	// Whether RCS is configured for this account
-	Configured bool `json:"configured"`
-	// RCS-enabled phone number in E.164 format
-	PhoneNumber string `json:"phone_number" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Configured  respjson.Field
-		PhoneNumber respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseDataChannelsRcs) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataChannelsRcs) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// SMS channel configuration. When configured, includes the sending phone number.
-type MeGetResponseDataChannelsSMS struct {
-	// Whether SMS is configured for this account
-	Configured bool `json:"configured"`
-	// Sending phone number in E.164 format
-	PhoneNumber string `json:"phone_number" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Configured  respjson.Field
-		PhoneNumber respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseDataChannelsSMS) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataChannelsSMS) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// WhatsApp Business channel configuration. When configured, includes the WhatsApp
-// phone number and business name.
-type MeGetResponseDataChannelsWhatsapp struct {
-	// WhatsApp Business display name
-	BusinessName string `json:"business_name" api:"nullable"`
-	// Whether WhatsApp is configured for this account
-	Configured bool `json:"configured"`
-	// WhatsApp phone number in E.164 format
-	PhoneNumber string `json:"phone_number" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		BusinessName respjson.Field
-		Configured   respjson.Field
-		PhoneNumber  respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r MeGetResponseDataChannelsWhatsapp) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataChannelsWhatsapp) UnmarshalJSON(data []byte) error {
+func (r AccountChannels) RawJSON() string { return r.JSON.raw }
+func (r *AccountChannels) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Profile (sender profile) response for v3 API
-type MeGetResponseDataProfile struct {
+type AccountProfile struct {
 	// Profile unique identifier
 	ID string `json:"id" format:"uuid"`
 	// When the profile was created
@@ -390,8 +242,156 @@ type MeGetResponseDataProfile struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MeGetResponseDataProfile) RawJSON() string { return r.JSON.raw }
-func (r *MeGetResponseDataProfile) UnmarshalJSON(data []byte) error {
+func (r AccountProfile) RawJSON() string { return r.JSON.raw }
+func (r *AccountProfile) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// RCS channel configuration. When configured, includes the RCS phone number.
+type AccountRcsChannel struct {
+	// Whether RCS is configured for this account
+	Configured bool `json:"configured"`
+	// RCS-enabled phone number in E.164 format
+	PhoneNumber string `json:"phone_number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Configured  respjson.Field
+		PhoneNumber respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AccountRcsChannel) RawJSON() string { return r.JSON.raw }
+func (r *AccountRcsChannel) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// SMS channel configuration. When configured, includes the sending phone number.
+type AccountSMSChannel struct {
+	// Whether SMS is configured for this account
+	Configured bool `json:"configured"`
+	// Sending phone number in E.164 format
+	PhoneNumber string `json:"phone_number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Configured  respjson.Field
+		PhoneNumber respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AccountSMSChannel) RawJSON() string { return r.JSON.raw }
+func (r *AccountSMSChannel) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// WhatsApp Business channel configuration. When configured, includes the WhatsApp
+// phone number and business name.
+type AccountWhatsappChannel struct {
+	// WhatsApp Business display name
+	BusinessName string `json:"business_name" api:"nullable"`
+	// Whether WhatsApp is configured for this account
+	Configured bool `json:"configured"`
+	// WhatsApp phone number in E.164 format
+	PhoneNumber string `json:"phone_number" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BusinessName respjson.Field
+		Configured   respjson.Field
+		PhoneNumber  respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AccountWhatsappChannel) RawJSON() string { return r.JSON.raw }
+func (r *AccountWhatsappChannel) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type APIResponseOfAccount struct {
+	// Account response for GET /v3/me endpoint. Returns organization (with profiles),
+	// user (standalone), or profile (child of an organization) data depending on the
+	// API key type. Always includes messaging channel configuration.
+	Data Account `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseOfAccount) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfAccount) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Profile configuration settings
+type ProfileSettings struct {
+	// Always false. A profile no longer shares contacts with sibling profiles — it
+	// sees only what it owns. Retained so existing v3 clients reading
+	// allow_contact_sharing keep deserializing; it carries no information.
+	//
+	// Deprecated: deprecated
+	AllowContactSharing bool `json:"allow_contact_sharing" api:"nullable"`
+	// Always false. A profile no longer shares templates with sibling profiles.
+	// Retained so existing v3 clients reading allow_template_sharing keep
+	// deserializing; it carries no information.
+	//
+	// Deprecated: deprecated
+	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
+	// Billing model: profile, organization, or profile_and_organization
+	BillingModel string `json:"billing_model" api:"nullable"`
+	// Always false. A profile no longer inherits its organization's contacts. Retained
+	// so existing v3 clients reading inherit_contacts keep deserializing; it carries
+	// no information.
+	//
+	// Deprecated: deprecated
+	InheritContacts bool `json:"inherit_contacts" api:"nullable"`
+	// Whether this profile inherits TCR brand from the organization
+	InheritTcrBrand bool `json:"inherit_tcr_brand" api:"nullable"`
+	// Whether this profile inherits TCR campaign from the organization
+	InheritTcrCampaign bool `json:"inherit_tcr_campaign" api:"nullable"`
+	// Always false. A profile no longer inherits its organization's templates.
+	// Retained so existing v3 clients reading inherit_templates keep deserializing; it
+	// carries no information.
+	//
+	// Deprecated: deprecated
+	InheritTemplates bool `json:"inherit_templates" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AllowContactSharing  respjson.Field
+		AllowTemplateSharing respjson.Field
+		BillingModel         respjson.Field
+		InheritContacts      respjson.Field
+		InheritTcrBrand      respjson.Field
+		InheritTcrCampaign   respjson.Field
+		InheritTemplates     respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileSettings) RawJSON() string { return r.JSON.raw }
+func (r *ProfileSettings) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
