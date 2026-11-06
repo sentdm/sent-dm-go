@@ -60,6 +60,56 @@ func NewMessageService(opts ...option.RequestOption) (r MessageService) {
 	return
 }
 
+// Calls off a message you scheduled with `scheduled_at`, before it is released for
+// sending. The message moves to `CANCELLED`, which is terminal, and it is never
+// sent.
+//
+// **Only a SCHEDULED message can be cancelled.** A message that has already been
+// released — queued, in flight, or finished — returns 409. The release sweeper
+// runs continuously, so a cancellation sent within about a minute of the scheduled
+// instant can lose that race and be refused; cancel with time to spare.
+//
+// **One message per call.** A send to many recipients, or on several channels,
+// becomes one message per recipient × channel, each with its own id; cancel the
+// ones you want stopped. There is no bulk cancellation.
+//
+// **Cancelling is free**, and nothing was charged for the hold in the first place
+// — a scheduled message is only priced and billed at release.
+//
+// **A cancellation fires `message.cancelled`** on your webhook, exactly once,
+// carrying the `scheduled_at` that was called off so a consumer can un-record the
+// send it was expecting. Cancelling the same message again returns this same
+// response and fires no second event. `Idempotency-Key` is honoured.
+//
+// A cancelled message cannot be resent — send a new one.
+//
+// The response is the message itself, in the same shape `GET /v3/messages/{id}`
+// returns, so the `status` you read back is the one now stored on the row, and
+// `scheduled_at` is the time it would have gone out. `GET /v3/messages/{id}` keeps
+// reporting both afterwards.
+//
+// `events` is the message lifecycle as it stood immediately before the
+// cancellation: the CANCELLED entry is written asynchronously and lands a moment
+// later, so read `status` for the outcome. If you need the entry itself, re-fetch
+// the message after a few seconds — `GET /v3/messages/{id}` is cached briefly, so
+// an immediate re-fetch can still show the pre-cancellation state.
+func (r *MessageService) Cancel(ctx context.Context, id string, params MessageCancelParams, opts ...option.RequestOption) (res *MessageCancelResponse, err error) {
+	if !param.IsOmitted(params.IdempotencyKey) {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	}
+	if !param.IsOmitted(params.XProfileID) {
+		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
+	}
+	opts = slices.Concat(r.Options, opts)
+	if id == "" {
+		err = errors.New("missing required id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("v3/messages/%s/cancel", id)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	return res, err
+}
+
 // Resends a message you already sent, on the same message id, without rebuilding
 // the request. The typical use is recovering a BLOCKED message — for example one
 // refused for insufficient balance — after the account has been topped up.
@@ -293,6 +343,280 @@ type MessageSendResponseDataRecipient struct {
 // Returns the unmodified JSON received from the API
 func (r MessageSendResponseDataRecipient) RawJSON() string { return r.JSON.raw }
 func (r *MessageSendResponseDataRecipient) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Standard API response envelope for all v3 endpoints
+type MessageCancelResponse struct {
+	// The response data (null if error)
+	Data MessageCancelResponseData `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponse) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The response data (null if error)
+type MessageCancelResponseData struct {
+	ID                 string                           `json:"id" format:"uuid"`
+	ActiveContactPrice float64                          `json:"active_contact_price" api:"nullable" format:"decimal"`
+	Channel            string                           `json:"channel"`
+	ContactID          string                           `json:"contact_id" format:"uuid"`
+	CreatedAt          time.Time                        `json:"created_at" format:"date-time"`
+	CustomerID         string                           `json:"customer_id" format:"uuid"`
+	Direction          string                           `json:"direction"`
+	Events             []MessageCancelResponseDataEvent `json:"events" api:"nullable"`
+	// Structured message body format for database storage. Preserves channel-specific
+	// components (header, header media, body, footer, buttons, MMS subject and media).
+	//
+	// Persisted as the messageBody jsonb column on Messages. Every write path goes
+	// through MessageUtils.MessageBodyJsonOptions, which writes nulls, so the envelope
+	// shape is stable regardless of channel or status. Anything that rebuilds this
+	// object field by field — the four IMessageBodyStrategy implementations and
+	// MessageUtils.BuildSegmentBody — has to carry every member, or that member is
+	// silently dropped on whichever path forgot it.
+	MessageBody        MessageCancelResponseDataMessageBody `json:"message_body" api:"nullable"`
+	Phone              string                               `json:"phone"`
+	PhoneInternational string                               `json:"phone_international"`
+	Price              float64                              `json:"price" api:"nullable" format:"decimal"`
+	// A human-readable sentence for reason_code, for example "Insufficient balance".
+	// Omitted whenever reason_code is.
+	Reason string `json:"reason" api:"nullable"`
+	// Why the message is at its current status, as a stable platform code such as
+	// DELIVERY_007, BUSINESS_003 or DELIVERY_003. Present when the current status is
+	// FAILED, FILTERED or BLOCKED and the lifecycle was loaded; omitted otherwise.
+	// Switch on this rather than on reason: the code is stable, the wording may be
+	// improved. It is the platform's classification of the outcome, never a carrier or
+	// vendor code.
+	ReasonCode string `json:"reason_code" api:"nullable"`
+	RegionCode string `json:"region_code"`
+	// The send time that was called off, in UTC — the scheduled_at the message was
+	// being held for, whether you set it or the recipient's quiet hours moved it
+	// there. Omitted only for a held message that carried no recorded instant.
+	ScheduledAt      time.Time `json:"scheduled_at" api:"nullable" format:"date-time"`
+	Status           string    `json:"status"`
+	TemplateCategory string    `json:"template_category" api:"nullable"`
+	TemplateID       string    `json:"template_id" api:"nullable" format:"uuid"`
+	TemplateName     string    `json:"template_name" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		ActiveContactPrice respjson.Field
+		Channel            respjson.Field
+		ContactID          respjson.Field
+		CreatedAt          respjson.Field
+		CustomerID         respjson.Field
+		Direction          respjson.Field
+		Events             respjson.Field
+		MessageBody        respjson.Field
+		Phone              respjson.Field
+		PhoneInternational respjson.Field
+		Price              respjson.Field
+		Reason             respjson.Field
+		ReasonCode         respjson.Field
+		RegionCode         respjson.Field
+		ScheduledAt        respjson.Field
+		Status             respjson.Field
+		TemplateCategory   respjson.Field
+		TemplateID         respjson.Field
+		TemplateName       respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponseData) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Represents a status change event in a message's lifecycle (v3)
+type MessageCancelResponseDataEvent struct {
+	Status      string    `json:"status" api:"required"`
+	Timestamp   time.Time `json:"timestamp" api:"required" format:"date-time"`
+	Description string    `json:"description" api:"nullable"`
+	// A human-readable sentence for reason_code. Omitted whenever reason_code is.
+	Reason string `json:"reason" api:"nullable"`
+	// Why the message reached this status, as a stable platform code such as
+	// DELIVERY_007. Present on FAILED, FILTERED and BLOCKED events; omitted on every
+	// status that needs no explanation. Same wire name and vocabulary as on the
+	// activities list and the webhook.
+	ReasonCode string `json:"reason_code" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Status      respjson.Field
+		Timestamp   respjson.Field
+		Description respjson.Field
+		Reason      respjson.Field
+		ReasonCode  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponseDataEvent) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponseDataEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Structured message body format for database storage. Preserves channel-specific
+// components (header, header media, body, footer, buttons, MMS subject and media).
+//
+// Persisted as the messageBody jsonb column on Messages. Every write path goes
+// through MessageUtils.MessageBodyJsonOptions, which writes nulls, so the envelope
+// shape is stable regardless of channel or status. Anything that rebuilds this
+// object field by field — the four IMessageBodyStrategy implementations and
+// MessageUtils.BuildSegmentBody — has to carry every member, or that member is
+// silently dropped on whichever path forgot it.
+type MessageCancelResponseDataMessageBody struct {
+	Buttons []MessageCancelResponseDataMessageBodyButton `json:"buttons" api:"nullable"`
+	Content string                                       `json:"content"`
+	Footer  string                                       `json:"footer" api:"nullable"`
+	Header  string                                       `json:"header" api:"nullable"`
+	// The media asset that rode a message's header, recorded as sent.
+	HeaderMedia MessageCancelResponseDataMessageBodyHeaderMedia `json:"headerMedia" api:"nullable"`
+	// MMS attachments, as the publicly fetchable URLs handed to the carrier. Null on
+	// every other channel.
+	//
+	// Persisted rather than derived because a resend and a curfew release rebuild the
+	// send from the stored row — MessageReplayCommandBuilder reads templateId and
+	// templateVariables and nothing else — so media that lives only on the original
+	// request would silently turn a replayed MMS into a text message.
+	Media []MessageCancelResponseDataMessageBodyMedia `json:"media" api:"nullable"`
+	// MMS subject line. Null on every other channel.
+	Subject string `json:"subject" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Buttons     respjson.Field
+		Content     respjson.Field
+		Footer      respjson.Field
+		Header      respjson.Field
+		HeaderMedia respjson.Field
+		Media       respjson.Field
+		Subject     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponseDataMessageBody) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponseDataMessageBody) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type MessageCancelResponseDataMessageBodyButton struct {
+	PostbackData string `json:"postbackData" api:"nullable"`
+	Text         string `json:"text" api:"nullable"`
+	Type         string `json:"type"`
+	Value        string `json:"value"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		PostbackData respjson.Field
+		Text         respjson.Field
+		Type         respjson.Field
+		Value        respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponseDataMessageBodyButton) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponseDataMessageBodyButton) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The media asset that rode a message's header, recorded as sent.
+type MessageCancelResponseDataMessageBodyHeaderMedia struct {
+	// "image", "video" or "document" — taken from the header's media variable.
+	Type string `json:"type"`
+	// The https URL the caller supplied for this send. Never the template's stored
+	// props.sample, which is Meta's expiring header_handle rather than what was
+	// delivered.
+	URL string `json:"url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponseDataMessageBodyHeaderMedia) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponseDataMessageBodyHeaderMedia) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One attachment on a message, in either direction — and in both, a URL somebody
+// else hosts.
+//
+// Outbound: the customer supplied a public URL and we handed it to the carrier.
+// Inbound: the carrier hosts the file and we record where. sent.dm never holds the
+// bytes, so there is no key, no expiry bookkeeping and nothing minted per read —
+// what is stored is what is served.
+//
+// An inbound link expires on the carrier's own schedule and is unauthenticated.
+// That is the customer's to manage, and it is documented where they will see it
+// rather than only here — a recipient who needs an attachment to outlive that
+// window copies it on receipt.
+//
+// Storing a presigned URL is the specific mistake this shape still avoids:
+// M260826130000 and M260826140000 exist because RCS assets were stored as signed
+// URLs and went stale. Nothing here is signed.
+type MessageCancelResponseDataMessageBodyMedia struct {
+	// One of MmsMediaTypes when the content type is known. Advisory — a reader should
+	// trust the fetched object's own Content-Type.
+	MediaType string `json:"mediaType" api:"nullable"`
+	// Content type as the provider declared it. Null when it declared none.
+	MimeType string `json:"mimeType" api:"nullable"`
+	// Size as the provider declared it. Never measured here — nothing downloads the
+	// file.
+	SizeBytes int64 `json:"sizeBytes" api:"nullable"`
+	// Inbound only: the SHA-256 the provider declared alongside the attachment, when
+	// it declared one. Relayed to the customer so they can verify what they fetch
+	// matches what the carrier said it sent. It is the only integrity signal available
+	// on an attachment nobody here has read.
+	SourceHashSha256 string `json:"sourceHashSha256" api:"nullable"`
+	// Where the file lives. Outbound: the URL the customer gave us and the carrier
+	// fetched. Inbound: the URL the carrier hosts it at, relayed unchanged.
+	URL string `json:"url" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		MediaType        respjson.Field
+		MimeType         respjson.Field
+		SizeBytes        respjson.Field
+		SourceHashSha256 respjson.Field
+		URL              respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageCancelResponseDataMessageBodyMedia) RawJSON() string { return r.JSON.raw }
+func (r *MessageCancelResponseDataMessageBodyMedia) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -684,6 +1008,20 @@ type MessageGetStatusResponseDataMessageBodyMedia struct {
 // Returns the unmodified JSON received from the API
 func (r MessageGetStatusResponseDataMessageBodyMedia) RawJSON() string { return r.JSON.raw }
 func (r *MessageGetStatusResponseDataMessageBodyMedia) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type MessageCancelParams struct {
+	MutationRequest MutationRequestParam
+	IdempotencyKey  param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
+	XProfileID      param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	paramObj
+}
+
+func (r MessageCancelParams) MarshalJSON() (data []byte, err error) {
+	return shimjson.Marshal(r.MutationRequest)
+}
+func (r *MessageCancelParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
