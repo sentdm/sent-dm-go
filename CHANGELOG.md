@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.50.0](https://github.com/sentdm/sent-dm-go/compare/v0.49.0...v0.50.0) (2026-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** stable names for shared models; typed methods for sender profiles, channels, compliance requirements and message cancel
+
+### Features
+
+* **api:** stable names for shared models; typed methods for sender profiles, channels, compliance requirements and message cancel ([18778ef](https://github.com/sentdm/sent-dm-go/commit/18778ef716c51b9a94e352124812838e69455ecd))
+
 ## [0.49.0](https://github.com/sentdm/sent-dm-go/compare/v0.48.0...v0.49.0) (2026-11-05)
 
 
