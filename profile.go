@@ -198,7 +198,7 @@ func (r *ProfileService) Update(ctx context.Context, profileID string, params Pr
 // configuration.
 //
 // Deprecated: deprecated
-func (r *ProfileService) List(ctx context.Context, query ProfileListParams, opts ...option.RequestOption) (res *ProfileListResponse, err error) {
+func (r *ProfileService) List(ctx context.Context, query ProfileListParams, opts ...option.RequestOption) (res *APIResponseOfProfilesList, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
@@ -288,7 +288,7 @@ func (r *ProfileService) Delete(ctx context.Context, profileID string, params Pr
 //     and the webhook reports the reason
 //
 // Deprecated: deprecated
-func (r *ProfileService) Complete(ctx context.Context, profileID string, params ProfileCompleteParams, opts ...option.RequestOption) (res *ProfileCompleteResponse, err error) {
+func (r *ProfileService) Complete(ctx context.Context, profileID string, params ProfileCompleteParams, opts ...option.RequestOption) (res *APIResponseOfProfileCompletionResult, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -303,6 +303,34 @@ func (r *ProfileService) Complete(ctx context.Context, profileID string, params 
 	path := fmt.Sprintf("v3/profiles/%s/complete", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
+}
+
+// Standard API response envelope for all v3 endpoints
+type APIResponseOfProfileCompletionResult struct {
+	// Response when a profile is already in the completed state and no further action
+	// is taken.
+	Data ProfileCompletionResult `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseOfProfileCompletionResult) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfProfileCompletionResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Standard API response envelope for all v3 endpoints
@@ -332,6 +360,56 @@ func (r *APIResponseOfProfileDetail) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Standard API response envelope for all v3 endpoints
+type APIResponseOfProfilesList struct {
+	// The profiles in the organization.
+	Data ProfilesList `json:"data" api:"nullable"`
+	// Error information
+	Error ErrorDetail `json:"error" api:"nullable"`
+	// Request and response metadata
+	Meta APIMeta `json:"meta"`
+	// Indicates whether the request was successful
+	Success bool `json:"success"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Error       respjson.Field
+		Meta        respjson.Field
+		Success     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r APIResponseOfProfilesList) RawJSON() string { return r.JSON.raw }
+func (r *APIResponseOfProfilesList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Billing contact info returned in profile responses
+type BillingContact struct {
+	Address string `json:"address" api:"nullable"`
+	Email   string `json:"email" api:"nullable"`
+	Name    string `json:"name" api:"nullable"`
+	Phone   string `json:"phone" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Address     respjson.Field
+		Email       respjson.Field
+		Name        respjson.Field
+		Phone       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BillingContact) RawJSON() string { return r.JSON.raw }
+func (r *BillingContact) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Billing contact information for a profile. Required when billing_model is
 // "profile" or "profile_and_organization".
 //
@@ -354,6 +432,53 @@ func (r BillingContactInfoParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BillingContactInfoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BrandBusiness struct {
+	// City
+	City string `json:"city" api:"nullable"`
+	// Country code (e.g., US, CA)
+	Country string `json:"country" api:"nullable"`
+	// Country where the business is registered
+	CountryOfRegistration string `json:"country_of_registration" api:"nullable"`
+	// Business entity type
+	EntityType string `json:"entity_type" api:"nullable"`
+	// Legal business name
+	LegalName string `json:"legal_name" api:"nullable"`
+	// Postal/ZIP code
+	PostalCode string `json:"postal_code" api:"nullable"`
+	// State/province code
+	State string `json:"state" api:"nullable"`
+	// Street address
+	Street string `json:"street" api:"nullable"`
+	// Tax ID/EIN number
+	TaxID string `json:"tax_id" api:"nullable"`
+	// Type of tax ID (e.g., us_ein, ca_bn)
+	TaxIDType string `json:"tax_id_type" api:"nullable"`
+	// Business website URL
+	URL string `json:"url" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		City                  respjson.Field
+		Country               respjson.Field
+		CountryOfRegistration respjson.Field
+		EntityType            respjson.Field
+		LegalName             respjson.Field
+		PostalCode            respjson.Field
+		State                 respjson.Field
+		Street                respjson.Field
+		TaxID                 respjson.Field
+		TaxIDType             respjson.Field
+		URL                   respjson.Field
+		ExtraFields           map[string]respjson.Field
+		raw                   string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BrandBusiness) RawJSON() string { return r.JSON.raw }
+func (r *BrandBusiness) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -381,7 +506,7 @@ type BrandBusinessInfoParam struct {
 	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
 	// Any of "PRIVATE_PROFIT", "PUBLIC_PROFIT", "NON_PROFIT", "SOLE_PROPRIETOR",
 	// "GOVERNMENT".
-	EntityType BrandBusinessInfoEntityType `json:"entityType,omitzero"`
+	EntityType EntityType `json:"entityType,omitzero"`
 	paramObj
 }
 
@@ -393,15 +518,55 @@ func (r *BrandBusinessInfoParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BrandBusinessInfoEntityType string
+type BrandCompliance struct {
+	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
+	// "KEY_ACCOUNT".
+	BrandRelationship TcrBrandRelationship `json:"brand_relationship" api:"nullable"`
+	// List of destination countries for messaging
+	DestinationCountries []DestinationCountry `json:"destination_countries"`
+	// Whether this is a TCR (Campaign Registry) application
+	IsTcrApplication bool `json:"is_tcr_application"`
+	// Additional notes about the business or use case
+	Notes string `json:"notes" api:"nullable"`
+	// Phone number prefix for messaging (e.g., "+1")
+	PhoneNumberPrefix string `json:"phone_number_prefix" api:"nullable"`
+	// Always null. The brand's free-text primary use case is no longer stored: it
+	// reached neither TCR nor any decision, and its column is dropped with no
+	// backfill, because the values were prose and the typed equivalent is the
+	// campaign's MessagingUseCaseUS.
+	//
+	// Retained so existing v3 clients reading primary_use_case keep deserializing.
+	// Unlike the profile sharing flags, which can answer false truthfully, there is no
+	// value to report here — the field is present and empty rather than present and
+	// wrong.
+	//
+	// Deprecated: deprecated
+	PrimaryUseCase string `json:"primary_use_case" api:"nullable"`
+	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
+	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
+	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
+	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
+	// "COMMUNICATION".
+	Vertical TcrVertical `json:"vertical" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BrandRelationship    respjson.Field
+		DestinationCountries respjson.Field
+		IsTcrApplication     respjson.Field
+		Notes                respjson.Field
+		PhoneNumberPrefix    respjson.Field
+		PrimaryUseCase       respjson.Field
+		Vertical             respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
+	} `json:"-"`
+}
 
-const (
-	BrandBusinessInfoEntityTypePrivateProfit  BrandBusinessInfoEntityType = "PRIVATE_PROFIT"
-	BrandBusinessInfoEntityTypePublicProfit   BrandBusinessInfoEntityType = "PUBLIC_PROFIT"
-	BrandBusinessInfoEntityTypeNonProfit      BrandBusinessInfoEntityType = "NON_PROFIT"
-	BrandBusinessInfoEntityTypeSoleProprietor BrandBusinessInfoEntityType = "SOLE_PROPRIETOR"
-	BrandBusinessInfoEntityTypeGovernment     BrandBusinessInfoEntityType = "GOVERNMENT"
-)
+// Returns the unmodified JSON received from the API
+func (r BrandCompliance) RawJSON() string { return r.JSON.raw }
+func (r *BrandCompliance) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Compliance and TCR information for brand registration
 //
@@ -435,6 +600,38 @@ func (r *BrandComplianceInfoParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type BrandContact struct {
+	// Business/brand name
+	BusinessName string `json:"business_name" api:"nullable"`
+	// Contact email address
+	Email string `json:"email" api:"nullable"`
+	// Primary contact name
+	Name string `json:"name"`
+	// Contact phone number in E.164 format
+	Phone string `json:"phone" api:"nullable"`
+	// Contact phone country code (e.g., "1" for US)
+	PhoneCountryCode string `json:"phone_country_code" api:"nullable"`
+	// Contact's role in the business
+	Role string `json:"role" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		BusinessName     respjson.Field
+		Email            respjson.Field
+		Name             respjson.Field
+		Phone            respjson.Field
+		PhoneCountryCode respjson.Field
+		Role             respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BrandContact) RawJSON() string { return r.JSON.raw }
+func (r *BrandContact) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Contact information for brand KYC
 //
 // The property Name is required.
@@ -459,6 +656,69 @@ func (r BrandContactInfoParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BrandContactInfoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Brand response with nested contact, business, and compliance sections — mirrors
+// the request structure.
+type BrandWithKYC struct {
+	// Unique identifier for the brand
+	ID string `json:"id" format:"uuid"`
+	// Business details and address information
+	Business BrandBusiness `json:"business" api:"nullable"`
+	// Compliance and TCR-related information
+	Compliance BrandCompliance `json:"compliance" api:"nullable"`
+	// Contact information for the brand
+	Contact BrandContact `json:"contact" api:"nullable"`
+	// When the brand was created
+	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Deprecated and scheduled for removal. Identifies the Campaign Service Provider
+	// that registered the brand, which is Sent, so the value is the same for every
+	// brand and every account. Nothing on your side can act on it and there is no
+	// replacement. Stop reading it.
+	//
+	// Deprecated: deprecated
+	CspID string `json:"csp_id" api:"nullable"`
+	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
+	IdentityStatus TcrBrandIdentityStatus `json:"identity_status" api:"nullable"`
+	// Whether this brand is inherited from the parent organization
+	IsInherited bool `json:"is_inherited"`
+	// Any of "ACTIVE", "INACTIVE", "SUSPENDED".
+	Status TcrBrandStatus `json:"status" api:"nullable"`
+	// When the brand was submitted to TCR
+	SubmittedAt time.Time `json:"submitted_at" api:"nullable" format:"date-time"`
+	// Whether this brand has been submitted to TCR
+	SubmittedToTcr bool `json:"submitted_to_tcr"`
+	// TCR brand ID (populated after TCR submission)
+	TcrBrandID string `json:"tcr_brand_id" api:"nullable"`
+	// Universal EIN from TCR
+	UniversalEin string `json:"universal_ein" api:"nullable"`
+	// When the brand was last updated
+	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID             respjson.Field
+		Business       respjson.Field
+		Compliance     respjson.Field
+		Contact        respjson.Field
+		CreatedAt      respjson.Field
+		CspID          respjson.Field
+		IdentityStatus respjson.Field
+		IsInherited    respjson.Field
+		Status         respjson.Field
+		SubmittedAt    respjson.Field
+		SubmittedToTcr respjson.Field
+		TcrBrandID     respjson.Field
+		UniversalEin   respjson.Field
+		UpdatedAt      respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BrandWithKYC) RawJSON() string { return r.JSON.raw }
+func (r *BrandWithKYC) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -524,6 +784,16 @@ func (r *DestinationCountryParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type EntityType string
+
+const (
+	EntityTypePrivateProfit  EntityType = "PRIVATE_PROFIT"
+	EntityTypePublicProfit   EntityType = "PUBLIC_PROFIT"
+	EntityTypeNonProfit      EntityType = "NON_PROFIT"
+	EntityTypeSoleProprietor EntityType = "SOLE_PROPRIETOR"
+	EntityTypeGovernment     EntityType = "GOVERNMENT"
+)
+
 // The properties CardNumber, Cvc, Expiry, ZipCode are required.
 type PaymentDetailsParam struct {
 	// Card number (digits only, 13–19 characters)
@@ -542,6 +812,29 @@ func (r PaymentDetailsParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *PaymentDetailsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Response when a profile is already in the completed state and no further action
+// is taken.
+type ProfileCompletionResult struct {
+	// Human-readable message describing the result.
+	Message string `json:"message"`
+	// Current process status of the profile (e.g., "completed", "submitted",
+	// "in_progress").
+	Status string `json:"status"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		Status      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProfileCompletionResult) RawJSON() string { return r.JSON.raw }
+func (r *ProfileCompletionResult) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -564,12 +857,12 @@ type ProfileDetail struct {
 	// Deprecated: deprecated
 	AllowTemplateSharing bool `json:"allow_template_sharing" api:"nullable"`
 	// Billing contact info returned in profile responses
-	BillingContact ProfileDetailBillingContact `json:"billing_contact" api:"nullable"`
+	BillingContact BillingContact `json:"billing_contact" api:"nullable"`
 	// Billing model: profile, organization, or profile_and_organization
 	BillingModel string `json:"billing_model"`
 	// Brand response with nested contact, business, and compliance sections — mirrors
 	// the request structure.
-	Brand ProfileDetailBrand `json:"brand" api:"nullable"`
+	Brand BrandWithKYC `json:"brand" api:"nullable"`
 	// When the profile was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Profile description
@@ -670,223 +963,35 @@ func (r *ProfileDetail) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Billing contact info returned in profile responses
-type ProfileDetailBillingContact struct {
-	Address string `json:"address" api:"nullable"`
-	Email   string `json:"email" api:"nullable"`
-	Name    string `json:"name" api:"nullable"`
-	Phone   string `json:"phone" api:"nullable"`
+// The profiles in the organization.
+type ProfilesList struct {
+	// Pagination metadata for list responses
+	Pagination PaginationMeta `json:"pagination"`
+	// The profiles on this page.
+	Profiles []ProfileDetail `json:"profiles"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Address     respjson.Field
-		Email       respjson.Field
-		Name        respjson.Field
-		Phone       respjson.Field
+		Pagination  respjson.Field
+		Profiles    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r ProfileDetailBillingContact) RawJSON() string { return r.JSON.raw }
-func (r *ProfileDetailBillingContact) UnmarshalJSON(data []byte) error {
+func (r ProfilesList) RawJSON() string { return r.JSON.raw }
+func (r *ProfilesList) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Brand response with nested contact, business, and compliance sections — mirrors
-// the request structure.
-type ProfileDetailBrand struct {
-	// Unique identifier for the brand
-	ID string `json:"id" format:"uuid"`
-	// Business details and address information
-	Business ProfileDetailBrandBusiness `json:"business" api:"nullable"`
-	// Compliance and TCR-related information
-	Compliance ProfileDetailBrandCompliance `json:"compliance" api:"nullable"`
-	// Contact information for the brand
-	Contact ProfileDetailBrandContact `json:"contact" api:"nullable"`
-	// When the brand was created
-	CreatedAt time.Time `json:"created_at" format:"date-time"`
-	// Deprecated and scheduled for removal. Identifies the Campaign Service Provider
-	// that registered the brand, which is Sent, so the value is the same for every
-	// brand and every account. Nothing on your side can act on it and there is no
-	// replacement. Stop reading it.
-	//
-	// Deprecated: deprecated
-	CspID string `json:"csp_id" api:"nullable"`
-	// Any of "SELF_DECLARED", "UNVERIFIED", "VERIFIED", "VETTED_VERIFIED".
-	IdentityStatus string `json:"identity_status" api:"nullable"`
-	// Whether this brand is inherited from the parent organization
-	IsInherited bool `json:"is_inherited"`
-	// Any of "ACTIVE", "INACTIVE", "SUSPENDED".
-	Status string `json:"status" api:"nullable"`
-	// When the brand was submitted to TCR
-	SubmittedAt time.Time `json:"submitted_at" api:"nullable" format:"date-time"`
-	// Whether this brand has been submitted to TCR
-	SubmittedToTcr bool `json:"submitted_to_tcr"`
-	// TCR brand ID (populated after TCR submission)
-	TcrBrandID string `json:"tcr_brand_id" api:"nullable"`
-	// Universal EIN from TCR
-	UniversalEin string `json:"universal_ein" api:"nullable"`
-	// When the brand was last updated
-	UpdatedAt time.Time `json:"updated_at" api:"nullable" format:"date-time"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID             respjson.Field
-		Business       respjson.Field
-		Compliance     respjson.Field
-		Contact        respjson.Field
-		CreatedAt      respjson.Field
-		CspID          respjson.Field
-		IdentityStatus respjson.Field
-		IsInherited    respjson.Field
-		Status         respjson.Field
-		SubmittedAt    respjson.Field
-		SubmittedToTcr respjson.Field
-		TcrBrandID     respjson.Field
-		UniversalEin   respjson.Field
-		UpdatedAt      respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
-	} `json:"-"`
-}
+type TcrBrandIdentityStatus string
 
-// Returns the unmodified JSON received from the API
-func (r ProfileDetailBrand) RawJSON() string { return r.JSON.raw }
-func (r *ProfileDetailBrand) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Business details and address information
-type ProfileDetailBrandBusiness struct {
-	// City
-	City string `json:"city" api:"nullable"`
-	// Country code (e.g., US, CA)
-	Country string `json:"country" api:"nullable"`
-	// Country where the business is registered
-	CountryOfRegistration string `json:"country_of_registration" api:"nullable"`
-	// Business entity type
-	EntityType string `json:"entity_type" api:"nullable"`
-	// Legal business name
-	LegalName string `json:"legal_name" api:"nullable"`
-	// Postal/ZIP code
-	PostalCode string `json:"postal_code" api:"nullable"`
-	// State/province code
-	State string `json:"state" api:"nullable"`
-	// Street address
-	Street string `json:"street" api:"nullable"`
-	// Tax ID/EIN number
-	TaxID string `json:"tax_id" api:"nullable"`
-	// Type of tax ID (e.g., us_ein, ca_bn)
-	TaxIDType string `json:"tax_id_type" api:"nullable"`
-	// Business website URL
-	URL string `json:"url" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		City                  respjson.Field
-		Country               respjson.Field
-		CountryOfRegistration respjson.Field
-		EntityType            respjson.Field
-		LegalName             respjson.Field
-		PostalCode            respjson.Field
-		State                 respjson.Field
-		Street                respjson.Field
-		TaxID                 respjson.Field
-		TaxIDType             respjson.Field
-		URL                   respjson.Field
-		ExtraFields           map[string]respjson.Field
-		raw                   string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileDetailBrandBusiness) RawJSON() string { return r.JSON.raw }
-func (r *ProfileDetailBrandBusiness) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Compliance and TCR-related information
-type ProfileDetailBrandCompliance struct {
-	// Any of "BASIC_ACCOUNT", "MEDIUM_ACCOUNT", "LARGE_ACCOUNT", "SMALL_ACCOUNT",
-	// "KEY_ACCOUNT".
-	BrandRelationship TcrBrandRelationship `json:"brand_relationship" api:"nullable"`
-	// List of destination countries for messaging
-	DestinationCountries []DestinationCountry `json:"destination_countries"`
-	// Whether this is a TCR (Campaign Registry) application
-	IsTcrApplication bool `json:"is_tcr_application"`
-	// Additional notes about the business or use case
-	Notes string `json:"notes" api:"nullable"`
-	// Phone number prefix for messaging (e.g., "+1")
-	PhoneNumberPrefix string `json:"phone_number_prefix" api:"nullable"`
-	// Always null. The brand's free-text primary use case is no longer stored: it
-	// reached neither TCR nor any decision, and its column is dropped with no
-	// backfill, because the values were prose and the typed equivalent is the
-	// campaign's MessagingUseCaseUS.
-	//
-	// Retained so existing v3 clients reading primary_use_case keep deserializing.
-	// Unlike the profile sharing flags, which can answer false truthfully, there is no
-	// value to report here — the field is present and empty rather than present and
-	// wrong.
-	//
-	// Deprecated: deprecated
-	PrimaryUseCase string `json:"primary_use_case" api:"nullable"`
-	// Any of "PROFESSIONAL", "REAL_ESTATE", "HEALTHCARE", "HUMAN_RESOURCES", "ENERGY",
-	// "ENTERTAINMENT", "RETAIL", "TRANSPORTATION", "AGRICULTURE", "INSURANCE",
-	// "POSTAL", "EDUCATION", "HOSPITALITY", "FINANCIAL", "POLITICAL", "GAMBLING",
-	// "LEGAL", "CONSTRUCTION", "NGO", "MANUFACTURING", "GOVERNMENT", "TECHNOLOGY",
-	// "COMMUNICATION".
-	Vertical TcrVertical `json:"vertical" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		BrandRelationship    respjson.Field
-		DestinationCountries respjson.Field
-		IsTcrApplication     respjson.Field
-		Notes                respjson.Field
-		PhoneNumberPrefix    respjson.Field
-		PrimaryUseCase       respjson.Field
-		Vertical             respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileDetailBrandCompliance) RawJSON() string { return r.JSON.raw }
-func (r *ProfileDetailBrandCompliance) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Contact information for the brand
-type ProfileDetailBrandContact struct {
-	// Business/brand name
-	BusinessName string `json:"business_name" api:"nullable"`
-	// Contact email address
-	Email string `json:"email" api:"nullable"`
-	// Primary contact name
-	Name string `json:"name"`
-	// Contact phone number in E.164 format
-	Phone string `json:"phone" api:"nullable"`
-	// Contact phone country code (e.g., "1" for US)
-	PhoneCountryCode string `json:"phone_country_code" api:"nullable"`
-	// Contact's role in the business
-	Role string `json:"role" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		BusinessName     respjson.Field
-		Email            respjson.Field
-		Name             respjson.Field
-		Phone            respjson.Field
-		PhoneCountryCode respjson.Field
-		Role             respjson.Field
-		ExtraFields      map[string]respjson.Field
-		raw              string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileDetailBrandContact) RawJSON() string { return r.JSON.raw }
-func (r *ProfileDetailBrandContact) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
+const (
+	TcrBrandIdentityStatusSelfDeclared   TcrBrandIdentityStatus = "SELF_DECLARED"
+	TcrBrandIdentityStatusUnverified     TcrBrandIdentityStatus = "UNVERIFIED"
+	TcrBrandIdentityStatusVerified       TcrBrandIdentityStatus = "VERIFIED"
+	TcrBrandIdentityStatusVettedVerified TcrBrandIdentityStatus = "VETTED_VERIFIED"
+)
 
 type TcrBrandRelationship string
 
@@ -896,6 +1001,22 @@ const (
 	TcrBrandRelationshipLargeAccount  TcrBrandRelationship = "LARGE_ACCOUNT"
 	TcrBrandRelationshipSmallAccount  TcrBrandRelationship = "SMALL_ACCOUNT"
 	TcrBrandRelationshipKeyAccount    TcrBrandRelationship = "KEY_ACCOUNT"
+)
+
+type TcrBrandStatus string
+
+const (
+	TcrBrandStatusActive    TcrBrandStatus = "ACTIVE"
+	TcrBrandStatusInactive  TcrBrandStatus = "INACTIVE"
+	TcrBrandStatusSuspended TcrBrandStatus = "SUSPENDED"
+)
+
+type TcrCampaignStatus string
+
+const (
+	TcrCampaignStatusSentCreated TcrCampaignStatus = "SENT_CREATED"
+	TcrCampaignStatusActive      TcrCampaignStatus = "ACTIVE"
+	TcrCampaignStatusExpired     TcrCampaignStatus = "EXPIRED"
 )
 
 type TcrVertical string
@@ -925,105 +1046,6 @@ const (
 	TcrVerticalTechnology     TcrVertical = "TECHNOLOGY"
 	TcrVerticalCommunication  TcrVertical = "COMMUNICATION"
 )
-
-// Standard API response envelope for all v3 endpoints
-type ProfileListResponse struct {
-	// The profiles in the organization.
-	Data ProfileListResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileListResponse) RawJSON() string { return r.JSON.raw }
-func (r *ProfileListResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The profiles in the organization.
-type ProfileListResponseData struct {
-	// Pagination metadata for list responses
-	Pagination PaginationMeta `json:"pagination"`
-	// The profiles on this page.
-	Profiles []ProfileDetail `json:"profiles"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Pagination  respjson.Field
-		Profiles    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileListResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ProfileListResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Standard API response envelope for all v3 endpoints
-type ProfileCompleteResponse struct {
-	// Response when a profile is already in the completed state and no further action
-	// is taken.
-	Data ProfileCompleteResponseData `json:"data" api:"nullable"`
-	// Error information
-	Error ErrorDetail `json:"error" api:"nullable"`
-	// Request and response metadata
-	Meta APIMeta `json:"meta"`
-	// Indicates whether the request was successful
-	Success bool `json:"success"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		Error       respjson.Field
-		Meta        respjson.Field
-		Success     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileCompleteResponse) RawJSON() string { return r.JSON.raw }
-func (r *ProfileCompleteResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Response when a profile is already in the completed state and no further action
-// is taken.
-type ProfileCompleteResponseData struct {
-	// Human-readable message describing the result.
-	Message string `json:"message"`
-	// Current process status of the profile (e.g., "completed", "submitted",
-	// "in_progress").
-	Status string `json:"status"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Message     respjson.Field
-		Status      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ProfileCompleteResponseData) RawJSON() string { return r.JSON.raw }
-func (r *ProfileCompleteResponseData) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
 
 type ProfileNewParams struct {
 	// Deprecated. Accepted and ignored. Contact and template sharing between sender

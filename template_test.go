@@ -33,7 +33,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 		CreationSource:  param.Null[string](),
 		Definition: sentdm.TemplateDefinitionParam{
 			Body: sentdm.TemplateBodyParam{
-				Mms: sentdm.TemplateBodyMmsParam{
+				Mms: sentdm.TemplateMmsBodyContentParam{
 					TemplateBodyContentParam: sentdm.TemplateBodyContentParam{
 						Template: "template",
 						Type:     sentdm.String("type"),
@@ -52,7 +52,7 @@ func TestTemplateNewWithOptionalParams(t *testing.T) {
 							ID:   sentdm.Int(0),
 						}},
 					},
-					Media: []sentdm.TemplateBodyMmsMediaParam{{
+					Media: []sentdm.TemplateMediaItemParam{{
 						MediaType: sentdm.String("mediaType"),
 						URL:       sentdm.String("url"),
 					}},
@@ -291,7 +291,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 			Category: sentdm.String("MARKETING"),
 			Definition: sentdm.TemplateDefinitionParam{
 				Body: sentdm.TemplateBodyParam{
-					Mms: sentdm.TemplateBodyMmsParam{
+					Mms: sentdm.TemplateMmsBodyContentParam{
 						TemplateBodyContentParam: sentdm.TemplateBodyContentParam{
 							Template: "template",
 							Type:     sentdm.String("type"),
@@ -310,7 +310,7 @@ func TestTemplateUpdateWithOptionalParams(t *testing.T) {
 								ID:   sentdm.Int(0),
 							}},
 						},
-						Media: []sentdm.TemplateBodyMmsMediaParam{{
+						Media: []sentdm.TemplateMediaItemParam{{
 							MediaType: sentdm.String("mediaType"),
 							URL:       sentdm.String("url"),
 						}},

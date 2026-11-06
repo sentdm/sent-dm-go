@@ -1027,3 +1027,147 @@ func (r *VoiceAgentsPageAutoPager[T]) Err() error {
 func (r *VoiceAgentsPageAutoPager[T]) Index() int {
 	return r.run
 }
+
+type SenderProfilesPageData[T any] struct {
+	Pagination     SenderProfilesPageDataPagination `json:"pagination"`
+	SenderProfiles []T                              `json:"sender_profiles"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Pagination     respjson.Field
+		SenderProfiles respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SenderProfilesPageData[T]) RawJSON() string { return r.JSON.raw }
+func (r *SenderProfilesPageData[T]) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SenderProfilesPageDataPagination struct {
+	HasMore    bool  `json:"has_more"`
+	Page       int64 `json:"page"`
+	PageSize   int64 `json:"page_size"`
+	TotalCount int64 `json:"total_count"`
+	TotalPages int64 `json:"total_pages"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		HasMore     respjson.Field
+		Page        respjson.Field
+		PageSize    respjson.Field
+		TotalCount  respjson.Field
+		TotalPages  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SenderProfilesPageDataPagination) RawJSON() string { return r.JSON.raw }
+func (r *SenderProfilesPageDataPagination) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SenderProfilesPage[T any] struct {
+	Data SenderProfilesPageData[T] `json:"data"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+	cfg *requestconfig.RequestConfig
+	res *http.Response
+}
+
+// Returns the unmodified JSON received from the API
+func (r SenderProfilesPage[T]) RawJSON() string { return r.JSON.raw }
+func (r *SenderProfilesPage[T]) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// GetNextPage returns the next page as defined by this pagination style. When
+// there is no next page, this function will return a 'nil' for the page value, but
+// will not return an error
+func (r *SenderProfilesPage[T]) GetNextPage() (res *SenderProfilesPage[T], err error) {
+	if len(r.Data.SenderProfiles) == 0 {
+		return nil, nil
+	}
+
+	if r.Data.Pagination.JSON.HasMore.Valid() && r.Data.Pagination.HasMore == false {
+		return nil, nil
+	}
+	u := r.cfg.Request.URL
+	currentPage, err := strconv.ParseInt(u.Query().Get("page"), 10, 64)
+	if err != nil {
+		currentPage = 1
+	}
+	cfg := r.cfg.Clone(context.Background())
+	query := cfg.Request.URL.Query()
+	query.Set("page", fmt.Sprintf("%d", currentPage+1))
+	cfg.Request.URL.RawQuery = query.Encode()
+	var raw *http.Response
+	cfg.ResponseInto = &raw
+	cfg.ResponseBodyInto = &res
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+func (r *SenderProfilesPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
+	if r == nil {
+		r = &SenderProfilesPage[T]{}
+	}
+	r.cfg = cfg
+	r.res = res
+}
+
+type SenderProfilesPageAutoPager[T any] struct {
+	page *SenderProfilesPage[T]
+	cur  T
+	idx  int
+	run  int
+	err  error
+	paramObj
+}
+
+func NewSenderProfilesPageAutoPager[T any](page *SenderProfilesPage[T], err error) *SenderProfilesPageAutoPager[T] {
+	return &SenderProfilesPageAutoPager[T]{
+		page: page,
+		err:  err,
+	}
+}
+
+func (r *SenderProfilesPageAutoPager[T]) Next() bool {
+	if r.page == nil || len(r.page.Data.SenderProfiles) == 0 {
+		return false
+	}
+	if r.idx >= len(r.page.Data.SenderProfiles) {
+		r.idx = 0
+		r.page, r.err = r.page.GetNextPage()
+		if r.err != nil || r.page == nil || len(r.page.Data.SenderProfiles) == 0 {
+			return false
+		}
+	}
+	r.cur = r.page.Data.SenderProfiles[r.idx]
+	r.run += 1
+	r.idx += 1
+	return true
+}
+
+func (r *SenderProfilesPageAutoPager[T]) Current() T {
+	return r.cur
+}
+
+func (r *SenderProfilesPageAutoPager[T]) Err() error {
+	return r.err
+}
+
+func (r *SenderProfilesPageAutoPager[T]) Index() int {
+	return r.run
+}

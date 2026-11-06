@@ -236,9 +236,9 @@ type BrandCampaign struct {
 	OptoutMessage            string `json:"optoutMessage" api:"nullable"`
 	PrivacyPolicyLink        string `json:"privacyPolicyLink" api:"nullable"`
 	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
-	Status         BrandCampaignStatus `json:"status" api:"nullable"`
-	SubmittedAt    time.Time           `json:"submittedAt" api:"nullable" format:"date-time"`
-	SubmittedToTcr bool                `json:"submittedToTCR"`
+	Status         TcrCampaignStatus `json:"status" api:"nullable"`
+	SubmittedAt    time.Time         `json:"submittedAt" api:"nullable" format:"date-time"`
+	SubmittedToTcr bool              `json:"submittedToTCR"`
 	// The Campaign Registry identifier, once the campaign has been accepted.
 	TcrCampaignID string `json:"tcrCampaignId" api:"nullable"`
 	// Surfaced so customers can see why a submission did not reach the registry.
@@ -294,14 +294,6 @@ func (r BrandCampaign) RawJSON() string { return r.JSON.raw }
 func (r *BrandCampaign) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-type BrandCampaignStatus string
-
-const (
-	BrandCampaignStatusSentCreated BrandCampaignStatus = "SENT_CREATED"
-	BrandCampaignStatusActive      BrandCampaignStatus = "ACTIVE"
-	BrandCampaignStatusExpired     BrandCampaignStatus = "EXPIRED"
-)
 
 // Campaign data for create or update operation
 //
