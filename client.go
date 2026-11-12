@@ -65,8 +65,8 @@ type Client struct {
 	// instead.
 	//
 	// **A sender is the exception.** A brand and a campaign can be inherited; a number
-	// cannot. A profile either has a sender of its own or terminates through your
-	// shared routes.
+	// cannot. A profile either has a sender of its own or reaches only the countries
+	// Sent runs a shared route for, and the US is not one of them.
 	//
 	// To act for a profile on any other resource, send `x-profile-id` with your
 	// organization key rather than looking for a parallel set of endpoints.

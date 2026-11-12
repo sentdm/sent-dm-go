@@ -331,9 +331,10 @@ type Call struct {
 	// When the call ended (UTC). Null while the call is live
 	EndedAt time.Time `json:"ended_at" api:"nullable" format:"date-time"`
 	// Why the call did not complete: callback_timeout, invalid_answer,
-	// insufficient_balance, destination_blocked, callback_not_configured, rejected,
-	// no_answer, or for an agent call agent_busy or agent_unreachable. Null while the
-	// call is live, when it completed, and when it failed without a recorded reason
+	// insufficient_balance, payment_method_missing, destination_blocked,
+	// callback_not_configured, rejected, no_answer, or for an agent call agent_busy or
+	// agent_unreachable. Null while the call is live, when it completed, and when it
+	// failed without a recorded reason
 	FailureReason string `json:"failure_reason" api:"nullable"`
 	// One end of a call
 	From CallParty `json:"from"`
