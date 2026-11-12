@@ -39,9 +39,9 @@ func TestChannelSMSTenDlcAddCampaignWithOptionalParams(t *testing.T) {
 		PrivacyPolicyLink:      sentdm.String("privacy_policy_link"),
 		Sandbox:                sentdm.Bool(false),
 		TermsAndConditionsLink: sentdm.String("terms_and_conditions_link"),
-		UseCases: []sentdm.ChannelSMSTenDlcAddCampaignParamsUseCase{{
+		UseCases: []sentdm.TenDlcCampaignUseCaseParam{{
 			SampleMessages: []any{map[string]any{}},
-			UseCase:        "MARKETING",
+			UseCase:        sentdm.TenDlcCampaignUseCaseUseCaseMarketing,
 		}},
 		Volume:     sentdm.String("volume"),
 		XProfileID: sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
@@ -140,9 +140,9 @@ func TestChannelSMSTenDlcUpdateCampaignWithOptionalParams(t *testing.T) {
 			PrivacyPolicyLink:      sentdm.String("privacy_policy_link"),
 			Sandbox:                sentdm.Bool(false),
 			TermsAndConditionsLink: sentdm.String("terms_and_conditions_link"),
-			UseCases: []sentdm.ChannelSMSTenDlcUpdateCampaignParamsUseCase{{
+			UseCases: []sentdm.TenDlcCampaignUseCaseParam{{
 				SampleMessages: []any{map[string]any{}},
-				UseCase:        "MARKETING",
+				UseCase:        sentdm.TenDlcCampaignUseCaseUseCaseMarketing,
 			}},
 			Volume:         sentdm.String("volume"),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),

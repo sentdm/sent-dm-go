@@ -413,6 +413,10 @@ Methods:
 
 ### TenDlc
 
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TenDlcCampaignUseCaseParam">TenDlcCampaignUseCaseParam</a>
+
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSuppliedCompliance">APIResponseOfSuppliedCompliance</a>
