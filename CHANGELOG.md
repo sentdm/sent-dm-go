@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.52.0](https://github.com/sentdm/sent-dm-go/compare/v0.51.0...v0.52.0) (2026-11-12)
+
+
+### Features
+
+* **api:** methods for the US 10DLC campaigns, numbers and market compliance ([dfc0367](https://github.com/sentdm/sent-dm-go/commit/dfc0367723f40db7a90cee6d24c3a793ef769dc5))
+
 ## [0.51.0](https://github.com/sentdm/sent-dm-go/compare/v0.50.0...v0.51.0) (2026-11-12)
 
 
