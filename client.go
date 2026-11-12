@@ -53,6 +53,24 @@ type Client struct {
 	//
 	// New integrations should not start here.
 	Profiles ProfileService
+	// Your customers, each sending as itself.
+	//
+	// A sender profile is a tenant of yours: it has its own API key, its own balance,
+	// and can have its own identity and senders — so your customers send under their
+	// own brand and never see Sent. Depth is one; a profile cannot create profiles.
+	//
+	// **Everything is inherited unless the profile owns it.** `{ "name": "…" }` alone
+	// gives you a usable profile immediately, running on your identity, your inbox and
+	// your billing. Supply a capability's fields and the profile owns that one
+	// instead.
+	//
+	// **A sender is the exception.** A brand and a campaign can be inherited; a number
+	// cannot. A profile either has a sender of its own or reaches only the countries
+	// Sent runs a shared route for, and the US is not one of them.
+	//
+	// To act for a profile on any other resource, send `x-profile-id` with your
+	// organization key rather than looking for a parallel set of endpoints.
+	SenderProfiles SenderProfileService
 	// What a phone number actually is, before you send to it.
 	//
 	// A lookup returns the number's country, line type and carrier, which is what
@@ -103,7 +121,49 @@ type Client struct {
 	// webhooks.
 	Conversations ConversationService
 	Voice         VoiceService
-	Channels      ChannelService
+	// The senders you send from, one per channel.
+	//
+	// **SMS is a list of markets**, each keyed by `(country, number_type)` — a
+	// customer can hold `us/10dlc` and `gb/alphanumeric` at once, so a market is
+	// addressed by the pair rather than by country alone. **WhatsApp and RCS are
+	// single**: a customer has one business account and one agent. **Voice is per
+	// number**: each number you hold can carry phone calls on its own
+	// (`POST /v3/channels/voice`), each with the callback URL Sent asks what to do
+	// with its calls, one of them is the default line for calls placed from your app,
+	// and voice tokens are minted with `POST /v3/voice/tokens`. Read your voice
+	// numbers with `GET /v3/channels/voice` and change one with
+	// `PATCH /v3/channels/voice/{number}`.
+	//
+	// ## Compliance lives on the market
+	//
+	// Adding a market records everything that market registers with, in its
+	// `compliance` object. Only **US `TEN_DLC`** registers with a regime — The
+	// Campaign Registry — and it is the only market whose compliance carries `brand`
+	// and `campaign`. Everywhere else compliance is documents, and many markets ask
+	// for none at all.
+	//
+	// `GET` and `PATCH` on a market return and accept the same shape, so what comes
+	// back can be sent back: an omitted key is left alone, and a key reported in
+	// `requirements` is the path into the body that clears it.
+	//
+	// Call `GET /v3/compliance/requirements` first — it answers what a market demands
+	// before you hold it, with a body you can fill in and post.
+	Channels ChannelService
+	// What a market demands, before you have it.
+	//
+	// Requirements vary enormously and change without notice. US `TEN_DLC` registers a
+	// brand and a campaign with The Campaign Registry and asks a substantial set of
+	// questions; an alphanumeric sender pre-registers with documents in one country
+	// and needs nothing in another.
+	//
+	// This is the authoritative answer for whichever market you ask about, and it is
+	// generated from the same declaration that validates the calls themselves — so it
+	// cannot drift from what is actually enforced. The response includes the request
+	// body to send, with every key that market wants already present and blank.
+	//
+	// What you supplied, as opposed to what is asked of you, is reported on the market
+	// under **Channels**.
+	Compliance ComplianceService
 	// Who the current key is.
 	//
 	// `GET /v3/me` answers with the account the key authenticates as, which is the
@@ -147,12 +207,14 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Users = NewUserService(opts...)
 	r.Templates = NewTemplateService(opts...)
 	r.Profiles = NewProfileService(opts...)
+	r.SenderProfiles = NewSenderProfileService(opts...)
 	r.Numbers = NewNumberService(opts...)
 	r.Messages = NewMessageService(opts...)
 	r.Contacts = NewContactService(opts...)
 	r.Conversations = NewConversationService(opts...)
 	r.Voice = NewVoiceService(opts...)
 	r.Channels = NewChannelService(opts...)
+	r.Compliance = NewComplianceService(opts...)
 	r.Me = NewMeService(opts...)
 
 	return

@@ -28,7 +28,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/sentdm/sent-dm-go@v0.49.0'
+go get -u 'github.com/sentdm/sent-dm-go@v0.50.0'
 ```
 
 <!-- x-release-please-end -->
@@ -58,7 +58,7 @@ func main() {
 	)
 	messageSendResponse, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 		Channel: []string{"sms", "whatsapp"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -335,7 +335,7 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 ```go
 _, err := client.Messages.Send(context.TODO(), sentdm.MessageSendParams{
 	Channel: []string{"sms"},
-	Template: sentdm.MessageSendParamsTemplate{
+	Template: sentdm.TemplateRefParam{
 		ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 		Name: sentdm.String("order_confirmation"),
 		Parameters: map[string]string{
@@ -373,7 +373,7 @@ client.Messages.Send(
 	ctx,
 	sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -420,7 +420,7 @@ client.Messages.Send(
 	context.TODO(),
 	sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{
@@ -446,7 +446,7 @@ messageSendResponse, err := client.Messages.Send(
 	context.TODO(),
 	sentdm.MessageSendParams{
 		Channel: []string{"sms"},
-		Template: sentdm.MessageSendParamsTemplate{
+		Template: sentdm.TemplateRefParam{
 			ID:   sentdm.String("7ba7b820-9dad-11d1-80b4-00c04fd430c8"),
 			Name: sentdm.String("order_confirmation"),
 			Parameters: map[string]string{

@@ -111,7 +111,10 @@ func (r *ProfileCampaignService) Update(ctx context.Context, campaignID string, 
 // explicitly.
 //
 // Retrieves all campaigns linked to the profile's brand, including use cases and
-// sample messages. Returns inherited campaigns if inherit_tcr_campaign=true.
+// sample messages. A profile with inherit_tcr_campaign=true gets its
+// organization's campaigns and, beside them, any campaign of its own (added with
+// POST /v3/channels/sms/compliances/US/TEN_DLC/campaigns); `isInherited` says
+// which is which.
 //
 // Deprecated: deprecated
 func (r *ProfileCampaignService) List(ctx context.Context, profileID string, query ProfileCampaignListParams, opts ...option.RequestOption) (res *APIResponseOfListOfBrandCampaign, err error) {
@@ -228,17 +231,21 @@ type BrandCampaign struct {
 	HasSubmissionTransaction bool   `json:"hasSubmissionTransaction"`
 	HelpKeywords             string `json:"helpKeywords" api:"nullable"`
 	HelpMessage              string `json:"helpMessage" api:"nullable"`
-	MessageFlow              string `json:"messageFlow" api:"nullable"`
-	Name                     string `json:"name"`
-	OptinKeywords            string `json:"optinKeywords" api:"nullable"`
-	OptinMessage             string `json:"optinMessage" api:"nullable"`
-	OptoutKeywords           string `json:"optoutKeywords" api:"nullable"`
-	OptoutMessage            string `json:"optoutMessage" api:"nullable"`
-	PrivacyPolicyLink        string `json:"privacyPolicyLink" api:"nullable"`
+	// Whether the campaign is the organization's, which the profile runs on, rather
+	// than one of the profile's own. A profile running on its organization's campaign
+	// can hold campaigns of its own beside it, and the list returns both.
+	IsInherited       bool   `json:"isInherited"`
+	MessageFlow       string `json:"messageFlow" api:"nullable"`
+	Name              string `json:"name"`
+	OptinKeywords     string `json:"optinKeywords" api:"nullable"`
+	OptinMessage      string `json:"optinMessage" api:"nullable"`
+	OptoutKeywords    string `json:"optoutKeywords" api:"nullable"`
+	OptoutMessage     string `json:"optoutMessage" api:"nullable"`
+	PrivacyPolicyLink string `json:"privacyPolicyLink" api:"nullable"`
 	// Any of "SENT_CREATED", "ACTIVE", "EXPIRED".
-	Status         BrandCampaignStatus `json:"status" api:"nullable"`
-	SubmittedAt    time.Time           `json:"submittedAt" api:"nullable" format:"date-time"`
-	SubmittedToTcr bool                `json:"submittedToTCR"`
+	Status         TcrCampaignStatus `json:"status" api:"nullable"`
+	SubmittedAt    time.Time         `json:"submittedAt" api:"nullable" format:"date-time"`
+	SubmittedToTcr bool              `json:"submittedToTCR"`
 	// The Campaign Registry identifier, once the campaign has been accepted.
 	TcrCampaignID string `json:"tcrCampaignId" api:"nullable"`
 	// Surfaced so customers can see why a submission did not reach the registry.
@@ -267,6 +274,7 @@ type BrandCampaign struct {
 		HasSubmissionTransaction respjson.Field
 		HelpKeywords             respjson.Field
 		HelpMessage              respjson.Field
+		IsInherited              respjson.Field
 		MessageFlow              respjson.Field
 		Name                     respjson.Field
 		OptinKeywords            respjson.Field
@@ -294,14 +302,6 @@ func (r BrandCampaign) RawJSON() string { return r.JSON.raw }
 func (r *BrandCampaign) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-type BrandCampaignStatus string
-
-const (
-	BrandCampaignStatusSentCreated BrandCampaignStatus = "SENT_CREATED"
-	BrandCampaignStatusActive      BrandCampaignStatus = "ACTIVE"
-	BrandCampaignStatusExpired     BrandCampaignStatus = "EXPIRED"
-)
 
 // Campaign data for create or update operation
 //
