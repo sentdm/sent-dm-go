@@ -118,11 +118,11 @@ func (r *VoiceCallParticipantService) List(ctx context.Context, id string, query
 // conference room, and answers with the participant's own call record. The
 // participant is a call of their own: it has its own id, can be looked up and hung
 // up, and is billed and reported through call.completed and call.failed like any
-// other call. Every participant needs a positive balance. A phone participant is
-// called from caller_id, which must be one of your numbers, or from the call's
-// owning number when omitted, and needs a destination you may call. Only a call
-// your answer connected to a conference can take participants: a call connected to
-// a user or a number answers 409.
+// other call. Every participant needs a payment method on file and a positive
+// balance. A phone participant is called from caller_id, which must be one of your
+// numbers, or from the call's owning number when omitted, and needs a destination
+// you may call. Only a call your answer connected to a conference can take
+// participants: a call connected to a user or a number answers 409.
 func (r *VoiceCallParticipantService) Add(ctx context.Context, id string, params VoiceCallParticipantAddParams, opts ...option.RequestOption) (res *APIResponseOfCall, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
