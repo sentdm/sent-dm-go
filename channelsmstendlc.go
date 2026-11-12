@@ -103,7 +103,7 @@ func NewChannelSMSTenDlcService(opts ...option.RequestOption) (r ChannelSMSTenDl
 // with `202`.
 func (r *ChannelSMSTenDlcService) AddCampaign(ctx context.Context, params ChannelSMSTenDlcAddCampaignParams, opts ...option.RequestOption) (res *APIResponseOfSMSMarket, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
 	}
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
@@ -138,7 +138,7 @@ func (r *ChannelSMSTenDlcService) AddCampaign(ctx context.Context, params Channe
 // with `202`.
 func (r *ChannelSMSTenDlcService) AddNumbers(ctx context.Context, params ChannelSMSTenDlcAddNumbersParams, opts ...option.RequestOption) (res *APIResponseOfSMSMarket, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
 	}
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
@@ -256,13 +256,56 @@ func (r *APIResponseOfSuppliedCompliance) UnmarshalJSON(data []byte) error {
 }
 
 type ChannelSMSTenDlcAddCampaignParams struct {
-	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// The compliance values a market registers with. `brand` and `campaign` apply to
-	// US `TEN_DLC`; other markets fill this map with the document keys their own
-	// requirements name.
-	Compliance MarketComplianceParam `json:"compliance,omitzero"`
+	IdempotencyKey string `header:"Idempotency-Key" api:"required" json:"-"`
+	// What this programme sends. TCR description: what recipients will get and why, in
+	// a sentence. The only one of these TCR takes verbatim as a description of the
+	// programme, which is why it is asked for rather than derived from the customer's
+	// name. Required when `compliance.campaign.inherit != true`.
+	Description param.Opt[string] `json:"description,omitzero"`
+	// Help keywords. TCR helpKeywords, comma separated, e.g. HELP,INFO. Required when
+	// `compliance.campaign.inherit != true`.
+	HelpKeywords param.Opt[string] `json:"help_keywords,omitzero" format:"csv_keywords"`
+	// Help reply. TCR helpMessage. Its presence is what sets subscriberHelp. Required
+	// when `compliance.campaign.inherit != true`.
+	HelpMessage param.Opt[string] `json:"help_message,omitzero"`
+	// Consent narrative. TCR messageFlow: how recipients opt in, in prose. Under 40
+	// characters is refused, and carriers reject vague descriptions — say where opt-in
+	// happens, that the box is unchecked by default, and that consent is not a
+	// condition of purchase. Required when `compliance.campaign.inherit != true`.
+	MessageFlow param.Opt[string] `json:"message_flow,omitzero"`
+	// Opt-in keywords. TCR optinKeywords, comma separated, e.g. START,YES. Required
+	// when `compliance.campaign.inherit != true`.
+	OptInKeywords param.Opt[string] `json:"opt_in_keywords,omitzero" format:"csv_keywords"`
+	// Opt-in confirmation. TCR optinMessage. Should state message frequency and that
+	// rates may apply. Its presence is what sets subscriberOptin. Required when
+	// `compliance.campaign.inherit != true`.
+	OptInMessage param.Opt[string] `json:"opt_in_message,omitzero"`
+	// Opt-out keywords. TCR optoutKeywords, comma separated. STOP, END, CANCEL,
+	// UNSUBSCRIBE and QUIT are honoured regardless of what is declared. Required when
+	// `compliance.campaign.inherit != true`.
+	OptOutKeywords param.Opt[string] `json:"opt_out_keywords,omitzero" format:"csv_keywords"`
+	// Opt-out confirmation. TCR optoutMessage. Its presence is what sets
+	// subscriberOptout. Required when `compliance.campaign.inherit != true`.
+	OptOutMessage param.Opt[string] `json:"opt_out_message,omitzero"`
+	// Privacy policy URL. TCR privacyPolicyLink. Required when
+	// `compliance.campaign.inherit != true`.
+	PrivacyPolicyLink param.Opt[string] `json:"privacy_policy_link,omitzero" format:"url"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
+	// Terms and conditions URL. TCR termsAndConditionsLink. Required when
+	// `compliance.campaign.inherit != true`.
+	TermsAndConditionsLink param.Opt[string] `json:"terms_and_conditions_link,omitzero" format:"url"`
+	// Expected monthly volume. Decides how the campaign registers and which fee tier
+	// applies: below the low-volume threshold it registers as LOW_VOLUME with
+	// sub-use-cases, above it as a single use case or MIXED. Omitting it registers the
+	// campaign at the higher-fee standard tier.
+	Volume     param.Opt[string] `json:"volume,omitzero"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	// Use cases. What the campaign sends, and an example of each. One to five entries;
+	// how they register is decided by volume, never declared. Required when
+	// `compliance.campaign.inherit != true`.
+	UseCases []ChannelSMSTenDlcAddCampaignParamsUseCase `json:"use_cases,omitzero"`
 	paramObj
 }
 
@@ -274,6 +317,35 @@ func (r *ChannelSMSTenDlcAddCampaignParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties SampleMessages, UseCase are required.
+type ChannelSMSTenDlcAddCampaignParamsUseCase struct {
+	// Sample messages. TCR sample1..sample5 for this use case. One to five, each
+	// carrying the brand name and an opt-out instruction.
+	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
+	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
+	// decides those.
+	//
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
+	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
+	UseCase string `json:"use_case,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ChannelSMSTenDlcAddCampaignParamsUseCase) MarshalJSON() (data []byte, err error) {
+	type shadow ChannelSMSTenDlcAddCampaignParamsUseCase
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChannelSMSTenDlcAddCampaignParamsUseCase) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChannelSMSTenDlcAddCampaignParamsUseCase](
+		"use_case", "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT", "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	)
+}
+
 type ChannelSMSTenDlcAddNumbersParams struct {
 	// The campaign to add the numbers to, as compliance.campaigns[].id reports it.
 	// Required.
@@ -283,12 +355,12 @@ type ChannelSMSTenDlcAddNumbersParams struct {
 	// area_code means any area code. Required.
 	//
 	// Added to what the campaign already asks for, never replacing it.
-	Numbers []SMSNumberRequestParam `json:"numbers,omitzero" api:"required"`
+	Numbers        []SMSNumberRequestParam `json:"numbers,omitzero" api:"required"`
+	IdempotencyKey string                  `header:"Idempotency-Key" api:"required" json:"-"`
 	// Sandbox flag - when true, the operation is simulated without side effects Useful
 	// for testing integrations without actual execution
-	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	Sandbox    param.Opt[bool]   `json:"sandbox,omitzero"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -306,13 +378,56 @@ type ChannelSMSTenDlcGetComplianceParams struct {
 }
 
 type ChannelSMSTenDlcUpdateCampaignParams struct {
-	Sandbox        param.Opt[bool]   `json:"sandbox,omitzero"`
+	// What this programme sends. TCR description: what recipients will get and why, in
+	// a sentence. The only one of these TCR takes verbatim as a description of the
+	// programme, which is why it is asked for rather than derived from the customer's
+	// name. Required when `compliance.campaign.inherit != true`.
+	Description param.Opt[string] `json:"description,omitzero"`
+	// Help keywords. TCR helpKeywords, comma separated, e.g. HELP,INFO. Required when
+	// `compliance.campaign.inherit != true`.
+	HelpKeywords param.Opt[string] `json:"help_keywords,omitzero" format:"csv_keywords"`
+	// Help reply. TCR helpMessage. Its presence is what sets subscriberHelp. Required
+	// when `compliance.campaign.inherit != true`.
+	HelpMessage param.Opt[string] `json:"help_message,omitzero"`
+	// Consent narrative. TCR messageFlow: how recipients opt in, in prose. Under 40
+	// characters is refused, and carriers reject vague descriptions — say where opt-in
+	// happens, that the box is unchecked by default, and that consent is not a
+	// condition of purchase. Required when `compliance.campaign.inherit != true`.
+	MessageFlow param.Opt[string] `json:"message_flow,omitzero"`
+	// Opt-in keywords. TCR optinKeywords, comma separated, e.g. START,YES. Required
+	// when `compliance.campaign.inherit != true`.
+	OptInKeywords param.Opt[string] `json:"opt_in_keywords,omitzero" format:"csv_keywords"`
+	// Opt-in confirmation. TCR optinMessage. Should state message frequency and that
+	// rates may apply. Its presence is what sets subscriberOptin. Required when
+	// `compliance.campaign.inherit != true`.
+	OptInMessage param.Opt[string] `json:"opt_in_message,omitzero"`
+	// Opt-out keywords. TCR optoutKeywords, comma separated. STOP, END, CANCEL,
+	// UNSUBSCRIBE and QUIT are honoured regardless of what is declared. Required when
+	// `compliance.campaign.inherit != true`.
+	OptOutKeywords param.Opt[string] `json:"opt_out_keywords,omitzero" format:"csv_keywords"`
+	// Opt-out confirmation. TCR optoutMessage. Its presence is what sets
+	// subscriberOptout. Required when `compliance.campaign.inherit != true`.
+	OptOutMessage param.Opt[string] `json:"opt_out_message,omitzero"`
+	// Privacy policy URL. TCR privacyPolicyLink. Required when
+	// `compliance.campaign.inherit != true`.
+	PrivacyPolicyLink param.Opt[string] `json:"privacy_policy_link,omitzero" format:"url"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
+	// Terms and conditions URL. TCR termsAndConditionsLink. Required when
+	// `compliance.campaign.inherit != true`.
+	TermsAndConditionsLink param.Opt[string] `json:"terms_and_conditions_link,omitzero" format:"url"`
+	// Expected monthly volume. Decides how the campaign registers and which fee tier
+	// applies: below the low-volume threshold it registers as LOW_VOLUME with
+	// sub-use-cases, above it as a single use case or MIXED. Omitting it registers the
+	// campaign at the higher-fee standard tier.
+	Volume         param.Opt[string] `json:"volume,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
-	// The compliance values a market registers with. `brand` and `campaign` apply to
-	// US `TEN_DLC`; other markets fill this map with the document keys their own
-	// requirements name.
-	Compliance MarketComplianceParam `json:"compliance,omitzero"`
+	// Use cases. What the campaign sends, and an example of each. One to five entries;
+	// how they register is decided by volume, never declared. Required when
+	// `compliance.campaign.inherit != true`.
+	UseCases []ChannelSMSTenDlcUpdateCampaignParamsUseCase `json:"use_cases,omitzero"`
 	paramObj
 }
 
@@ -322,4 +437,33 @@ func (r ChannelSMSTenDlcUpdateCampaignParams) MarshalJSON() (data []byte, err er
 }
 func (r *ChannelSMSTenDlcUpdateCampaignParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties SampleMessages, UseCase are required.
+type ChannelSMSTenDlcUpdateCampaignParamsUseCase struct {
+	// Sample messages. TCR sample1..sample5 for this use case. One to five, each
+	// carrying the brand name and an opt-out instruction.
+	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
+	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
+	// decides those.
+	//
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
+	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
+	UseCase string `json:"use_case,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ChannelSMSTenDlcUpdateCampaignParamsUseCase) MarshalJSON() (data []byte, err error) {
+	type shadow ChannelSMSTenDlcUpdateCampaignParamsUseCase
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChannelSMSTenDlcUpdateCampaignParamsUseCase) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChannelSMSTenDlcUpdateCampaignParamsUseCase](
+		"use_case", "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT", "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	)
 }
