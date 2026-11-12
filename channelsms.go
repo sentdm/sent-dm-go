@@ -135,7 +135,10 @@ func NewChannelSMSService(opts ...option.RequestOption) (r ChannelSMSService) {
 // read as `PROVISIONING` in the response's `numbers`, each with the area code it
 // was asked for. A profile inheriting your organization's campaign cannot request
 // `numbers` (`400`). `numbers` on a `TEN_DLC` market you already hold is `409`:
-// its numbers belong to its one campaign and are set when the market is created.
+// change its campaign's numbers with `PATCH /v3/channels/sms/{country}/{type}`,
+// add numbers to one of its campaigns with
+// `POST /v3/channels/sms/numbers/US/TEN_DLC`, or add a new campaign with
+// `POST /v3/channels/sms/compliances/US/TEN_DLC/campaigns`.
 //
 // **A market you already send in is `409`**: adding what is already there is a
 // mistake worth reporting rather than a silent no-op. A market is a
@@ -664,10 +667,6 @@ type SMSMarket struct {
 	// this rather than on reason. Omitted while ACTIVE. Read-only; when nothing more
 	// specific is known it is the generic reason for the status.
 	ReasonCode string `json:"reason_code" api:"nullable"`
-	// The sender itself. Null until a carrier-assigned number is procured. For a
-	// market holding several numbers, the first active one (the first assigned while
-	// none is active) — every number is in numbers.
-	SenderValue string `json:"sender_value" api:"nullable"`
 	// Where this market's sender stands, in terms of who is holding it up —
 	// PROVISIONING, ACTION_NEEDED, PENDING_REVIEW or ACTIVE. Read-only.
 	//
@@ -692,7 +691,6 @@ type SMSMarket struct {
 		Numbers     respjson.Field
 		Reason      respjson.Field
 		ReasonCode  respjson.Field
-		SenderValue respjson.Field
 		Status      respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -733,6 +731,11 @@ type SMSNumber struct {
 	// The number's area code, e.g. 212. While the number is still to be assigned, the
 	// area code it was asked for, or null when it was asked for in any area code.
 	AreaCode string `json:"area_code" api:"nullable"`
+	// The campaign the number is on, or is owed for: the id of its entry in
+	// compliance.campaigns. Omitted for a market that registers no campaigns, and
+	// where the campaign is not known — a number recorded without one, or one owed on
+	// a campaign inherited from the organization.
+	CampaignID string `json:"campaign_id" api:"nullable" format:"uuid"`
 	// The number, or null while it is still to be assigned.
 	SenderValue string `json:"sender_value" api:"nullable"`
 	// ACTIVE once the number can send; PROVISIONING while it is still to be assigned;
@@ -741,6 +744,7 @@ type SMSNumber struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		AreaCode    respjson.Field
+		CampaignID  respjson.Field
 		SenderValue respjson.Field
 		Status      respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -819,6 +823,24 @@ type SuppliedCompliance struct {
 	// refused if the caller sent this object back — which it is meant to be able to
 	// do.
 	Campaign map[string]any `json:"campaign" api:"nullable"`
+	// Every campaign this market registers, each with inherit saying whose it is —
+	// oldest first.
+	//
+	// A list, because a market can now be on more than one. POST
+	// /v3/channels/sms/compliances/US/TEN_DLC/campaigns adds a campaign of the
+	// customer's own beside the one it has, and a profile running on its
+	// organization's campaign keeps that one when it adds its own. Campaign can only
+	// show one of them, so it stays as it was, for callers that read it, and this is
+	// where the rest are.
+	//
+	// The organization's campaign reads "inherit": true and the customer's own read
+	// "inherit": false. Each entry is the shape of Campaign plus id, the campaign's
+	// own id, so several can be told apart. Campaign carries no id, because it is sent
+	// back to PATCH, which refuses a key it does not declare; this list is read-only.
+	//
+	// Absent for a market that registers with nobody; empty for one that registers and
+	// has no campaign yet.
+	Campaigns []map[string]any `json:"campaigns" api:"nullable"`
 	// What has been supplied for this market.
 	//
 	// Files, not values — the declared halves above carry the values. A document
@@ -833,6 +855,7 @@ type SuppliedCompliance struct {
 	JSON struct {
 		Brand       respjson.Field
 		Campaign    respjson.Field
+		Campaigns   respjson.Field
 		Documents   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
