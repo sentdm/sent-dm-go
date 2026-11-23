@@ -28,6 +28,7 @@ func TestWebhookNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Webhooks.New(context.TODO(), sentdm.WebhookNewParams{
+		AgentID:     param.Null[string](),
 		DisplayName: sentdm.String("Order Notifications"),
 		EndpointURL: sentdm.String("https://example.com/webhooks/orders"),
 		EventFilters: map[string][]string{
@@ -147,6 +148,7 @@ func TestWebhookListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Webhooks.List(context.TODO(), sentdm.WebhookListParams{
+		AgentID:    sentdm.String("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
 		IsActive:   sentdm.Bool(true),
 		Page:       sentdm.Int(0),
 		PageSize:   sentdm.Int(0),
