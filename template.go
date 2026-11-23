@@ -4,6 +4,7 @@ package sentdm
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -224,6 +225,38 @@ func (r *APIResponseTemplate) UnmarshalJSON(data []byte) error {
 }
 
 // Configuration for AUTHENTICATION category templates
+type AuthenticationConfig struct {
+	// Whether to add the security recommendation text: "For your security, do not
+	// share this code."
+	AddSecurityRecommendation bool `json:"addSecurityRecommendation"`
+	// Code expiration time in minutes (1-90). If set, adds footer: "This code expires
+	// in X minutes."
+	CodeExpirationMinutes int64 `json:"codeExpirationMinutes" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AddSecurityRecommendation respjson.Field
+		CodeExpirationMinutes     respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AuthenticationConfig) RawJSON() string { return r.JSON.raw }
+func (r *AuthenticationConfig) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this AuthenticationConfig to a AuthenticationConfigParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// AuthenticationConfigParam.Overrides()
+func (r AuthenticationConfig) ToParam() AuthenticationConfigParam {
+	return param.Override[AuthenticationConfigParam](json.RawMessage(r.RawJSON()))
+}
+
+// Configuration for AUTHENTICATION category templates
 type AuthenticationConfigParam struct {
 	// Code expiration time in minutes (1-90). If set, adds footer: "This code expires
 	// in X minutes."
@@ -280,12 +313,19 @@ type Template struct {
 	Channels []string `json:"channels" api:"nullable"`
 	// When the template was created
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
+	// Complete definition of a message template including header, body, footer, and
+	// buttons
+	Definition TemplateDefinition `json:"definition" api:"nullable"`
 	// Whether the template is published and active
 	IsPublished bool `json:"is_published"`
 	// Template language code (e.g., en_US)
 	Language string `json:"language"`
 	// Template display name
 	Name string `json:"name"`
+	// The template's slug: a stable, URL-safe name a send can use in place of the id
+	// (template.slug on POST /v3/messages). Given at creation from the name and never
+	// changed.
+	Slug string `json:"slug" api:"nullable"`
 	// Template status: DRAFT, PENDING, APPROVED, REJECTED. A template created with
 	// submit_for_review: false starts as DRAFT and stays there until it is submitted.
 	Status string `json:"status"`
@@ -301,9 +341,11 @@ type Template struct {
 		Category        respjson.Field
 		Channels        respjson.Field
 		CreatedAt       respjson.Field
+		Definition      respjson.Field
 		IsPublished     respjson.Field
 		Language        respjson.Field
 		Name            respjson.Field
+		Slug            respjson.Field
 		Status          respjson.Field
 		UpdatedAt       respjson.Field
 		Variables       respjson.Field
@@ -316,6 +358,62 @@ type Template struct {
 func (r Template) RawJSON() string { return r.JSON.raw }
 func (r *Template) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body section of a message template.
+//
+// A body picks one of two authoring strategies, and mixing them is refused
+// (TemplateDefinitionValidator.HaveValidChannelConfiguration): a shared
+// multiChannel body on its own, or an explicit sms + whatsapp pair, both present.
+//
+// multiChannel together with sms or whatsapp is rejected, and so is sms or
+// whatsapp on its own — every template is expected to be deliverable on every
+// channel. rcs is the one true override: it may accompany either strategy to vary
+// the copy, but cannot stand alone.
+type TemplateBody struct {
+	// MMS-specific content — subject, text and attachments.
+	//
+	// Like Rcs, an override that cannot stand on its own: a template still needs a
+	// MultiChannel body or the Sms + Whatsapp pair to be deliverable at all. Without
+	// this slot MMS renders the shared or SMS body, so it is only needed for
+	// MMS-specific copy, a subject or attachments. When present it replaces that body
+	// on MMS rather than adding to it.
+	Mms TemplateMmsBodyContent `json:"mms" api:"nullable"`
+	// The shared body, used for every channel. One half of the choice described above.
+	MultiChannel TemplateBodyContent `json:"multiChannel" api:"nullable"`
+	// RCS-specific copy that overrides the chosen strategy for RCS only. The one true
+	// override: optional on top of either strategy, but it cannot be the only body
+	// present. Its length cap is the higher one described on Template.
+	Rcs TemplateBodyContent `json:"rcs" api:"nullable"`
+	// The SMS body. It does not override multiChannel, it replaces it.
+	SMS TemplateBodyContent `json:"sms" api:"nullable"`
+	// The WhatsApp body. It does not override multiChannel, it replaces it.
+	Whatsapp TemplateBodyContent `json:"whatsapp" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Mms          respjson.Field
+		MultiChannel respjson.Field
+		Rcs          respjson.Field
+		SMS          respjson.Field
+		Whatsapp     respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateBody) RawJSON() string { return r.JSON.raw }
+func (r *TemplateBody) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateBody to a TemplateBodyParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateBodyParam.Overrides()
+func (r TemplateBody) ToParam() TemplateBodyParam {
+	return param.Override[TemplateBodyParam](json.RawMessage(r.RawJSON()))
 }
 
 // Body section of a message template.
@@ -356,6 +454,62 @@ func (r TemplateBodyParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateBodyParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type TemplateBodyContent struct {
+	// The body copy, with variables written as {{index:variable}}.
+	//
+	// Length cap depends on which channel this body belongs to:
+	// TemplateContentLimits.MaxBodyLength (1024) for multiChannel, sms and whatsapp —
+	// Meta's BODY limit, which a multiChannel body may be delivered under — and
+	// TemplateContentLimits.MaxRcsBodyLength (3072) for an rcs body, which never
+	// reaches Meta. The maxLength advertised on this schema is the 1024 one, because
+	// all four channel bodies share this single schema — an rcs body between the two
+	// is accepted.
+	//
+	// Meta requires every variable to carry surrounding context, so a body is refused
+	// unless it also satisfies all of the following (enforced by
+	// TemplateDefinitionValidator): At least one letter before the first variable and
+	// after the last — trailing punctuation such as "... {{1:variable}}." does not
+	// count. At least (2 × variable count) + 1 words once the placeholders are
+	// removed. No two variables adjacent with only whitespace between them. No leading
+	// or trailing newline, no more than two consecutive line breaks, and no more than
+	// four consecutive spaces.
+	//
+	// Example: "Hello {{0:variable}}! Welcome to {{1:variable}}. We are glad to have
+	// you on board." — two variables, so at least five words are required, and the
+	// copy after the final variable contains letters.
+	Template string `json:"template" api:"required"`
+	// The type of body content. Defaults to "text" when omitted, which also fills it
+	// in when reading stored bodies saved without it; the template editor refuses to
+	// load a body with no type.
+	Type string `json:"type" api:"nullable"`
+	// The variables referenced by the body copy, one entry per {{index:variable}}
+	// placeholder.
+	Variables []TemplateVariable `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Template    respjson.Field
+		Type        respjson.Field
+		Variables   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateBodyContent) RawJSON() string { return r.JSON.raw }
+func (r *TemplateBodyContent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateBodyContent to a TemplateBodyContentParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateBodyContentParam.Overrides()
+func (r TemplateBodyContent) ToParam() TemplateBodyContentParam {
+	return param.Override[TemplateBodyContentParam](json.RawMessage(r.RawJSON()))
 }
 
 // The property Template is required.
@@ -402,6 +556,45 @@ func (r *TemplateBodyContentParam) UnmarshalJSON(data []byte) error {
 }
 
 // Interactive button in a message template
+type TemplateButton struct {
+	// Properties specific to the button type
+	Props TemplateButtonProps `json:"props" api:"required"`
+	// The type of button (e.g., QUICK_REPLY, URL, PHONE_NUMBER, VOICE_CALL, COPY_CODE)
+	Type string `json:"type" api:"required"`
+	// The button's identifier (1-based index), unique within the template.
+	//
+	// Omitting it is only safe for a template holding a single button. The field is a
+	// non-nullable int, so every button that leaves it out defaults to 0, and two such
+	// buttons are refused by the unique-id rule ("Button IDs must be unique"). Number
+	// them from 1 in the order they should appear — order matters on RCS, where only
+	// the first four buttons render.
+	ID int64 `json:"id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Props       respjson.Field
+		Type        respjson.Field
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateButton) RawJSON() string { return r.JSON.raw }
+func (r *TemplateButton) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateButton to a TemplateButtonParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateButtonParam.Overrides()
+func (r TemplateButton) ToParam() TemplateButtonParam {
+	return param.Override[TemplateButtonParam](json.RawMessage(r.RawJSON()))
+}
+
+// Interactive button in a message template
 //
 // The properties Props, Type are required.
 type TemplateButtonParam struct {
@@ -426,6 +619,69 @@ func (r TemplateButtonParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateButtonParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type TemplateButtonProps struct {
+	ActiveFor      int64  `json:"activeFor" api:"required"`
+	CountryCode    string `json:"countryCode" api:"required"`
+	OfferCode      string `json:"offerCode" api:"required"`
+	PhoneNumber    string `json:"phoneNumber" api:"required"`
+	QuickReplyType string `json:"quickReplyType" api:"required"`
+	// The button's label. Required for every button type, and capped at
+	// TemplateContentLimits.MaxButtonTextLength (25) characters.
+	//
+	// Meta accepts only static text here, so a label is refused when it contains a
+	// {{...}} variable placeholder, a newline, an emoji, or WhatsApp formatting markup
+	// (\*, \_, ~) — enforced by ApplyButtonLabelContentRules in
+	// TemplateButtonValidator. Meta reports all four as one error: "Buttons can't have
+	// any variables, newlines, emojis, or formatting characters."
+	//
+	// AUTHENTICATION OTP buttons are the exception: Meta auto-localizes their label
+	// from the template language, and the converter drops whatever text was sent.
+	Text    string `json:"text" api:"required"`
+	URL     string `json:"url" api:"required"`
+	URLType string `json:"urlType" api:"required"`
+	// Variables embedded in a dynamic URL button (only when UrlType = dynamic). Count
+	// is capped by TemplateContentLimits.MaxUrlButtonVariables; the placeholder must
+	// appear at the end of Url (validated in TemplateDefinitionValidator).
+	Variables     []TemplateVariable `json:"variables" api:"required"`
+	AutofillText  string             `json:"autofillText" api:"nullable"`
+	OtpType       string             `json:"otpType" api:"nullable"`
+	PackageName   string             `json:"packageName" api:"nullable"`
+	SignatureHash string             `json:"signatureHash" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ActiveFor      respjson.Field
+		CountryCode    respjson.Field
+		OfferCode      respjson.Field
+		PhoneNumber    respjson.Field
+		QuickReplyType respjson.Field
+		Text           respjson.Field
+		URL            respjson.Field
+		URLType        respjson.Field
+		Variables      respjson.Field
+		AutofillText   respjson.Field
+		OtpType        respjson.Field
+		PackageName    respjson.Field
+		SignatureHash  respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateButtonProps) RawJSON() string { return r.JSON.raw }
+func (r *TemplateButtonProps) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateButtonProps to a TemplateButtonPropsParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateButtonPropsParam.Overrides()
+func (r TemplateButtonProps) ToParam() TemplateButtonPropsParam {
+	return param.Override[TemplateButtonPropsParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties ActiveFor, CountryCode, OfferCode, PhoneNumber, QuickReplyType,
@@ -471,6 +727,58 @@ func (r *TemplateButtonPropsParam) UnmarshalJSON(data []byte) error {
 
 // Complete definition of a message template including header, body, footer, and
 // buttons
+type TemplateDefinition struct {
+	// Body section of a message template.
+	//
+	// A body picks one of two authoring strategies, and mixing them is refused
+	// (TemplateDefinitionValidator.HaveValidChannelConfiguration): a shared
+	// multiChannel body on its own, or an explicit sms + whatsapp pair, both present.
+	//
+	// multiChannel together with sms or whatsapp is rejected, and so is sms or
+	// whatsapp on its own — every template is expected to be deliverable on every
+	// channel. rcs is the one true override: it may accompany either strategy to vary
+	// the copy, but cannot stand alone.
+	Body TemplateBody `json:"body" api:"required"`
+	// Configuration for AUTHENTICATION category templates
+	AuthenticationConfig AuthenticationConfig `json:"authenticationConfig" api:"nullable"`
+	// Optional list of interactive buttons (e.g., quick replies, URLs, phone numbers)
+	Buttons []TemplateButton `json:"buttons" api:"nullable"`
+	// The version of the template definition format
+	DefinitionVersion string `json:"definitionVersion" api:"nullable"`
+	// Footer section of a message template
+	Footer TemplateFooter `json:"footer" api:"nullable"`
+	// Header section of a message template
+	Header TemplateHeader `json:"header" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Body                 respjson.Field
+		AuthenticationConfig respjson.Field
+		Buttons              respjson.Field
+		DefinitionVersion    respjson.Field
+		Footer               respjson.Field
+		Header               respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateDefinition) RawJSON() string { return r.JSON.raw }
+func (r *TemplateDefinition) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateDefinition to a TemplateDefinitionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateDefinitionParam.Overrides()
+func (r TemplateDefinition) ToParam() TemplateDefinitionParam {
+	return param.Override[TemplateDefinitionParam](json.RawMessage(r.RawJSON()))
+}
+
+// Complete definition of a message template including header, body, footer, and
+// buttons
 //
 // The property Body is required.
 type TemplateDefinitionParam struct {
@@ -507,6 +815,39 @@ func (r *TemplateDefinitionParam) UnmarshalJSON(data []byte) error {
 }
 
 // Footer section of a message template
+type TemplateFooter struct {
+	// The footer template text with optional variable placeholders
+	Template string `json:"template" api:"required"`
+	// The type of footer (typically "text")
+	Type string `json:"type" api:"nullable"`
+	// List of variables used in the footer template
+	Variables []TemplateVariable `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Template    respjson.Field
+		Type        respjson.Field
+		Variables   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateFooter) RawJSON() string { return r.JSON.raw }
+func (r *TemplateFooter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateFooter to a TemplateFooterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateFooterParam.Overrides()
+func (r TemplateFooter) ToParam() TemplateFooterParam {
+	return param.Override[TemplateFooterParam](json.RawMessage(r.RawJSON()))
+}
+
+// Footer section of a message template
 //
 // The property Template is required.
 type TemplateFooterParam struct {
@@ -525,6 +866,79 @@ func (r TemplateFooterParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateFooterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Header section of a message template
+type TemplateHeader struct {
+	// The header template text with optional variable placeholders (e.g., "Welcome to
+	// {{0:variable}}")
+	Template string `json:"template" api:"required"`
+	// Request-only. The s.dm URL of the asset Meta's reviewers see —
+	// https://s.dm/s/{ID}, eight uppercase characters, uploaded to s.dm out of band.
+	// NormalizeRichHeader folds it into the synthesized media variable's Props.Sample
+	// and clears it, so it never persists and a stored definition is indistinguishable
+	// from an imported one.
+	//
+	// Stricter than the send path on purpose:
+	// TemplateUtils.ValidateMediaVariableValues accepts any absolute https URL for the
+	// per-send asset, because that one is the customer's and may live behind a signed
+	// CDN link. This one is the review sample, has to outlive every resubmission, and
+	// so must be ours. Do not "fix" one to match the other.
+	ExampleURL string `json:"example_url" api:"nullable"`
+	// The map pin a location header drops. Meta wants none of this at creation — the
+	// component is just {"type":"header","format":"location"} — so these values exist
+	// for Sent: a preview, and the default a StaticResource header falls back to at
+	// send.
+	Location TemplateHeaderLocation `json:"location" api:"nullable"`
+	// Whether the asset registered at creation is reused when a caller omits the
+	// header's variable at send time. Default false — the caller must supply it per
+	// message, which is the behaviour every existing template has. Written only when
+	// true, so a default-valued header serializes byte-identically to one imported
+	// from Meta.
+	//
+	// Stored and validated but not yet honoured at send: that lands with the Resumable
+	// Upload work, alongside the code that lets such a template be approved in the
+	// first place.
+	StaticResource bool `json:"static_resource"`
+	// The kind of header. One of:
+	//
+	// text — up to 60 characters, at most one variable. image — png, jpg or jpeg.
+	// Needs ExampleUrl. video — mp4. Needs ExampleUrl. gif — mp4, max 3.5MB. WhatsApp
+	// renders larger files as an ordinary video. Needs ExampleUrl. document — pdf or
+	// docx; only the first page is shown as a thumbnail, so pdf is the practical
+	// choice. Needs ExampleUrl. location — a map pin, supplied through Location.
+	//
+	// Kept lowercase because MetaToTemplateConverter writes Meta's format through
+	// ToLowerInvariant() into this field on import, and the two are compared directly.
+	Type string `json:"type" api:"nullable"`
+	// List of variables used in the header template
+	Variables []TemplateVariable `json:"variables" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Template       respjson.Field
+		ExampleURL     respjson.Field
+		Location       respjson.Field
+		StaticResource respjson.Field
+		Type           respjson.Field
+		Variables      respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateHeader) RawJSON() string { return r.JSON.raw }
+func (r *TemplateHeader) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateHeader to a TemplateHeaderParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateHeaderParam.Overrides()
+func (r TemplateHeader) ToParam() TemplateHeaderParam {
+	return param.Override[TemplateHeaderParam](json.RawMessage(r.RawJSON()))
 }
 
 // Header section of a message template
@@ -589,6 +1003,41 @@ func (r *TemplateHeaderParam) UnmarshalJSON(data []byte) error {
 // component is just {"type":"header","format":"location"} — so these values exist
 // for Sent: a preview, and the default a StaticResource header falls back to at
 // send.
+type TemplateHeaderLocation struct {
+	Address   string `json:"address" api:"required"`
+	Latitude  string `json:"latitude" api:"required"`
+	Longitude string `json:"longitude" api:"required"`
+	Name      string `json:"name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Address     respjson.Field
+		Latitude    respjson.Field
+		Longitude   respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateHeaderLocation) RawJSON() string { return r.JSON.raw }
+func (r *TemplateHeaderLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateHeaderLocation to a TemplateHeaderLocationParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateHeaderLocationParam.Overrides()
+func (r TemplateHeaderLocation) ToParam() TemplateHeaderLocationParam {
+	return param.Override[TemplateHeaderLocationParam](json.RawMessage(r.RawJSON()))
+}
+
+// The map pin a location header drops. Meta wants none of this at creation — the
+// component is just {"type":"header","format":"location"} — so these values exist
+// for Sent: a preview, and the default a StaticResource header falls back to at
+// send.
 //
 // The properties Address, Latitude, Longitude, Name are required.
 type TemplateHeaderLocationParam struct {
@@ -605,6 +1054,41 @@ func (r TemplateHeaderLocationParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateHeaderLocationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// One attachment on an MMS template body.
+type TemplateMediaItem struct {
+	// One of MmsMediaTypes. Advisory: the carrier reads the Content-Type off the
+	// fetched object, not this field. It exists so an authoring UI can render the
+	// right preview and so a reviewer can see what was intended.
+	MediaType string `json:"mediaType" api:"nullable"`
+	// Publicly fetchable https URL. The carrier's MMSC fetches this at send time, so
+	// it has to stay reachable and unauthenticated for the life of the send —
+	// including retries and a DLQ replay — which is why a presigned URL is not a valid
+	// value here.
+	URL string `json:"url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		MediaType   respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateMediaItem) RawJSON() string { return r.JSON.raw }
+func (r *TemplateMediaItem) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateMediaItem to a TemplateMediaItemParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateMediaItemParam.Overrides()
+func (r TemplateMediaItem) ToParam() TemplateMediaItemParam {
+	return param.Override[TemplateMediaItemParam](json.RawMessage(r.RawJSON()))
 }
 
 // One attachment on an MMS template body.
@@ -627,6 +1111,57 @@ func (r TemplateMediaItemParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateMediaItemParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// MMS-specific body content.
+//
+// Why MMS needs its own type when the other channels share one: it is the only
+// channel with a subject line and the only one with attachments. Every other
+// channel's body is text and variables, which is exactly what TemplateBodyContent
+// already is. Putting Subject and Media on the shared type instead would give sms,
+// whatsapp and rcs two members none of them can ever use.
+//
+// Derives from TemplateBodyContent so that every existing consumer of a body slot
+// — MessageUtils.ConvertVariableToReadable,
+// TemplateDefinition.GetRequiredVariables,
+// TemplateDefinitionValidator.ApplyBodyContentRules — reads it with no change. The
+// two extra members are what the MMS strategy and the provider request need on
+// top.
+type TemplateMmsBodyContent struct {
+	// Attachments carried by every send on this template, in order. A per-send
+	// media_urls on the request replaces this list rather than adding to it, so a
+	// template can hold a default creative and a caller can still send something
+	// recipient-specific.
+	Media []TemplateMediaItem `json:"media" api:"nullable"`
+	// MMS subject line. Optional — most handsets render it above the body, some ignore
+	// it entirely. Deliberately its own field rather than riding TemplateHeader: the
+	// header is authored once and shared across every channel, and carries Meta's
+	// 60-character cap plus its no-newline, no-emoji text rules, none of which
+	// describe an MMS subject.
+	Subject string `json:"subject" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Media       respjson.Field
+		Subject     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+	TemplateBodyContent
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateMmsBodyContent) RawJSON() string { return r.JSON.raw }
+func (r *TemplateMmsBodyContent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateMmsBodyContent to a TemplateMmsBodyContentParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateMmsBodyContentParam.Overrides()
+func (r TemplateMmsBodyContent) ToParam() TemplateMmsBodyContentParam {
+	return param.Override[TemplateMmsBodyContentParam](json.RawMessage(r.RawJSON()))
 }
 
 // MMS-specific body content.
@@ -666,13 +1201,17 @@ func (r TemplateMmsBodyContentParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, shadow{&r, false})
 }
 
-// SDK-style template reference: resolve by ID or by name, with optional
-// parameters.
+// SDK-style template reference: resolve by id, by slug or by name (exactly one),
+// with optional parameters.
 type TemplateRefParam struct {
-	// Template ID (mutually exclusive with name)
+	// Template ID (mutually exclusive with slug and name)
 	ID param.Opt[string] `json:"id,omitzero" format:"uuid"`
-	// Template name (mutually exclusive with id)
+	// Template name (mutually exclusive with id and slug)
 	Name param.Opt[string] `json:"name,omitzero"`
+	// Template slug (mutually exclusive with id and name): the stable name every
+	// template on this account carries (GET /v3/templates lists them). Compared
+	// case-insensitively.
+	Slug param.Opt[string] `json:"slug,omitzero"`
 	// Template variable parameters for personalization, keyed by variable name.
 	//
 	// Every variable the template declares is required; GET /v3/templates/{id} lists
@@ -697,6 +1236,48 @@ func (r TemplateRefParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateRefParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type TemplateVariable struct {
+	// The variable's name, and the key callers use for it in a send request's
+	// parameters object. Must start with a letter and hold only letters, digits and
+	// underscores.
+	Name  string                `json:"name" api:"required"`
+	Props TemplateVariableProps `json:"props" api:"required"`
+	// One of variable, link or media. Decides which Props fields are required.
+	Type string `json:"type" api:"required"`
+	// The variable's index, and the number its {{index:variable}} placeholder refers
+	// to.
+	//
+	// Omitting it is only safe for a section holding a single variable. The field is a
+	// non-nullable int, so every variable that leaves it out defaults to 0, and a
+	// section with two such variables is refused by the unique-id rule ("variables
+	// must have unique IDs"). Number them from 0 in the order they appear.
+	ID int64 `json:"id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Props       respjson.Field
+		Type        respjson.Field
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateVariable) RawJSON() string { return r.JSON.raw }
+func (r *TemplateVariable) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateVariable to a TemplateVariableParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateVariableParam.Overrides()
+func (r TemplateVariable) ToParam() TemplateVariableParam {
+	return param.Override[TemplateVariableParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties Name, Props, Type are required.
@@ -725,6 +1306,48 @@ func (r TemplateVariableParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *TemplateVariableParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type TemplateVariableProps struct {
+	MediaType string `json:"mediaType" api:"required"`
+	// Example value substituted into the template when previewing it and when
+	// submitting it to Meta for review. Free text by nature, so the converter accepts
+	// a JSON number or boolean here and normalizes it — see
+	// JsonScalarToStringConverter for why — and guarantees it is always serialized
+	// back out as a JSON string.
+	Sample       string `json:"sample" api:"required"`
+	URL          string `json:"url" api:"required"`
+	VariableType string `json:"variableType" api:"required"`
+	Alt          string `json:"alt" api:"nullable"`
+	Regex        string `json:"regex" api:"nullable"`
+	ShortURL     string `json:"shortUrl" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		MediaType    respjson.Field
+		Sample       respjson.Field
+		URL          respjson.Field
+		VariableType respjson.Field
+		Alt          respjson.Field
+		Regex        respjson.Field
+		ShortURL     respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TemplateVariableProps) RawJSON() string { return r.JSON.raw }
+func (r *TemplateVariableProps) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this TemplateVariableProps to a TemplateVariablePropsParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// TemplateVariablePropsParam.Overrides()
+func (r TemplateVariableProps) ToParam() TemplateVariablePropsParam {
+	return param.Override[TemplateVariablePropsParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties MediaType, Sample, URL, VariableType are required.

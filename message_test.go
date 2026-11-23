@@ -172,6 +172,7 @@ func TestMessageSendWithOptionalParams(t *testing.T) {
 				"name":     "John Doe",
 				"order_id": "12345",
 			},
+			Slug: sentdm.String("slug"),
 		},
 		Text:           param.Null[string](),
 		To:             []string{"+14155551234", "+14155555678"},
