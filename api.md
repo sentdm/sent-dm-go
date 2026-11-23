@@ -95,7 +95,20 @@ Response Types:
 
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfTemplatesList">APIResponseOfTemplatesList</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseTemplate">APIResponseTemplate</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#AuthenticationConfig">AuthenticationConfig</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#Template">Template</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateBody">TemplateBody</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateBodyContent">TemplateBodyContent</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateButton">TemplateButton</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateButtonProps">TemplateButtonProps</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateDefinition">TemplateDefinition</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateFooter">TemplateFooter</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateHeader">TemplateHeader</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateHeaderLocation">TemplateHeaderLocation</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateMediaItem">TemplateMediaItem</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateMmsBodyContent">TemplateMmsBodyContent</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateVariable">TemplateVariable</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplateVariableProps">TemplateVariableProps</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TemplatesList">TemplatesList</a>
 
 Methods:
@@ -396,19 +409,17 @@ Params Types:
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfSMSMarket">APIResponseOfListOfSMSMarket</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SMSMarket">SMSMarket</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SMSNumber">SMSNumber</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SuppliedCampaign">SuppliedCampaign</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SuppliedCompliance">SuppliedCompliance</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SuppliedDocument">SuppliedDocument</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewResponse">ChannelSMSNewResponse</a>
 
 Methods:
 
-- <code title="post /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewParams">ChannelSMSNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-- <code title="get /v3/channels/sms/{country}/{type}">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSGetParams">ChannelSMSGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-- <code title="patch /v3/channels/sms/{country}/{type}">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSUpdateParams">ChannelSMSUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfSMSMarket">APIResponseOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-- <code title="get /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSListParams">ChannelSMSListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfSMSMarket">APIResponseOfListOfSMSMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewParams">ChannelSMSNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewResponse">ChannelSMSNewResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+### TenDlc
 
 ## Rcs
 
