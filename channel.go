@@ -78,6 +78,34 @@ type ChannelService struct {
 	//
 	// Call `GET /v3/compliance/requirements` first — it answers what a market demands
 	// before you hold it, with a body you can fill in and post.
+	Markets ChannelMarketService
+	// The senders you send from, one per channel.
+	//
+	// **SMS is a list of markets**, each keyed by `(country, number_type)` — a
+	// customer can hold `us/10dlc` and `gb/alphanumeric` at once, so a market is
+	// addressed by the pair rather than by country alone. **WhatsApp and RCS are
+	// single**: a customer has one business account and one agent. **Voice is per
+	// number**: each number you hold can carry phone calls on its own
+	// (`POST /v3/channels/voice`), each with the callback URL Sent asks what to do
+	// with its calls, one of them is the default line for calls placed from your app,
+	// and voice tokens are minted with `POST /v3/voice/tokens`. Read your voice
+	// numbers with `GET /v3/channels/voice` and change one with
+	// `PATCH /v3/channels/voice/{number}`.
+	//
+	// ## Compliance lives on the market
+	//
+	// Adding a market records everything that market registers with, in its
+	// `compliance` object. Only **US `TEN_DLC`** registers with a regime — The
+	// Campaign Registry — and it is the only market whose compliance carries `brand`
+	// and `campaign`. Everywhere else compliance is documents, and many markets ask
+	// for none at all.
+	//
+	// `GET` and `PATCH` on a market return and accept the same shape, so what comes
+	// back can be sent back: an omitted key is left alone, and a key reported in
+	// `requirements` is the path into the body that clears it.
+	//
+	// Call `GET /v3/compliance/requirements` first — it answers what a market demands
+	// before you hold it, with a body you can fill in and post.
 	SMS ChannelSMSService
 	// The senders you send from, one per channel.
 	//
@@ -171,6 +199,7 @@ type ChannelService struct {
 func NewChannelService(opts ...option.RequestOption) (r ChannelService) {
 	r = ChannelService{}
 	r.Options = opts
+	r.Markets = NewChannelMarketService(opts...)
 	r.SMS = NewChannelSMSService(opts...)
 	r.Rcs = NewChannelRcService(opts...)
 	r.Whatsapp = NewChannelWhatsappService(opts...)
@@ -268,8 +297,8 @@ type ChannelsState struct {
 	// three things only we can answer: the record's id, its status, and the number it
 	// sends from. So a read after a write shows the form as stored rather than as
 	// echoed.
-	Rcs RcsAgent    `json:"rcs" api:"nullable"`
-	SMS []SMSMarket `json:"sms"`
+	Rcs RcsAgent        `json:"rcs" api:"nullable"`
+	SMS []ChannelMarket `json:"sms"`
 	// The numbers this profile carries phone calls on, one entry per number, or empty
 	// when none. Voice is per number like an SMS market is per country: each number is
 	// its own channel row, turned on and off on its own, and one of them is the line
@@ -298,11 +327,11 @@ func (r *ChannelsState) UnmarshalJSON(data []byte) error {
 
 // One market the profile can send MMS in.
 //
-// Deliberately not SmsMarketState: an MMS market carries no compliance of its own.
-// It is the same number, carrier and registration as the SMS market on it in that
-// country — MMS files nothing separately — so a compliance block here would always
-// be null and would invite the question of what an MMS market owes. It owes what
-// the SMS market owes, reported there.
+// Deliberately not ChannelMarketState: an MMS market carries no compliance of its
+// own. It is the same number, carrier and registration as the SMS market on it in
+// that country — MMS files nothing separately — so a compliance block here would
+// always be null and would invite the question of what an MMS market owes. It owes
+// what the SMS market owes, reported there.
 type MmsMarket struct {
 	// ISO-3166 alpha-2 of the market.
 	Country string `json:"country" api:"nullable"`
