@@ -72,12 +72,10 @@ func NewChannelSMSTenDlcService(opts ...option.RequestOption) (r ChannelSMSTenDl
 // ## What to send
 //
 // The new campaign's fields, at the top level of the body: use cases, consent
-// narrative, volume, sample messages and keywords, under the
-// `compliance.campaign.*` keys
-// `GET /v3/compliance/requirements?country=US&type=TEN_DLC` lists, without that
-// prefix. It has to be complete. A rejected field is keyed by its name
-// (`description`). `id` and `inherit` are ignored, so an entry of
-// `compliance.campaigns` can be sent as read.
+// narrative, volume, sample messages and keywords, under their keys
+// (`description`, `message_flow`, `use_cases`, `volume`, …). It has to be
+// complete. A rejected field is keyed by its name (`description`). `id` and
+// `inherit` are ignored, so an entry of `campaigns` can be sent as read.
 //
 // The identity is the market's and is not sent here. A market whose identity has
 // no registration yet, or one not yet submitted for review, is `400`.
@@ -86,22 +84,21 @@ func NewChannelSMSTenDlcService(opts ...option.RequestOption) (r ChannelSMSTenDl
 //
 // The campaign is recorded and goes for review; it is not filed with The Campaign
 // Registry by this call. **It comes without numbers**: send its `id` from
-// `compliance.campaigns` to `POST /v3/channels/sms/numbers/US/TEN_DLC` to give it
-// some. **The campaign you already have, and its numbers, are not touched** —
-// including a campaign you run on from your organization.
+// `compliance.campaigns` to `POST /v3/channels/sms/{country}/{type}/numbers` to
+// give it some. **The campaign you already have, and its numbers, are not
+// touched** — including a campaign you run on from your organization.
 //
 // **Each call files a new campaign**, which is charged when it is submitted. Send
 // an `Idempotency-Key` so a retried request does not file a second one.
 //
-// To change the campaign a market already has, use
-// `PATCH /v3/channels/sms/US/TEN_DLC`. Once a market holds more than one campaign,
-// that `PATCH` refuses a campaign or numbers change (`409`) rather than guess
-// which campaign is meant; numbers are added to a named campaign with
-// `POST /v3/channels/sms/numbers/US/TEN_DLC`.
+// To change a campaign, use
+// `PATCH /v3/channels/sms/US/TEN_DLC/campaigns/{campaignId}`;
+// `PATCH /v3/channels/sms/US/TEN_DLC` changes the brand and documents only, and
+// refuses a campaign or numbers (`400`).
 //
 // Returns **the market**, in the shape `GET /v3/channels/sms/US/TEN_DLC` returns,
 // with `202`.
-func (r *ChannelSMSTenDlcService) AddCampaign(ctx context.Context, params ChannelSMSTenDlcAddCampaignParams, opts ...option.RequestOption) (res *APIResponseOfSMSMarket, err error) {
+func (r *ChannelSMSTenDlcService) AddCampaign(ctx context.Context, params ChannelSMSTenDlcAddCampaignParams, opts ...option.RequestOption) (res *APIResponseOfChannelMarket, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
 	}
@@ -109,63 +106,31 @@ func (r *ChannelSMSTenDlcService) AddCampaign(ctx context.Context, params Channe
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
-	path := "v3/channels/sms/compliances/US/TEN_DLC/campaigns"
+	path := "v3/channels/sms/US/TEN_DLC/campaigns"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
 }
 
-// Adds numbers to **one campaign of your own** on the US `TEN_DLC` market you
-// hold, named by `campaign_id` — the `id` of an entry in the market's
-// `compliance.campaigns`.
+// Every campaign your US `TEN_DLC` market registers, oldest first, each with its
+// `id`, where it stands and `inherit` (`true` for your organization's) beside its
+// fields — the list `GET /v3/channels/sms/US/TEN_DLC` reports under
+// `compliance.campaigns`. Add one with `POST` on this path, and change one of your
+// own with `PATCH /v3/channels/sms/US/TEN_DLC/campaigns/{id}`.
 //
-// ## What to send
+// Each campaign has a `status` of its own, so a market on several says which is
+// approved: `ACTIVE` once the carriers have elected it, `PENDING_REVIEW` until
+// then, `ACTION_NEEDED` when it came back for correction, `DECLINED` when the
+// carriers refused it, `INACTIVE` once it has ended. Why the market is held up is
+// the market's own `reason`, which names the campaign concerned. `status` is
+// read-only and ignored when the entry is sent back.
 //
-//   - `campaign_id` — the campaign. One you inherit from your organization is `400`:
-//     its numbers are the organization's. One out of service — expired, deactivated
-//     or released — is `409`.
-//   - `numbers` — the list `POST /v3/channels/sms` takes, one entry per area code.
-//
-// ## What happens
-//
-// The entries are **added** to what the campaign already asks for. With everything
-// it asks for, a campaign holds at most 49 numbers, counting one for each sender
-// profile inheriting it. A campaign the carriers have not approved yet gets its
-// numbers when they do; an approved one gets them now. Until a number is assigned
-// it reads as `PROVISIONING` in the market's `numbers`, with the area code it was
-// asked for.
-//
-// Returns **the market**, in the shape `GET /v3/channels/sms/US/TEN_DLC` returns,
-// with `202`.
-func (r *ChannelSMSTenDlcService) AddNumbers(ctx context.Context, params ChannelSMSTenDlcAddNumbersParams, opts ...option.RequestOption) (res *APIResponseOfSMSMarket, err error) {
-	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
-	}
-	if !param.IsOmitted(params.XProfileID) {
-		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
-	}
-	opts = slices.Concat(r.Options, opts)
-	path := "v3/channels/sms/numbers/US/TEN_DLC"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return res, err
-}
-
-// Reads what the US `TEN_DLC` market you hold has registered: the `brand` it files
-// under, **every campaign** under `campaigns` (each with its `id` and `inherit`),
-// and its `documents`. It is the `compliance` object
-// `GET /v3/channels/sms/US/TEN_DLC` returns, without the sender and numbers.
-//
-// Use a campaign's `id` to change it with
-// `PATCH /v3/channels/sms/compliances/US/TEN_DLC/campaigns/{campaignId}`, or to
-// add numbers to it with `POST /v3/channels/sms/numbers/US/TEN_DLC`.
-//
-// Send `x-profile-id` with an organization key to read one of your profiles'
-// markets.
-func (r *ChannelSMSTenDlcService) GetCompliance(ctx context.Context, query ChannelSMSTenDlcGetComplianceParams, opts ...option.RequestOption) (res *APIResponseOfSuppliedCompliance, err error) {
+// A customer without a US `TEN_DLC` market is `404`.
+func (r *ChannelSMSTenDlcService) ListCampaigns(ctx context.Context, query ChannelSMSTenDlcListCampaignsParams, opts ...option.RequestOption) (res *ChannelSMSTenDlcListCampaignsResponse, err error) {
 	if !param.IsOmitted(query.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", query.XProfileID.Value)))
 	}
 	opts = slices.Concat(r.Options, opts)
-	path := "v3/channels/sms/compliances/US/TEN_DLC"
+	path := "v3/channels/sms/US/TEN_DLC/campaigns"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -175,15 +140,14 @@ func (r *ChannelSMSTenDlcService) GetCompliance(ctx context.Context, query Chann
 //
 // ## What to send
 //
-// The fields to change, at the top level of the body, under the
-// `compliance.campaign.*` keys
-// `GET /v3/compliance/requirements?country=US&type=TEN_DLC` lists, without that
-// prefix. A field you leave out keeps its value, and a rejected one is keyed by
-// its name. `id` and `"inherit": false` are ignored, so an entry of
-// `compliance.campaigns` can be sent as read; `"inherit": true` is `400`, because
-// this call changes a campaign's fields, not whose campaign you run on. The
-// campaign only: add numbers with `POST /v3/channels/sms/numbers/US/TEN_DLC`, and
-// change the brand or documents with `PATCH /v3/channels/sms/US/TEN_DLC`.
+// The fields to change, at the top level of the body, under their keys
+// (`description`, `message_flow`, `use_cases`, `help_message`, …). A field you
+// leave out keeps its value, and a rejected one is keyed by its name. `id` and
+// `"inherit": false` are ignored, so an entry of `campaigns` can be sent as read;
+// `"inherit": true` is `400`, because this call changes a campaign's fields, not
+// whose campaign you run on. The campaign only: add numbers with
+// `POST /v3/channels/sms/US/TEN_DLC/numbers`, and change the brand or documents
+// with `PATCH /v3/channels/sms/US/TEN_DLC`.
 //
 // ## When it can be changed
 //
@@ -195,7 +159,7 @@ func (r *ChannelSMSTenDlcService) GetCompliance(ctx context.Context, query Chann
 // released.
 //
 // Returns **the market**, in the shape `GET /v3/channels/sms/US/TEN_DLC` returns.
-func (r *ChannelSMSTenDlcService) UpdateCampaign(ctx context.Context, campaignID string, params ChannelSMSTenDlcUpdateCampaignParams, opts ...option.RequestOption) (res *APIResponseOfSMSMarket, err error) {
+func (r *ChannelSMSTenDlcService) UpdateCampaign(ctx context.Context, campaignID string, params ChannelSMSTenDlcUpdateCampaignParams, opts ...option.RequestOption) (res *APIResponseOfChannelMarket, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
@@ -207,31 +171,15 @@ func (r *ChannelSMSTenDlcService) UpdateCampaign(ctx context.Context, campaignID
 		err = errors.New("missing required campaignId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("v3/channels/sms/compliances/US/TEN_DLC/campaigns/%s", campaignID)
+	path := fmt.Sprintf("v3/channels/sms/US/TEN_DLC/campaigns/%s", campaignID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
 	return res, err
 }
 
 // Standard API response envelope for all v3 endpoints
-type APIResponseOfSuppliedCompliance struct {
-	// What a market has been given: the identity it registers under, its programme,
-	// and any documents attached.
-	//
-	// What it does not carry is what the market asks for. That is the subject of GET
-	// /v3/compliance/requirements, and it is the same answer for every caller — a
-	// description of what a compliance regime wants, not a record of one customer's
-	// progress through it. It was reported here as well for a while, which put the
-	// same array in six response shapes and left a caller deciding which of two
-	// sources to believe.
-	//
-	// Present on a list read for markets that register (carrying brand and campaign),
-	// but with documents absent — documents are not fetched for a list, because a
-	// catalog lookup and a document read per market would multiply across a page.
-	// Absent documents is distinct from an empty list: absent says they were not
-	// fetched; empty says the market has been given none. The parent object is null
-	// only when the market registers with nobody and compliance was not computed —
-	// nothing to show at all.
-	Data SuppliedCompliance `json:"data" api:"nullable"`
+type ChannelSMSTenDlcListCampaignsResponse struct {
+	// The response data (null if error)
+	Data []map[string]any `json:"data" api:"nullable"`
 	// Error information
 	Error ErrorDetail `json:"error" api:"nullable"`
 	// Request and response metadata
@@ -250,103 +198,64 @@ type APIResponseOfSuppliedCompliance struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r APIResponseOfSuppliedCompliance) RawJSON() string { return r.JSON.raw }
-func (r *APIResponseOfSuppliedCompliance) UnmarshalJSON(data []byte) error {
+func (r ChannelSMSTenDlcListCampaignsResponse) RawJSON() string { return r.JSON.raw }
+func (r *ChannelSMSTenDlcListCampaignsResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// The properties SampleMessages, UseCase are required.
-type TenDlcCampaignUseCaseParam struct {
-	// Sample messages. TCR sample1..sample5 for this use case. One to five, each
-	// carrying the brand name and an opt-out instruction.
-	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
-	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
-	// decides those.
-	//
-	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
-	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
-	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
-	UseCase TenDlcCampaignUseCaseUseCase `json:"use_case,omitzero" api:"required"`
-	paramObj
-}
-
-func (r TenDlcCampaignUseCaseParam) MarshalJSON() (data []byte, err error) {
-	type shadow TenDlcCampaignUseCaseParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *TenDlcCampaignUseCaseParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
-// decides those.
-type TenDlcCampaignUseCaseUseCase string
-
-const (
-	TenDlcCampaignUseCaseUseCaseMarketing                 TenDlcCampaignUseCaseUseCase = "MARKETING"
-	TenDlcCampaignUseCaseUseCaseAccountNotification       TenDlcCampaignUseCaseUseCase = "ACCOUNT_NOTIFICATION"
-	TenDlcCampaignUseCaseUseCaseCustomerCare              TenDlcCampaignUseCaseUseCase = "CUSTOMER_CARE"
-	TenDlcCampaignUseCaseUseCaseFraudAlert                TenDlcCampaignUseCaseUseCase = "FRAUD_ALERT"
-	TenDlcCampaignUseCaseUseCase2Fa                       TenDlcCampaignUseCaseUseCase = "2FA"
-	TenDlcCampaignUseCaseUseCaseDeliveryNotification      TenDlcCampaignUseCaseUseCase = "DELIVERY_NOTIFICATION"
-	TenDlcCampaignUseCaseUseCaseSecurityAlert             TenDlcCampaignUseCaseUseCase = "SECURITY_ALERT"
-	TenDlcCampaignUseCaseUseCaseM2M                       TenDlcCampaignUseCaseUseCase = "M2M"
-	TenDlcCampaignUseCaseUseCaseHigherEducation           TenDlcCampaignUseCaseUseCase = "HIGHER_EDUCATION"
-	TenDlcCampaignUseCaseUseCasePollingVoting             TenDlcCampaignUseCaseUseCase = "POLLING_VOTING"
-	TenDlcCampaignUseCaseUseCasePublicServiceAnnouncement TenDlcCampaignUseCaseUseCase = "PUBLIC_SERVICE_ANNOUNCEMENT"
-)
 
 type ChannelSMSTenDlcAddCampaignParams struct {
-	IdempotencyKey string `header:"Idempotency-Key" api:"required" json:"-"`
 	// What this programme sends. TCR description: what recipients will get and why, in
 	// a sentence. The only one of these TCR takes verbatim as a description of the
 	// programme, which is why it is asked for rather than derived from the customer's
 	// name. Required when `compliance.campaign.inherit != true`.
-	Description param.Opt[string] `json:"description,omitzero"`
+	Description string `json:"description" api:"required"`
 	// Help keywords. TCR helpKeywords, comma separated, e.g. HELP,INFO. Required when
 	// `compliance.campaign.inherit != true`.
-	HelpKeywords param.Opt[string] `json:"help_keywords,omitzero" format:"csv_keywords"`
+	HelpKeywords string `json:"help_keywords" api:"required" format:"csv_keywords"`
 	// Help reply. TCR helpMessage. Its presence is what sets subscriberHelp. Required
 	// when `compliance.campaign.inherit != true`.
-	HelpMessage param.Opt[string] `json:"help_message,omitzero"`
+	HelpMessage string `json:"help_message" api:"required"`
 	// Consent narrative. TCR messageFlow: how recipients opt in, in prose. Under 40
 	// characters is refused, and carriers reject vague descriptions — say where opt-in
 	// happens, that the box is unchecked by default, and that consent is not a
 	// condition of purchase. Required when `compliance.campaign.inherit != true`.
-	MessageFlow param.Opt[string] `json:"message_flow,omitzero"`
+	MessageFlow string `json:"message_flow" api:"required"`
 	// Opt-in keywords. TCR optinKeywords, comma separated, e.g. START,YES. Required
 	// when `compliance.campaign.inherit != true`.
-	OptInKeywords param.Opt[string] `json:"opt_in_keywords,omitzero" format:"csv_keywords"`
+	OptInKeywords string `json:"opt_in_keywords" api:"required" format:"csv_keywords"`
 	// Opt-in confirmation. TCR optinMessage. Should state message frequency and that
 	// rates may apply. Its presence is what sets subscriberOptin. Required when
 	// `compliance.campaign.inherit != true`.
-	OptInMessage param.Opt[string] `json:"opt_in_message,omitzero"`
+	OptInMessage string `json:"opt_in_message" api:"required"`
 	// Opt-out keywords. TCR optoutKeywords, comma separated. STOP, END, CANCEL,
 	// UNSUBSCRIBE and QUIT are honoured regardless of what is declared. Required when
 	// `compliance.campaign.inherit != true`.
-	OptOutKeywords param.Opt[string] `json:"opt_out_keywords,omitzero" format:"csv_keywords"`
+	OptOutKeywords string `json:"opt_out_keywords" api:"required" format:"csv_keywords"`
 	// Opt-out confirmation. TCR optoutMessage. Its presence is what sets
 	// subscriberOptout. Required when `compliance.campaign.inherit != true`.
-	OptOutMessage param.Opt[string] `json:"opt_out_message,omitzero"`
+	OptOutMessage string `json:"opt_out_message" api:"required"`
 	// Privacy policy URL. TCR privacyPolicyLink. Required when
 	// `compliance.campaign.inherit != true`.
-	PrivacyPolicyLink param.Opt[string] `json:"privacy_policy_link,omitzero" format:"url"`
-	// Sandbox flag - when true, the operation is simulated without side effects Useful
-	// for testing integrations without actual execution
-	Sandbox param.Opt[bool] `json:"sandbox,omitzero"`
+	PrivacyPolicyLink string `json:"privacy_policy_link" api:"required" format:"url"`
 	// Terms and conditions URL. TCR termsAndConditionsLink. Required when
 	// `compliance.campaign.inherit != true`.
-	TermsAndConditionsLink param.Opt[string] `json:"terms_and_conditions_link,omitzero" format:"url"`
-	// Expected monthly volume. Decides how the campaign registers and which fee tier
-	// applies: below the low-volume threshold it registers as LOW_VOLUME with
-	// sub-use-cases, above it as a single use case or MIXED. Omitting it registers the
-	// campaign at the higher-fee standard tier.
-	Volume     param.Opt[string] `json:"volume,omitzero"`
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	TermsAndConditionsLink string `json:"terms_and_conditions_link" api:"required" format:"url"`
 	// Use cases. What the campaign sends, and an example of each. One to five entries;
 	// how they register is decided by volume, never declared. Required when
 	// `compliance.campaign.inherit != true`.
-	UseCases []TenDlcCampaignUseCaseParam `json:"use_cases,omitzero"`
+	UseCases []ChannelSMSTenDlcAddCampaignParamsUseCase `json:"use_cases,omitzero" api:"required"`
+	// Expected monthly volume. Required whenever the campaign's fields are written. A
+	// whole number of messages, e.g. 1000 or 10000. Decides how the campaign registers
+	// and which fee tier applies: below the low-volume threshold it registers as
+	// LOW_VOLUME with sub-use-cases, above it as a single use case or MIXED. Omitting
+	// it registers the campaign at the higher-fee standard tier. Required when
+	// `compliance.campaign.inherit != true`, whenever its block is written.
+	Volume         string `json:"volume" api:"required"`
+	IdempotencyKey string `header:"Idempotency-Key" api:"required" json:"-"`
+	// Sandbox flag - when true, the operation is simulated without side effects Useful
+	// for testing integrations without actual execution
+	Sandbox    param.Opt[bool]   `json:"sandbox,omitzero"`
+	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
 
@@ -358,33 +267,38 @@ func (r *ChannelSMSTenDlcAddCampaignParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ChannelSMSTenDlcAddNumbersParams struct {
-	// The campaign to add the numbers to, as compliance.campaigns[].id reports it.
-	// Required.
-	CampaignID string `json:"campaign_id" api:"required" format:"uuid"`
-	// The numbers to add, one entry per area code, e.g. [{"area_code": "415",
-	// "quantity": 2}, {"quantity": 1}]. quantity defaults to 1, and an entry without
-	// area_code means any area code. Required.
+// The properties SampleMessages, UseCase are required.
+type ChannelSMSTenDlcAddCampaignParamsUseCase struct {
+	// Sample messages. TCR sample1..sample5 for this use case. One to five, each 20 to
+	// 1024 characters and carrying the brand name and an opt-out instruction. At most
+	// five across the campaign, and at least two when a high-volume campaign has a
+	// single use case.
+	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
+	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
+	// decides those.
 	//
-	// Added to what the campaign already asks for, never replacing it.
-	Numbers        []SMSNumberRequestParam `json:"numbers,omitzero" api:"required"`
-	IdempotencyKey string                  `header:"Idempotency-Key" api:"required" json:"-"`
-	// Sandbox flag - when true, the operation is simulated without side effects Useful
-	// for testing integrations without actual execution
-	Sandbox    param.Opt[bool]   `json:"sandbox,omitzero"`
-	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
+	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
+	UseCase string `json:"use_case,omitzero" api:"required"`
 	paramObj
 }
 
-func (r ChannelSMSTenDlcAddNumbersParams) MarshalJSON() (data []byte, err error) {
-	type shadow ChannelSMSTenDlcAddNumbersParams
+func (r ChannelSMSTenDlcAddCampaignParamsUseCase) MarshalJSON() (data []byte, err error) {
+	type shadow ChannelSMSTenDlcAddCampaignParamsUseCase
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ChannelSMSTenDlcAddNumbersParams) UnmarshalJSON(data []byte) error {
+func (r *ChannelSMSTenDlcAddCampaignParamsUseCase) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ChannelSMSTenDlcGetComplianceParams struct {
+func init() {
+	apijson.RegisterFieldValidator[ChannelSMSTenDlcAddCampaignParamsUseCase](
+		"use_case", "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT", "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	)
+}
+
+type ChannelSMSTenDlcListCampaignsParams struct {
 	XProfileID param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	paramObj
 }
@@ -429,17 +343,19 @@ type ChannelSMSTenDlcUpdateCampaignParams struct {
 	// Terms and conditions URL. TCR termsAndConditionsLink. Required when
 	// `compliance.campaign.inherit != true`.
 	TermsAndConditionsLink param.Opt[string] `json:"terms_and_conditions_link,omitzero" format:"url"`
-	// Expected monthly volume. Decides how the campaign registers and which fee tier
-	// applies: below the low-volume threshold it registers as LOW_VOLUME with
-	// sub-use-cases, above it as a single use case or MIXED. Omitting it registers the
-	// campaign at the higher-fee standard tier.
+	// Expected monthly volume. Required whenever the campaign's fields are written. A
+	// whole number of messages, e.g. 1000 or 10000. Decides how the campaign registers
+	// and which fee tier applies: below the low-volume threshold it registers as
+	// LOW_VOLUME with sub-use-cases, above it as a single use case or MIXED. Omitting
+	// it registers the campaign at the higher-fee standard tier. Required when
+	// `compliance.campaign.inherit != true`, whenever its block is written.
 	Volume         param.Opt[string] `json:"volume,omitzero"`
 	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
 	XProfileID     param.Opt[string] `header:"x-profile-id,omitzero" format:"uuid" json:"-"`
 	// Use cases. What the campaign sends, and an example of each. One to five entries;
 	// how they register is decided by volume, never declared. Required when
 	// `compliance.campaign.inherit != true`.
-	UseCases []TenDlcCampaignUseCaseParam `json:"use_cases,omitzero"`
+	UseCases []ChannelSMSTenDlcUpdateCampaignParamsUseCase `json:"use_cases,omitzero"`
 	paramObj
 }
 
@@ -449,4 +365,35 @@ func (r ChannelSMSTenDlcUpdateCampaignParams) MarshalJSON() (data []byte, err er
 }
 func (r *ChannelSMSTenDlcUpdateCampaignParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties SampleMessages, UseCase are required.
+type ChannelSMSTenDlcUpdateCampaignParamsUseCase struct {
+	// Sample messages. TCR sample1..sample5 for this use case. One to five, each 20 to
+	// 1024 characters and carrying the brand name and an opt-out instruction. At most
+	// five across the campaign, and at least two when a high-volume campaign has a
+	// single use case.
+	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
+	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
+	// decides those.
+	//
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
+	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
+	UseCase string `json:"use_case,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ChannelSMSTenDlcUpdateCampaignParamsUseCase) MarshalJSON() (data []byte, err error) {
+	type shadow ChannelSMSTenDlcUpdateCampaignParamsUseCase
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChannelSMSTenDlcUpdateCampaignParamsUseCase) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChannelSMSTenDlcUpdateCampaignParamsUseCase](
+		"use_case", "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT", "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
+	)
 }
