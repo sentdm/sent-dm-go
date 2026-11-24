@@ -51,6 +51,10 @@ func NewComplianceService(opts ...option.RequestOption) (r ComplianceService) {
 	return
 }
 
+// **Deprecated.** Use `GET /v3/channels/{channel}/{country}/compliance` instead,
+// and expect this to be removed in a future release. It answers exactly as before,
+// so nothing needs to change today.
+//
 // **Call this first.** It returns what a channel, country and sender type demand
 // before you can send there — and `setup[]`, the calls that satisfy those demands,
 // in order, each with a body you can copy and send as it stands. You never have to
@@ -117,6 +121,8 @@ func NewComplianceService(opts ...option.RequestOption) (r ComplianceService) {
 // `required` is `false` and `requirements` is empty, and the single `setup` step
 // carries no `compliance` array at all. A `sender_id_pattern` may still be present
 // — many markets constrain the sender string without registering anything.
+//
+// Deprecated: deprecated
 func (r *ComplianceService) GetRequirements(ctx context.Context, params ComplianceGetRequirementsParams, opts ...option.RequestOption) (res *APIResponseOfComplianceRequirements, err error) {
 	if !param.IsOmitted(params.XProfileID) {
 		opts = append(opts, option.WithHeader("x-profile-id", fmt.Sprintf("%v", params.XProfileID.Value)))
@@ -200,6 +206,11 @@ type ComplianceRequirement struct {
 	Label string `json:"label" api:"nullable"`
 	// Most entries this value accepts, where the market caps it.
 	MaxItems int64 `json:"max_items" api:"nullable"`
+	// Longest acceptable value, where the market caps it. On a list of strings, each
+	// item's.
+	MaxLength int64 `json:"max_length" api:"nullable"`
+	// Fewest entries this value accepts, where the market sets a minimum.
+	MinItems int64 `json:"min_items" api:"nullable"`
 	// Shortest acceptable value, where the market sets one. TCR refuses a consent
 	// narrative under 40 characters, and finding that out at submission time is the
 	// round trip this exists to save.
@@ -223,6 +234,8 @@ type ComplianceRequirement struct {
 		Key          respjson.Field
 		Label        respjson.Field
 		MaxItems     respjson.Field
+		MaxLength    respjson.Field
+		MinItems     respjson.Field
 		MinLength    respjson.Field
 		Notes        respjson.Field
 		Options      respjson.Field

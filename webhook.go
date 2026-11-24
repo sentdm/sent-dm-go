@@ -1052,6 +1052,11 @@ type InboundMessageEventPayload struct {
 	// particular is not sent for ads shown in WhatsApp Status, so treat every field as
 	// optional.
 	Referral any `json:"referral" api:"nullable"`
+	// The Sent agent whose conversation this reply arrived in, when the contact is in
+	// one, as on the messages it sent. Absent otherwise.
+	SentAgentID string `json:"sent_agent_id" api:"nullable"`
+	// The conversation (agent × contact) the reply belongs to, when it belongs to one.
+	SentInstanceID string `json:"sent_instance_id" api:"nullable"`
 	// The message body. Sent as null when the inbound message carried no text, for
 	// example a media-only message. The field is always present, so read it and check
 	// for null rather than checking whether the key exists.
@@ -1069,6 +1074,8 @@ type InboundMessageEventPayload struct {
 		MessageID      respjson.Field
 		OutboundNumber respjson.Field
 		Referral       respjson.Field
+		SentAgentID    respjson.Field
+		SentInstanceID respjson.Field
 		Text           respjson.Field
 		UpdatedAt      respjson.Field
 		ExtraFields    map[string]respjson.Field
@@ -1328,6 +1335,11 @@ type MessageEventPayload struct {
 	MessageID string `json:"message_id" format:"uuid"`
 	// The recipient's number in E.164 format.
 	OutboundNumber string `json:"outbound_number"`
+	// When this message is another send of a message you sent earlier, the id of that
+	// original message; omitted for every other message. The new send has its own
+	// message_id, so this ties its events back to the message you sent. Always the
+	// first message, however many sends lie between them.
+	ParentMessageID string `json:"parent_message_id" api:"nullable" format:"uuid"`
 	// A human-readable sentence for ReasonCode, for example "The recipient is not
 	// registered on this channel". Omitted whenever reason_code is.
 	Reason string `json:"reason" api:"nullable"`
@@ -1350,6 +1362,13 @@ type MessageEventPayload struct {
 	// before and after. A consumer that recorded a future send from the first event
 	// has what it needs to un-record it from the second. Omitted on every other event.
 	ScheduledAt string `json:"scheduled_at" api:"nullable"`
+	// The Sent agent (Sent Agents) that sent this message, when one did. Not the RCS
+	// agent_id above: that names the RCS sender agent, this names the autonomous agent
+	// running on the account.
+	SentAgentID string `json:"sent_agent_id" api:"nullable"`
+	// The conversation (agent × contact) the message belongs to, when a Sent agent
+	// sent it.
+	SentInstanceID string `json:"sent_instance_id" api:"nullable"`
 	// The template the message was sent from, when it was sent from one.
 	TemplateID string `json:"template_id" api:"nullable" format:"uuid"`
 	// Name of the template the message was sent from. Omitted when the message wasn't
@@ -1360,22 +1379,25 @@ type MessageEventPayload struct {
 	UpdatedAt string `json:"updated_at"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		MessageStatus  respjson.Field
-		AccountID      respjson.Field
-		AgentID        respjson.Field
-		Body           respjson.Field
-		Channel        respjson.Field
-		MessageID      respjson.Field
-		OutboundNumber respjson.Field
-		Reason         respjson.Field
-		ReasonCode     respjson.Field
-		ScheduleReason respjson.Field
-		ScheduledAt    respjson.Field
-		TemplateID     respjson.Field
-		TemplateName   respjson.Field
-		UpdatedAt      respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
+		MessageStatus   respjson.Field
+		AccountID       respjson.Field
+		AgentID         respjson.Field
+		Body            respjson.Field
+		Channel         respjson.Field
+		MessageID       respjson.Field
+		OutboundNumber  respjson.Field
+		ParentMessageID respjson.Field
+		Reason          respjson.Field
+		ReasonCode      respjson.Field
+		ScheduleReason  respjson.Field
+		ScheduledAt     respjson.Field
+		SentAgentID     respjson.Field
+		SentInstanceID  respjson.Field
+		TemplateID      respjson.Field
+		TemplateName    respjson.Field
+		UpdatedAt       respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
 	} `json:"-"`
 }
 
@@ -1617,7 +1639,8 @@ func (r *WebhookDelivery) UnmarshalJSON(data []byte) error {
 
 // WebhookDeliveryEventDataUnion contains all possible properties and values from
 // [MessageEvent], [InboundMessageEvent], [TemplateEvent], [ChannelEvent],
-// [ContactEvent], [LinkEvent], [CallEvent].
+// [ContactEvent], [LinkEvent], [CallEvent],
+// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type WebhookDeliveryEventDataUnion struct {
@@ -1625,7 +1648,8 @@ type WebhookDeliveryEventDataUnion struct {
 	Field string `json:"field"`
 	// This field is a union of [MessageEventPayload], [InboundMessageEventPayload],
 	// [TemplateEventPayload], [ChannelEventPayload], [ContactEventPayload],
-	// [LinkEventPayload], [CallEventPayload]
+	// [LinkEventPayload], [CallEventPayload],
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload]
 	Payload   WebhookDeliveryEventDataUnionPayload `json:"payload"`
 	RequestID string                               `json:"request_id"`
 	Timestamp string                               `json:"timestamp"`
@@ -1674,6 +1698,11 @@ func (u WebhookDeliveryEventDataUnion) AsCallEvent() (v CallEvent) {
 	return
 }
 
+func (u WebhookDeliveryEventDataUnion) AsWebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload() (v WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u WebhookDeliveryEventDataUnion) RawJSON() string { return u.JSON.raw }
 
@@ -1697,15 +1726,19 @@ type WebhookDeliveryEventDataUnionPayload struct {
 	Channel        string `json:"channel"`
 	MessageID      string `json:"message_id"`
 	OutboundNumber string `json:"outbound_number"`
-	Reason         string `json:"reason"`
-	ReasonCode     string `json:"reason_code"`
+	// This field is from variant [MessageEventPayload].
+	ParentMessageID string `json:"parent_message_id"`
+	Reason          string `json:"reason"`
+	ReasonCode      string `json:"reason_code"`
 	// This field is from variant [MessageEventPayload].
 	ScheduleReason string `json:"schedule_reason"`
 	// This field is from variant [MessageEventPayload].
-	ScheduledAt  string `json:"scheduled_at"`
-	TemplateID   string `json:"template_id"`
-	TemplateName string `json:"template_name"`
-	UpdatedAt    string `json:"updated_at"`
+	ScheduledAt    string `json:"scheduled_at"`
+	SentAgentID    string `json:"sent_agent_id"`
+	SentInstanceID string `json:"sent_instance_id"`
+	TemplateID     string `json:"template_id"`
+	TemplateName   string `json:"template_name"`
+	UpdatedAt      string `json:"updated_at"`
 	// This field is from variant [InboundMessageEventPayload].
 	InboundNumber string `json:"inbound_number"`
 	// This field is from variant [InboundMessageEventPayload].
@@ -1735,8 +1768,7 @@ type WebhookDeliveryEventDataUnionPayload struct {
 	// This field is from variant [ContactEventPayload].
 	OptOut bool `json:"opt_out"`
 	// This field is from variant [ContactEventPayload].
-	Source string `json:"source"`
-	// This field is from variant [ContactEventPayload].
+	Source    string `json:"source"`
 	ContactID string `json:"contact_id"`
 	// This field is from variant [ContactEventPayload].
 	From string `json:"from"`
@@ -1757,8 +1789,7 @@ type WebhookDeliveryEventDataUnionPayload struct {
 	// This field is from variant [LinkEventPayload].
 	Device string `json:"device"`
 	// This field is from variant [LinkEventPayload].
-	LinkKind string `json:"link_kind"`
-	// This field is from variant [LinkEventPayload].
+	LinkKind   string `json:"link_kind"`
 	OccurredAt string `json:"occurred_at"`
 	// This field is from variant [LinkEventPayload].
 	ReferenceKey string `json:"reference_key"`
@@ -1784,7 +1815,31 @@ type WebhookDeliveryEventDataUnionPayload struct {
 	Price float64 `json:"price"`
 	// This field is from variant [CallEventPayload].
 	RecordingID string `json:"recording_id"`
-	JSON        struct {
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	EventID string `json:"event_id"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	Actor string `json:"actor"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	AgentName string `json:"agent_name"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	AgentVersion int64 `json:"agent_version"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	ContactPhoneNumber string `json:"contact_phone_number"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	Data any `json:"data"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	InstanceID string `json:"instance_id"`
+	// This field is from variant
+	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	Sequence int64 `json:"sequence"`
+	JSON     struct {
 		MessageStatus      respjson.Field
 		AccountID          respjson.Field
 		AgentID            respjson.Field
@@ -1792,10 +1847,13 @@ type WebhookDeliveryEventDataUnionPayload struct {
 		Channel            respjson.Field
 		MessageID          respjson.Field
 		OutboundNumber     respjson.Field
+		ParentMessageID    respjson.Field
 		Reason             respjson.Field
 		ReasonCode         respjson.Field
 		ScheduleReason     respjson.Field
 		ScheduledAt        respjson.Field
+		SentAgentID        respjson.Field
+		SentInstanceID     respjson.Field
 		TemplateID         respjson.Field
 		TemplateName       respjson.Field
 		UpdatedAt          respjson.Field
@@ -1839,11 +1897,123 @@ type WebhookDeliveryEventDataUnionPayload struct {
 		Number             respjson.Field
 		Price              respjson.Field
 		RecordingID        respjson.Field
+		EventID            respjson.Field
+		Actor              respjson.Field
+		AgentName          respjson.Field
+		AgentVersion       respjson.Field
+		ContactPhoneNumber respjson.Field
+		Data               respjson.Field
+		InstanceID         respjson.Field
+		Sequence           respjson.Field
 		raw                string
 	} `json:"-"`
 }
 
 func (r *WebhookDeliveryEventDataUnionPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload struct {
+	// The specific event within the family, for example message.delivered,
+	// message.received or contact.opt_out. Absent on events that have no subtype, so
+	// treat it as optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message, templates or contact. Route on this
+	// first, then on event for the specific change.
+	Field string `json:"field"`
+	// Body of an agent.\* webhook (Sent Agents). The event is the agent service's own
+	// record, forwarded without renaming: EventId is its id, so a subscriber can
+	// dedupe a redelivery.
+	Payload WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload `json:"payload" api:"nullable"`
+	// The event-specific body.
+	RequestID string `json:"request_id" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of an agent.\* webhook (Sent Agents). The event is the agent service's own
+// record, forwarded without renaming: EventId is its id, so a subscriber can
+// dedupe a redelivery.
+type WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload struct {
+	// The agent service's event id. The same event is never delivered under two ids.
+	EventID string `json:"event_id" api:"required"`
+	// When the agent service recorded it, UTC, to the millisecond.
+	OccurredAt string `json:"occurred_at" api:"required"`
+	// The sender profile the agent runs on.
+	AccountID string `json:"account_id" format:"uuid"`
+	// Who caused it: system, the agent service's customer, or an approver.
+	Actor string `json:"actor" api:"nullable"`
+	// The agent.
+	AgentID string `json:"agent_id"`
+	// The agent's name, as it is listed. Absent for an agent services no longer holds.
+	AgentName string `json:"agent_name" api:"nullable"`
+	// The version of the agent the event is of: the one its conversation runs, or the
+	// active one for an event of the agent itself. Absent when the agent service does
+	// not say it.
+	AgentVersion int64 `json:"agent_version" api:"nullable"`
+	// The contact of that conversation; absent on agent-level events.
+	ContactID string `json:"contact_id" api:"nullable"`
+	// The contact's phone number, in E.164, so a receiver knows who the event is about
+	// without asking for the contact. Read from the account's contacts as the webhook
+	// is built: the agent service's own record names a contact by id only. Absent on
+	// agent-level events, and for a contact the account no longer holds.
+	ContactPhoneNumber string `json:"contact_phone_number" api:"nullable"`
+	// The event's own fields (outcome, reason, ...), exactly as the agent service
+	// recorded them.
+	Data any `json:"data"`
+	// The conversation (agent × contact) the event belongs to; absent on agent-level
+	// events.
+	InstanceID string `json:"instance_id" api:"nullable"`
+	// Where the event stands among the agent's events: a number that grows with each,
+	// so two events of the same second are put in order by it. Not a count: there are
+	// gaps between an agent's own. Absent from an agent service that does not say it.
+	Sequence int64 `json:"sequence" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventID            respjson.Field
+		OccurredAt         respjson.Field
+		AccountID          respjson.Field
+		Actor              respjson.Field
+		AgentID            respjson.Field
+		AgentName          respjson.Field
+		AgentVersion       respjson.Field
+		ContactID          respjson.Field
+		ContactPhoneNumber respjson.Field
+		Data               respjson.Field
+		InstanceID         respjson.Field
+		Sequence           respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1917,6 +2087,9 @@ func (r *WebhookEventsList) UnmarshalJSON(data []byte) error {
 
 type WebhookResponse struct {
 	ID string `json:"id" format:"uuid"`
+	// The Sent agent whose events alone this webhook receives; absent on a webhook of
+	// the whole account.
+	AgentID string `json:"agent_id" api:"nullable" format:"uuid"`
 	// Failed attempts since the last success. Version 1 only: always 0 on a version 2
 	// webhook, whose deliveries are in its events (GET /v3/webhooks/{id}/events).
 	ConsecutiveFailures int64     `json:"consecutive_failures"`
@@ -1955,6 +2128,7 @@ type WebhookResponse struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
+		AgentID                  respjson.Field
 		ConsecutiveFailures      respjson.Field
 		CreatedAt                respjson.Field
 		CustomerID               respjson.Field
@@ -2079,6 +2253,11 @@ func (r *WebhooksList) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookNewParams struct {
+	// One of your Sent agents: the webhook then receives only that agent's events, its
+	// agent events and the messages it sent or received, and is never inheritable:
+	// is_inheritable set with it is refused. Only the account the agent runs on can
+	// set it, and only on a version 2 webhook.
+	AgentID param.Opt[string] `json:"agent_id,omitzero" format:"uuid"`
 	// Who delivers the webhook: 2, the default, is delivered by Svix and signed with
 	// the webhook-id, webhook-timestamp and webhook-signature headers; 1 is the older
 	// delivery, signed with the X-Webhook-\* headers, which will be retired.
@@ -2125,7 +2304,7 @@ type WebhookGetParams struct {
 type WebhookUpdateParams struct {
 	// Makes this webhook inheritable by the organization's sender profiles (see
 	// create), or stops it being inheritable. Omit or pass null to keep it as it is.
-	// Only a version 2 webhook can be inheritable.
+	// Only a version 2 webhook can be inheritable, and never an agent's.
 	IsInheritable param.Opt[bool]   `json:"is_inheritable,omitzero"`
 	DisplayName   param.Opt[string] `json:"display_name,omitzero"`
 	EndpointURL   param.Opt[string] `json:"endpoint_url,omitzero"`
@@ -2154,6 +2333,8 @@ func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 type WebhookListParams struct {
+	// Only the webhooks of this Sent agent.
+	AgentID    param.Opt[string] `query:"agent_id,omitzero" format:"uuid" json:"-"`
 	IsActive   param.Opt[bool]   `query:"is_active,omitzero" json:"-"`
 	Search     param.Opt[string] `query:"search,omitzero" json:"-"`
 	Page       param.Opt[int64]  `query:"page,omitzero" json:"-"`
