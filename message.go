@@ -30,10 +30,10 @@ import (
 // decided by the markets under **Channels** — so a recipient in a country you hold
 // no sender for is refused here rather than queued.
 //
-// **A message can be resent on its id.** `POST /v3/messages/{id}/resend` puts a
-// finished message — typically one BLOCKED for insufficient balance — back through
-// the send pipeline. It is a new attempt, not a free retry: every policy runs
-// again, the message is billed again, and its status webhooks fire again. A
+// **A message can be resent.** `POST /v3/messages/{id}/resend` sends a finished
+// message — typically one BLOCKED for insufficient balance — again, as a new
+// message with its own id. It is a new send, not a free retry: every policy runs
+// again, the new message is billed, and its status webhooks fire for its own id. A
 // FILTERED message is never resendable.
 //
 // **A scheduled message can be called off.** `POST /v3/messages/{id}/cancel`
@@ -110,27 +110,31 @@ func (r *MessageService) Cancel(ctx context.Context, id string, params MessageCa
 	return res, err
 }
 
-// Resends a message you already sent, on the same message id, without rebuilding
-// the request. The typical use is recovering a BLOCKED message — for example one
+// Resends a message you already sent, as a new message, without rebuilding the
+// request. The typical use is recovering a BLOCKED message — for example one
 // refused for insufficient balance — after the account has been topped up.
 //
-// **A resend bills again.** Each accepted resend is a new delivery attempt and
-// records a new charge against the same message id; a client that resends on every
-// failure is charged on every loop.
+// **A resend is a new message.** It gets its own message id, returned in
+// `recipients[0].message_id`, with its own status, delivery attempts and charge.
+// The message you resent is left exactly as it was. Each accepted resend is
+// billed; a client that resends on every failure is charged on every loop.
 //
 // **Every policy runs again.** The resend goes back through the full send pipeline
 // — consent, balance, KYC and channel quota, template approval, quiet hours and
 // channel health — so it can land on BLOCKED, FILTERED or SCHEDULED again rather
-// than being sent, exactly as a fresh send would. Status webhooks (message.sent,
-// message.blocked, message.filtered, message.failed) fire again for the same
-// message id, so consumers keyed on the id will see repeated transitions.
+// than being sent, exactly as a fresh send would. Status webhooks (message.queued,
+// message.sent, message.delivered, message.blocked, message.filtered,
+// message.failed) fire for the new message id.
 //
 // **What can be resent.** A message in a terminal state — DELIVERED, FAILED, READ
 // or BLOCKED — or one stuck at SENT for more than 15 minutes. A FILTERED message
 // can never be resent: the recipient opted out or a routing rule refused the send.
 // A message still in flight (QUEUED, PROCESSED, ROUTED), held for quiet hours
-// (SCHEDULED), or SENT less than 15 minutes ago returns 409. Two concurrent
-// resends of one id are serialised: one is accepted, the other gets 409.
+// (SCHEDULED), or SENT less than 15 minutes ago returns 409. A message can be
+// resent more than once, one resend at a time: while an earlier resend of it is
+// still in flight, a new resend returns 409, so a double click or a retried
+// request does not send it twice. Each accepted resend is another new message. A
+// resend can itself be resent; the new message's parent is still the original.
 //
 // The resend keeps the channel the message was originally requested on; the
 // channel cannot be changed on a resend — send a new message instead.
@@ -138,7 +142,7 @@ func (r *MessageService) Cancel(ctx context.Context, id string, params MessageCa
 // response instead of resending twice.
 //
 // The response has the same shape as `POST /v3/messages`: `recipients` has a
-// single entry whose `message_id` is the id you resent.
+// single entry whose `message_id` is the new message's id.
 func (r *MessageService) Resend(ctx context.Context, id string, params MessageResendParams, opts ...option.RequestOption) (res *MessageSendResponse, err error) {
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
@@ -379,10 +383,14 @@ type Message struct {
 	// object field by field — the four IMessageBodyStrategy implementations and
 	// MessageUtils.BuildSegmentBody — has to carry every member, or that member is
 	// silently dropped on whichever path forgot it.
-	MessageBody        MessageBody `json:"message_body" api:"nullable"`
-	Phone              string      `json:"phone"`
-	PhoneInternational string      `json:"phone_international"`
-	Price              float64     `json:"price" api:"nullable" format:"decimal"`
+	MessageBody MessageBody `json:"message_body" api:"nullable"`
+	// When this message is another send of a message you sent earlier, the id of that
+	// original message; null for every other message. Always the first message,
+	// however many sends lie between them.
+	ParentMessageID    string  `json:"parent_message_id" api:"nullable" format:"uuid"`
+	Phone              string  `json:"phone"`
+	PhoneInternational string  `json:"phone_international"`
+	Price              float64 `json:"price" api:"nullable" format:"decimal"`
 	// A human-readable sentence for reason_code, for example "Insufficient balance".
 	// Omitted whenever reason_code is.
 	Reason string `json:"reason" api:"nullable"`
@@ -409,6 +417,7 @@ type Message struct {
 		Direction          respjson.Field
 		Events             respjson.Field
 		MessageBody        respjson.Field
+		ParentMessageID    respjson.Field
 		Phone              respjson.Field
 		PhoneInternational respjson.Field
 		Price              respjson.Field
@@ -921,8 +930,8 @@ type MessageSendParams struct {
 	// stay publicly reachable — a link that expires, or one behind auth, arrives as a
 	// failed message.
 	MediaURLs []string `json:"media_urls,omitzero"`
-	// SDK-style template reference: resolve by ID or by name, with optional
-	// parameters.
+	// SDK-style template reference: resolve by id, by slug or by name (exactly one),
+	// with optional parameters.
 	Template TemplateRefParam `json:"template,omitzero"`
 	// List of recipient phone numbers in E.164 format (multi-recipient fan-out)
 	To []string `json:"to,omitzero"`
