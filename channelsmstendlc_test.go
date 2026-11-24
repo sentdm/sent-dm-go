@@ -37,9 +37,9 @@ func TestChannelSMSTenDlcAddCampaignWithOptionalParams(t *testing.T) {
 		OptOutMessage:          "xxxxxxxxxxxxxxxxxxxx",
 		PrivacyPolicyLink:      "privacy_policy_link",
 		TermsAndConditionsLink: "terms_and_conditions_link",
-		UseCases: []sentdm.ChannelSMSTenDlcAddCampaignParamsUseCase{{
+		UseCases: []sentdm.TenDlcCampaignUseCaseParam{{
 			SampleMessages: []any{"Reminder: your appointment is tomorrow at 10:00. Reply STOP to opt out."},
-			UseCase:        "ACCOUNT_NOTIFICATION",
+			UseCase:        sentdm.TenDlcCampaignUseCaseUseCaseAccountNotification,
 		}},
 		Volume:         "volume",
 		IdempotencyKey: "req_abc123_retry1",
@@ -108,9 +108,9 @@ func TestChannelSMSTenDlcUpdateCampaignWithOptionalParams(t *testing.T) {
 			PrivacyPolicyLink:      sentdm.String("privacy_policy_link"),
 			Sandbox:                sentdm.Bool(false),
 			TermsAndConditionsLink: sentdm.String("terms_and_conditions_link"),
-			UseCases: []sentdm.ChannelSMSTenDlcUpdateCampaignParamsUseCase{{
+			UseCases: []sentdm.TenDlcCampaignUseCaseParam{{
 				SampleMessages: []any{map[string]any{}},
-				UseCase:        "MARKETING",
+				UseCase:        sentdm.TenDlcCampaignUseCaseUseCaseMarketing,
 			}},
 			Volume:         sentdm.String("volume"),
 			IdempotencyKey: sentdm.String("req_abc123_retry1"),

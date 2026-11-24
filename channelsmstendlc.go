@@ -176,6 +176,49 @@ func (r *ChannelSMSTenDlcService) UpdateCampaign(ctx context.Context, campaignID
 	return res, err
 }
 
+// The properties SampleMessages, UseCase are required.
+type TenDlcCampaignUseCaseParam struct {
+	// Sample messages. TCR sample1..sample5 for this use case. One to five, each 20 to
+	// 1024 characters and carrying the brand name and an opt-out instruction. At most
+	// five across the campaign, and at least two when a high-volume campaign has a
+	// single use case.
+	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
+	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
+	// decides those.
+	//
+	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
+	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
+	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
+	UseCase TenDlcCampaignUseCaseUseCase `json:"use_case,omitzero" api:"required"`
+	paramObj
+}
+
+func (r TenDlcCampaignUseCaseParam) MarshalJSON() (data []byte, err error) {
+	type shadow TenDlcCampaignUseCaseParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *TenDlcCampaignUseCaseParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
+// decides those.
+type TenDlcCampaignUseCaseUseCase string
+
+const (
+	TenDlcCampaignUseCaseUseCaseMarketing                 TenDlcCampaignUseCaseUseCase = "MARKETING"
+	TenDlcCampaignUseCaseUseCaseAccountNotification       TenDlcCampaignUseCaseUseCase = "ACCOUNT_NOTIFICATION"
+	TenDlcCampaignUseCaseUseCaseCustomerCare              TenDlcCampaignUseCaseUseCase = "CUSTOMER_CARE"
+	TenDlcCampaignUseCaseUseCaseFraudAlert                TenDlcCampaignUseCaseUseCase = "FRAUD_ALERT"
+	TenDlcCampaignUseCaseUseCase2Fa                       TenDlcCampaignUseCaseUseCase = "2FA"
+	TenDlcCampaignUseCaseUseCaseDeliveryNotification      TenDlcCampaignUseCaseUseCase = "DELIVERY_NOTIFICATION"
+	TenDlcCampaignUseCaseUseCaseSecurityAlert             TenDlcCampaignUseCaseUseCase = "SECURITY_ALERT"
+	TenDlcCampaignUseCaseUseCaseM2M                       TenDlcCampaignUseCaseUseCase = "M2M"
+	TenDlcCampaignUseCaseUseCaseHigherEducation           TenDlcCampaignUseCaseUseCase = "HIGHER_EDUCATION"
+	TenDlcCampaignUseCaseUseCasePollingVoting             TenDlcCampaignUseCaseUseCase = "POLLING_VOTING"
+	TenDlcCampaignUseCaseUseCasePublicServiceAnnouncement TenDlcCampaignUseCaseUseCase = "PUBLIC_SERVICE_ANNOUNCEMENT"
+)
+
 // Standard API response envelope for all v3 endpoints
 type ChannelSMSTenDlcListCampaignsResponse struct {
 	// The response data (null if error)
@@ -243,7 +286,7 @@ type ChannelSMSTenDlcAddCampaignParams struct {
 	// Use cases. What the campaign sends, and an example of each. One to five entries;
 	// how they register is decided by volume, never declared. Required when
 	// `compliance.campaign.inherit != true`.
-	UseCases []ChannelSMSTenDlcAddCampaignParamsUseCase `json:"use_cases,omitzero" api:"required"`
+	UseCases []TenDlcCampaignUseCaseParam `json:"use_cases,omitzero" api:"required"`
 	// Expected monthly volume. Required whenever the campaign's fields are written. A
 	// whole number of messages, e.g. 1000 or 10000. Decides how the campaign registers
 	// and which fee tier applies: below the low-volume threshold it registers as
@@ -265,37 +308,6 @@ func (r ChannelSMSTenDlcAddCampaignParams) MarshalJSON() (data []byte, err error
 }
 func (r *ChannelSMSTenDlcAddCampaignParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties SampleMessages, UseCase are required.
-type ChannelSMSTenDlcAddCampaignParamsUseCase struct {
-	// Sample messages. TCR sample1..sample5 for this use case. One to five, each 20 to
-	// 1024 characters and carrying the brand name and an opt-out instruction. At most
-	// five across the campaign, and at least two when a high-volume campaign has a
-	// single use case.
-	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
-	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
-	// decides those.
-	//
-	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
-	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
-	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
-	UseCase string `json:"use_case,omitzero" api:"required"`
-	paramObj
-}
-
-func (r ChannelSMSTenDlcAddCampaignParamsUseCase) MarshalJSON() (data []byte, err error) {
-	type shadow ChannelSMSTenDlcAddCampaignParamsUseCase
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ChannelSMSTenDlcAddCampaignParamsUseCase) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ChannelSMSTenDlcAddCampaignParamsUseCase](
-		"use_case", "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT", "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
-	)
 }
 
 type ChannelSMSTenDlcListCampaignsParams struct {
@@ -355,7 +367,7 @@ type ChannelSMSTenDlcUpdateCampaignParams struct {
 	// Use cases. What the campaign sends, and an example of each. One to five entries;
 	// how they register is decided by volume, never declared. Required when
 	// `compliance.campaign.inherit != true`.
-	UseCases []ChannelSMSTenDlcUpdateCampaignParamsUseCase `json:"use_cases,omitzero"`
+	UseCases []TenDlcCampaignUseCaseParam `json:"use_cases,omitzero"`
 	paramObj
 }
 
@@ -365,35 +377,4 @@ func (r ChannelSMSTenDlcUpdateCampaignParams) MarshalJSON() (data []byte, err er
 }
 func (r *ChannelSMSTenDlcUpdateCampaignParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties SampleMessages, UseCase are required.
-type ChannelSMSTenDlcUpdateCampaignParamsUseCase struct {
-	// Sample messages. TCR sample1..sample5 for this use case. One to five, each 20 to
-	// 1024 characters and carrying the brand name and an opt-out instruction. At most
-	// five across the campaign, and at least two when a high-volume campaign has a
-	// single use case.
-	SampleMessages []any `json:"sample_messages,omitzero" api:"required"`
-	// Use case. What this entry sends. MIXED and LOW_VOLUME are refused — volume
-	// decides those.
-	//
-	// Any of "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT",
-	// "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION",
-	// "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT".
-	UseCase string `json:"use_case,omitzero" api:"required"`
-	paramObj
-}
-
-func (r ChannelSMSTenDlcUpdateCampaignParamsUseCase) MarshalJSON() (data []byte, err error) {
-	type shadow ChannelSMSTenDlcUpdateCampaignParamsUseCase
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ChannelSMSTenDlcUpdateCampaignParamsUseCase) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ChannelSMSTenDlcUpdateCampaignParamsUseCase](
-		"use_case", "MARKETING", "ACCOUNT_NOTIFICATION", "CUSTOMER_CARE", "FRAUD_ALERT", "2FA", "DELIVERY_NOTIFICATION", "SECURITY_ALERT", "M2M", "HIGHER_EDUCATION", "POLLING_VOTING", "PUBLIC_SERVICE_ANNOUNCEMENT",
-	)
 }
