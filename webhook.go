@@ -267,6 +267,106 @@ func (r *WebhookService) ToggleStatus(ctx context.Context, id string, params Web
 	return res, err
 }
 
+// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
+// this shape and varies only in Payload.
+type AgentEvent struct {
+	// The specific event within the family, for example message.delivered,
+	// message.received or contact.opt_out. Absent on events that have no subtype, so
+	// treat it as optional.
+	Event string `json:"event" api:"nullable"`
+	// The event family, for example message, templates or contact. Route on this
+	// first, then on event for the specific change.
+	Field string `json:"field"`
+	// Body of an agent.\* webhook (Sent Agents). The event is the agent service's own
+	// record, forwarded without renaming: EventId is its id, so a subscriber can
+	// dedupe a redelivery.
+	Payload AgentEventPayload `json:"payload" api:"nullable"`
+	// The event-specific body.
+	RequestID string `json:"request_id" api:"nullable"`
+	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
+	// time, not the time the underlying change happened. Use the timestamp inside the
+	// payload for the latter.
+	Timestamp string `json:"timestamp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		Field       respjson.Field
+		Payload     respjson.Field
+		RequestID   respjson.Field
+		Timestamp   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Body of an agent.\* webhook (Sent Agents). The event is the agent service's own
+// record, forwarded without renaming: EventId is its id, so a subscriber can
+// dedupe a redelivery.
+type AgentEventPayload struct {
+	// The agent service's event id. The same event is never delivered under two ids.
+	EventID string `json:"event_id" api:"required"`
+	// When the agent service recorded it, UTC, to the millisecond.
+	OccurredAt string `json:"occurred_at" api:"required"`
+	// The sender profile the agent runs on.
+	AccountID string `json:"account_id" format:"uuid"`
+	// Who caused it: system, the agent service's customer, or an approver.
+	Actor string `json:"actor" api:"nullable"`
+	// The agent.
+	AgentID string `json:"agent_id"`
+	// The agent's name, as it is listed. Absent for an agent services no longer holds.
+	AgentName string `json:"agent_name" api:"nullable"`
+	// The version of the agent the event is of: the one its conversation runs, or the
+	// active one for an event of the agent itself. Absent when the agent service does
+	// not say it.
+	AgentVersion int64 `json:"agent_version" api:"nullable"`
+	// The contact of that conversation; absent on agent-level events.
+	ContactID string `json:"contact_id" api:"nullable"`
+	// The contact's phone number, in E.164, so a receiver knows who the event is about
+	// without asking for the contact. Read from the account's contacts as the webhook
+	// is built: the agent service's own record names a contact by id only. Absent on
+	// agent-level events, and for a contact the account no longer holds.
+	ContactPhoneNumber string `json:"contact_phone_number" api:"nullable"`
+	// The event's own fields (outcome, reason, ...), exactly as the agent service
+	// recorded them.
+	Data any `json:"data"`
+	// The conversation (agent × contact) the event belongs to; absent on agent-level
+	// events.
+	InstanceID string `json:"instance_id" api:"nullable"`
+	// Where the event stands among the agent's events: a number that grows with each,
+	// so two events of the same second are put in order by it. Not a count: there are
+	// gaps between an agent's own. Absent from an agent service that does not say it.
+	Sequence int64 `json:"sequence" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventID            respjson.Field
+		OccurredAt         respjson.Field
+		AccountID          respjson.Field
+		Actor              respjson.Field
+		AgentID            respjson.Field
+		AgentName          respjson.Field
+		AgentVersion       respjson.Field
+		ContactID          respjson.Field
+		ContactPhoneNumber respjson.Field
+		Data               respjson.Field
+		InstanceID         respjson.Field
+		Sequence           respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEventPayload) RawJSON() string { return r.JSON.raw }
+func (r *AgentEventPayload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Request and response metadata
 type APIMeta struct {
 	// Unique identifier for this request (for tracing and support)
@@ -1639,8 +1739,7 @@ func (r *WebhookDelivery) UnmarshalJSON(data []byte) error {
 
 // WebhookDeliveryEventDataUnion contains all possible properties and values from
 // [MessageEvent], [InboundMessageEvent], [TemplateEvent], [ChannelEvent],
-// [ContactEvent], [LinkEvent], [CallEvent],
-// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload].
+// [ContactEvent], [LinkEvent], [CallEvent], [AgentEvent].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type WebhookDeliveryEventDataUnion struct {
@@ -1648,8 +1747,7 @@ type WebhookDeliveryEventDataUnion struct {
 	Field string `json:"field"`
 	// This field is a union of [MessageEventPayload], [InboundMessageEventPayload],
 	// [TemplateEventPayload], [ChannelEventPayload], [ContactEventPayload],
-	// [LinkEventPayload], [CallEventPayload],
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload]
+	// [LinkEventPayload], [CallEventPayload], [AgentEventPayload]
 	Payload   WebhookDeliveryEventDataUnionPayload `json:"payload"`
 	RequestID string                               `json:"request_id"`
 	Timestamp string                               `json:"timestamp"`
@@ -1698,7 +1796,7 @@ func (u WebhookDeliveryEventDataUnion) AsCallEvent() (v CallEvent) {
 	return
 }
 
-func (u WebhookDeliveryEventDataUnion) AsWebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload() (v WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload) {
+func (u WebhookDeliveryEventDataUnion) AsAgentEvent() (v AgentEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -1815,29 +1913,21 @@ type WebhookDeliveryEventDataUnionPayload struct {
 	Price float64 `json:"price"`
 	// This field is from variant [CallEventPayload].
 	RecordingID string `json:"recording_id"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	EventID string `json:"event_id"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	Actor string `json:"actor"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	AgentName string `json:"agent_name"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	AgentVersion int64 `json:"agent_version"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	ContactPhoneNumber string `json:"contact_phone_number"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	Data any `json:"data"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	InstanceID string `json:"instance_id"`
-	// This field is from variant
-	// [WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload].
+	// This field is from variant [AgentEventPayload].
 	Sequence int64 `json:"sequence"`
 	JSON     struct {
 		MessageStatus      respjson.Field
@@ -1910,110 +2000,6 @@ type WebhookDeliveryEventDataUnionPayload struct {
 }
 
 func (r *WebhookDeliveryEventDataUnionPayload) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The envelope Sent POSTs to a subscribed webhook endpoint. Every event shares
-// this shape and varies only in Payload.
-type WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload struct {
-	// The specific event within the family, for example message.delivered,
-	// message.received or contact.opt_out. Absent on events that have no subtype, so
-	// treat it as optional.
-	Event string `json:"event" api:"nullable"`
-	// The event family, for example message, templates or contact. Route on this
-	// first, then on event for the specific change.
-	Field string `json:"field"`
-	// Body of an agent.\* webhook (Sent Agents). The event is the agent service's own
-	// record, forwarded without renaming: EventId is its id, so a subscriber can
-	// dedupe a redelivery.
-	Payload WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload `json:"payload" api:"nullable"`
-	// The event-specific body.
-	RequestID string `json:"request_id" api:"nullable"`
-	// When Sent emitted the event, in UTC (yyyy-MM-ddTHH:mm:ssZ). This is the emission
-	// time, not the time the underlying change happened. Use the timestamp inside the
-	// payload for the latter.
-	Timestamp string `json:"timestamp"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Event       respjson.Field
-		Field       respjson.Field
-		Payload     respjson.Field
-		RequestID   respjson.Field
-		Timestamp   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload) RawJSON() string {
-	return r.JSON.raw
-}
-func (r *WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayload) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Body of an agent.\* webhook (Sent Agents). The event is the agent service's own
-// record, forwarded without renaming: EventId is its id, so a subscriber can
-// dedupe a redelivery.
-type WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload struct {
-	// The agent service's event id. The same event is never delivered under two ids.
-	EventID string `json:"event_id" api:"required"`
-	// When the agent service recorded it, UTC, to the millisecond.
-	OccurredAt string `json:"occurred_at" api:"required"`
-	// The sender profile the agent runs on.
-	AccountID string `json:"account_id" format:"uuid"`
-	// Who caused it: system, the agent service's customer, or an approver.
-	Actor string `json:"actor" api:"nullable"`
-	// The agent.
-	AgentID string `json:"agent_id"`
-	// The agent's name, as it is listed. Absent for an agent services no longer holds.
-	AgentName string `json:"agent_name" api:"nullable"`
-	// The version of the agent the event is of: the one its conversation runs, or the
-	// active one for an event of the agent itself. Absent when the agent service does
-	// not say it.
-	AgentVersion int64 `json:"agent_version" api:"nullable"`
-	// The contact of that conversation; absent on agent-level events.
-	ContactID string `json:"contact_id" api:"nullable"`
-	// The contact's phone number, in E.164, so a receiver knows who the event is about
-	// without asking for the contact. Read from the account's contacts as the webhook
-	// is built: the agent service's own record names a contact by id only. Absent on
-	// agent-level events, and for a contact the account no longer holds.
-	ContactPhoneNumber string `json:"contact_phone_number" api:"nullable"`
-	// The event's own fields (outcome, reason, ...), exactly as the agent service
-	// recorded them.
-	Data any `json:"data"`
-	// The conversation (agent × contact) the event belongs to; absent on agent-level
-	// events.
-	InstanceID string `json:"instance_id" api:"nullable"`
-	// Where the event stands among the agent's events: a number that grows with each,
-	// so two events of the same second are put in order by it. Not a count: there are
-	// gaps between an agent's own. Absent from an agent service that does not say it.
-	Sequence int64 `json:"sequence" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		EventID            respjson.Field
-		OccurredAt         respjson.Field
-		AccountID          respjson.Field
-		Actor              respjson.Field
-		AgentID            respjson.Field
-		AgentName          respjson.Field
-		AgentVersion       respjson.Field
-		ContactID          respjson.Field
-		ContactPhoneNumber respjson.Field
-		Data               respjson.Field
-		InstanceID         respjson.Field
-		Sequence           respjson.Field
-		ExtraFields        map[string]respjson.Field
-		raw                string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload) RawJSON() string {
-	return r.JSON.raw
-}
-func (r *WebhookDeliveryEventDataSentDmServicesCommonServicesWebhooksContractsWebhookEventOfAgentWebhookPayloadPayload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
