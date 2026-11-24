@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.53.0](https://github.com/sentdm/sent-dm-go/compare/v0.52.0...v0.53.0) (2026-11-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** markets move to channels.markets and 10DLC numbers to markets.add_numbers
+
+### Features
+
+* **api:** markets move to channels.markets and 10DLC numbers to markets.add_numbers ([8b02fd9](https://github.com/sentdm/sent-dm-go/commit/8b02fd9f91afa8d920b49c0c548c89b4508bfcd7))
+
 ## [0.52.0](https://github.com/sentdm/sent-dm-go/compare/v0.51.0...v0.52.0) (2026-11-12)
 
 
