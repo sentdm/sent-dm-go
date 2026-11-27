@@ -252,6 +252,17 @@ func NewSenderProfileService(opts ...option.RequestOption) (r SenderProfileServi
 // needs. A carrier approval no API call can trigger is arranged offline, so the
 // status reports `PROVISIONING` until it is.
 //
+// ## An agent
+//
+// `agent_template_id` (optional) names one of your organization's agent templates
+// (`GET /v3/agents/templates`). As soon as the profile exists, a draft agent is
+// made from it on the profile, and the answer's `agent_id` is that agent: give it
+// the profile's numbers and activate it through `/v3/agents` with the profile's
+// `x-profile-id`. The template is checked before the profile is made: one that is
+// not your organization's is a `404`, agents not enabled a `403`, and no profile
+// is made. Should the agent fail once the profile exists, the profile stands and
+// `agent_error` says why; make the agent with `POST /v3/agents` and `template_id`.
+//
 // ## Responses
 //
 // `201` when the profile is complete on return — the fully-inherited case, where
@@ -514,6 +525,13 @@ func (r *APIResponseOfSenderProfilesList) UnmarshalJSON(data []byte) error {
 // into one.
 type SenderProfile struct {
 	ID string `json:"id" format:"uuid"`
+	// Why no agent was made from agent_template_id, when the profile was created and
+	// the agent could not be: the profile stands, and the agent can be made with POST
+	// /v3/agents and template_id.
+	AgentError string `json:"agent_error" api:"nullable"`
+	// The draft agent made from agent_template_id when the profile was created. Only
+	// on that answer, and left out when none was asked for.
+	AgentID string `json:"agent_id" api:"nullable" format:"uuid"`
 	// The API key for this profile.
 	//
 	// Returned by create and by nothing else. It is shown once; a read that repeated
@@ -566,6 +584,8 @@ type SenderProfile struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID             respjson.Field
+		AgentError     respjson.Field
+		AgentID        respjson.Field
 		APIKey         respjson.Field
 		Billing        respjson.Field
 		Channels       respjson.Field
@@ -907,7 +927,14 @@ func (r *SenderProfilesList) UnmarshalJSON(data []byte) error {
 }
 
 type SenderProfileNewParams struct {
-	Description param.Opt[string] `json:"description,omitzero"`
+	// One of the organization's agent templates (GET /v3/agents/templates with the
+	// organization's key) to make an agent from on the new profile as soon as it
+	// exists. The agent is a draft with the template's definition; give it the
+	// profile's numbers and activate it through /v3/agents with the profile's
+	// x-profile-id. Agents must be enabled for the organization. A sender profile's
+	// own template cannot be used: it is that profile's alone.
+	AgentTemplateID param.Opt[string] `json:"agent_template_id,omitzero" format:"uuid"`
+	Description     param.Opt[string] `json:"description,omitzero"`
 	// Who is notified about this profile's events: ORGANIZATION, SENDER_PROFILE, or
 	// ORGANIZATION_AND_SENDER_PROFILE. Omitting it leaves the profile on the
 	// Organization default.
