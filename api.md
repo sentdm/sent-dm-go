@@ -7,6 +7,8 @@ Params Types:
 
 Response Types:
 
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#AgentEvent">AgentEvent</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#AgentEventPayload">AgentEventPayload</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIMeta">APIMeta</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfWebhookEventTypesList">APIResponseOfWebhookEventTypesList</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfWebhookEventsList">APIResponseOfWebhookEventsList</a>
@@ -400,6 +402,26 @@ Methods:
 
 - <code title="get /v3/channels">client.Channels.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelListParams">ChannelListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelsState">APIResponseOfChannelsState</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Markets
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfChannelMarket">APIResponseOfListOfChannelMarket</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfMarketNumbers">APIResponseOfMarketNumbers</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarket">ChannelMarket</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MarketNumber">MarketNumber</a>
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#MarketNumbers">MarketNumbers</a>
+
+Methods:
+
+- <code title="get /v3/channels/{channel}/{country}/{type}">client.Channels.Markets.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketGetParams">ChannelMarketGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="patch /v3/channels/{channel}/{country}/{type}">client.Channels.Markets.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketUpdateParams">ChannelMarketUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/channels/{channel}">client.Channels.Markets.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, channel <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketListParams">ChannelMarketListParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfListOfChannelMarket">APIResponseOfListOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/channels/{channel}/{country}/{type}/numbers">client.Channels.Markets.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketService.AddNumbers">AddNumbers</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketAddNumbersParams">ChannelMarketAddNumbersParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/channels/{channel}/{country}/{type}/numbers">client.Channels.Markets.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketService.ListNumbers">ListNumbers</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketListNumbersParams">ChannelMarketListNumbersParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfMarketNumbers">APIResponseOfMarketNumbers</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="patch /v3/channels/{channel}/{country}/{type}/numbers">client.Channels.Markets.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketService.ReplaceNumbers">ReplaceNumbers</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, type\_ <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelMarketReplaceNumbersParams">ChannelMarketReplaceNumbersParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## SMS
 
 Params Types:
@@ -413,13 +435,26 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SuppliedCampaign">SuppliedCampaign</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SuppliedCompliance">SuppliedCompliance</a>
 - <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#SuppliedDocument">SuppliedDocument</a>
-- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewResponse">ChannelSMSNewResponse</a>
 
 Methods:
 
-- <code title="post /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewParams">ChannelSMSNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewResponse">ChannelSMSNewResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /v3/channels/sms">client.Channels.SMS.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSNewParams">ChannelSMSNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ### TenDlc
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#TenDlcCampaignUseCaseParam">TenDlcCampaignUseCaseParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcListCampaignsResponse">ChannelSMSTenDlcListCampaignsResponse</a>
+
+Methods:
+
+- <code title="post /v3/channels/sms/US/TEN_DLC/campaigns">client.Channels.SMS.TenDlc.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcService.AddCampaign">AddCampaign</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcAddCampaignParams">ChannelSMSTenDlcAddCampaignParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /v3/channels/sms/US/TEN_DLC/campaigns">client.Channels.SMS.TenDlc.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcService.ListCampaigns">ListCampaigns</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcListCampaignsParams">ChannelSMSTenDlcListCampaignsParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcListCampaignsResponse">ChannelSMSTenDlcListCampaignsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="patch /v3/channels/sms/US/TEN_DLC/campaigns/{campaignId}">client.Channels.SMS.TenDlc.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcService.UpdateCampaign">UpdateCampaign</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, campaignID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#ChannelSMSTenDlcUpdateCampaignParams">ChannelSMSTenDlcUpdateCampaignParams</a>) (\*<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go">sentdm</a>.<a href="https://pkg.go.dev/github.com/sentdm/sent-dm-go#APIResponseOfChannelMarket">APIResponseOfChannelMarket</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ## Rcs
 

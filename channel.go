@@ -78,6 +78,34 @@ type ChannelService struct {
 	//
 	// Call `GET /v3/compliance/requirements` first — it answers what a market demands
 	// before you hold it, with a body you can fill in and post.
+	Markets ChannelMarketService
+	// The senders you send from, one per channel.
+	//
+	// **SMS is a list of markets**, each keyed by `(country, number_type)` — a
+	// customer can hold `us/10dlc` and `gb/alphanumeric` at once, so a market is
+	// addressed by the pair rather than by country alone. **WhatsApp and RCS are
+	// single**: a customer has one business account and one agent. **Voice is per
+	// number**: each number you hold can carry phone calls on its own
+	// (`POST /v3/channels/voice`), each with the callback URL Sent asks what to do
+	// with its calls, one of them is the default line for calls placed from your app,
+	// and voice tokens are minted with `POST /v3/voice/tokens`. Read your voice
+	// numbers with `GET /v3/channels/voice` and change one with
+	// `PATCH /v3/channels/voice/{number}`.
+	//
+	// ## Compliance lives on the market
+	//
+	// Adding a market records everything that market registers with, in its
+	// `compliance` object. Only **US `TEN_DLC`** registers with a regime — The
+	// Campaign Registry — and it is the only market whose compliance carries `brand`
+	// and `campaign`. Everywhere else compliance is documents, and many markets ask
+	// for none at all.
+	//
+	// `GET` and `PATCH` on a market return and accept the same shape, so what comes
+	// back can be sent back: an omitted key is left alone, and a key reported in
+	// `requirements` is the path into the body that clears it.
+	//
+	// Call `GET /v3/compliance/requirements` first — it answers what a market demands
+	// before you hold it, with a body you can fill in and post.
 	SMS ChannelSMSService
 	// The senders you send from, one per channel.
 	//
@@ -171,6 +199,7 @@ type ChannelService struct {
 func NewChannelService(opts ...option.RequestOption) (r ChannelService) {
 	r = ChannelService{}
 	r.Options = opts
+	r.Markets = NewChannelMarketService(opts...)
 	r.SMS = NewChannelSMSService(opts...)
 	r.Rcs = NewChannelRcService(opts...)
 	r.Whatsapp = NewChannelWhatsappService(opts...)
@@ -268,8 +297,8 @@ type ChannelsState struct {
 	// three things only we can answer: the record's id, its status, and the number it
 	// sends from. So a read after a write shows the form as stored rather than as
 	// echoed.
-	Rcs RcsAgent           `json:"rcs" api:"nullable"`
-	SMS []ChannelsStateSMS `json:"sms"`
+	Rcs RcsAgent        `json:"rcs" api:"nullable"`
+	SMS []ChannelMarket `json:"sms"`
 	// The numbers this profile carries phone calls on, one entry per number, or empty
 	// when none. Voice is per number like an SMS market is per country: each number is
 	// its own channel row, turned on and off on its own, and one of them is the line
@@ -293,86 +322,6 @@ type ChannelsState struct {
 // Returns the unmodified JSON received from the API
 func (r ChannelsState) RawJSON() string { return r.JSON.raw }
 func (r *ChannelsState) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// One market the profile sends in on a channel — its sender, where that sender
-// stands, and what the market wants. Named for no one channel, as the routes it
-// answers are not (/v3/channels/{channel}/{country}/{type}); SMS is the channel
-// with markets today.
-//
-// A profile may send in several: it is a tenant, not a market. Each carries its
-// own status, because a profile can be live in one country and mid-registration in
-// another — and each carries what it still owes, rather than that being reported
-// in a separate array a caller has to join on.
-type ChannelsStateSMS struct {
-	// What a market has been given: the identity it registers under, its programme,
-	// and any documents attached.
-	//
-	// What it does not carry is what the market asks for. That is the subject of GET
-	// /v3/compliance/requirements, and it is the same answer for every caller — a
-	// description of what a compliance regime wants, not a record of one customer's
-	// progress through it. It was reported here as well for a while, which put the
-	// same array in six response shapes and left a caller deciding which of two
-	// sources to believe.
-	//
-	// Present on a list read for markets that register (carrying brand and campaign),
-	// but with documents absent — documents are not fetched for a list, because a
-	// catalog lookup and a document read per market would multiply across a page.
-	// Absent documents is distinct from an empty list: absent says they were not
-	// fetched; empty says the market has been given none. The parent object is null
-	// only when the market registers with nobody and compliance was not computed —
-	// nothing to show at all.
-	Compliance SuppliedCompliance `json:"compliance" api:"nullable"`
-	Country    string             `json:"country" api:"nullable"`
-	NumberType string             `json:"number_type" api:"nullable"`
-	// Every number this market holds or is still owed, each with its area code and its
-	// own status (ACTIVE once it can send, PROVISIONING while it is still to be
-	// assigned, INACTIVE once it could send and no longer can). One entry for a market
-	// holding one number. US 10DLC numbers are assigned when the campaign is approved,
-	// so they read as owed until then. Read-only.
-	Numbers []SMSNumber `json:"numbers"`
-	// A sentence for reason_code: this market's own explanation, naming what is
-	// outstanding where that is you. Omitted while ACTIVE.
-	Reason string `json:"reason" api:"nullable"`
-	// Why the market is not ACTIVE, as a stable code: an ErrorCodes CHANNEL_xxx value
-	// such as CHANNEL_001 (something you owe) or CHANNEL_009 (under review). Switch on
-	// this rather than on reason. Omitted while ACTIVE. Read-only; when nothing more
-	// specific is known it is the generic reason for the status.
-	ReasonCode string `json:"reason_code" api:"nullable"`
-	// Where this market's sender stands, in terms of who is holding it up —
-	// PROVISIONING, ACTION_NEEDED, PENDING_REVIEW or ACTIVE. Read-only.
-	//
-	// Resolved rather than reported raw: a live sender reads ACTIVE whatever it still
-	// owes, a market with outstanding requirements or an open resubmission request
-	// reads ACTION_NEEDED, and a market that registers with a regime reads
-	// PENDING_REVIEW once its brand exists — filing to The Campaign Registry is ours
-	// to do and need not have happened yet, so a dedicated brand created through this
-	// API reads PENDING_REVIEW from the moment it is stored.
-	//
-	// Describes whether the market can send, not each number: a market holding several
-	// numbers reads ACTIVE as soon as one of them is, whatever the others are doing.
-	// Each number's own status is in numbers.
-	//
-	// Any of "PROVISIONING", "ACTION_NEEDED", "PENDING_REVIEW", "ACTIVE", "INACTIVE".
-	Status string `json:"status" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Compliance  respjson.Field
-		Country     respjson.Field
-		NumberType  respjson.Field
-		Numbers     respjson.Field
-		Reason      respjson.Field
-		ReasonCode  respjson.Field
-		Status      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ChannelsStateSMS) RawJSON() string { return r.JSON.raw }
-func (r *ChannelsStateSMS) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

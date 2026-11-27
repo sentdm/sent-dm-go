@@ -28,6 +28,7 @@ func TestSenderProfileNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.SenderProfiles.New(context.TODO(), sentdm.SenderProfileNewParams{
+		AgentTemplateID: param.Null[string](),
 		Billing: sentdm.SenderProfileBillingRequestParam{
 			Inherit: sentdm.Bool(true),
 		},
